@@ -1,0 +1,22 @@
+body, label, input, button, radio, select {font-family: 'Helvetica Neue', Helvetica; font-weight: 400;}
+h1, h2, h3, h4 {font-family: 'Helvetica Neue', Helvetica; font-weight: 400;}
+body {overflow-y: hidden;}
+input {autocorrect: "off"; spellcheck: "false";}
+
+/* Disable bouncy transition for sidebar toggle. */
+ .content-wrapper,
+ .right-side,
+ .main-footer {
+   -moz-transition: none;
+   -webkit-transition: none;
+   -o-transition: all 0 none;
+   transition: none;
+ }
+ .main-sidebar,
+ .left-side {
+   -moz-transition: none;
+   -webkit-transition: none;
+   -o-transition: all 0 none;
+   transition: none;
+ }
+ 

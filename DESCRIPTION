@@ -1,0 +1,33 @@
+Package: glucidum
+Title: A Shiny App to Build and Understand GBMs and GLMs
+Version: 0.0.0.9000
+Authors@R: 
+    person("Gary", "Hemming", , "garyhemming@me.com", role = c("cre", "aut"))
+Description: A Shiny App to interactively explore datasets, map UK
+    postcode data and build code-free GBMs and GLMs.
+License: MIT + file LICENSE
+Depends: 
+    R (>= 2.10)
+Imports: 
+    config,
+    data.table,
+    DT,
+    golem,
+    grDevices,
+    htmlwidgets,
+    leaflet,
+    pkgload,
+    sf,
+    shiny,
+    shinyAce,
+    shinydashboard,
+    shinyWidgets,
+    stats
+Suggests: 
+    knitr
+VignetteBuilder: 
+    knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.2
