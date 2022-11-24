@@ -11,8 +11,8 @@ mod_ChartaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png'), 'Histogram')), br()),
-                tabPanel(value = '1-way line and bar', title = span(tagList(icon('chart-line'), '1-way line and bar')), br()),
+                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png', height="20px", width="18px"), 'Histogram')), br()),
+                tabPanel(value = '1-way line and bar', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="25px"), '1-way line and bar')), br()),
                 tabPanel(value = '2-way line and bar', title = span(tagList(icon('chart-line'), '2-way line and bar')), br()),
                 tabPanel(value = 'Box plot', title = span(tagList(icon('chart-line'), 'Box plot')), br()),
                 tabPanel(value = 'Scatterplot', title = span(tagList(icon('chart-line'), 'Scatterplot')), br())

@@ -17,7 +17,7 @@ app_ui <- function(request) {
     # List the first level UI elements here 
     dashboardPage(
       dashboardHeader(
-        title = "glucidum",
+        title = span(tagList(tags$img(src='www/favicon.ico', height='40px', width='44px'),'lucidum')),
         titleWidth = 250,
         # controls placed in the header
         insertDashboardHeader(div('Models', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px;margin-right: 10px')),
@@ -51,8 +51,8 @@ app_ui <- function(request) {
           menuItemOutput('GlimmaR'),
 
           # response, weight, navigator and filter       
-          mod_selectColumn_ui('response', label = 'Response', width = '100%'),
-          mod_selectColumn_ui('weight', label = 'Weight', width = '100%'),
+          mod_selectResponseColumn_ui('response', label = 'Response', width = '100%'),
+          mod_selectWeightColumn_ui('weight', label = 'Weight', width = '100%'),
           mod_navigator_ui("navigator"),
           mod_defineFilter_ui("filter"),
           
@@ -60,9 +60,10 @@ app_ui <- function(request) {
           div(textOutput('selection_text'), style = 'margin-top:0px; margin-bottom:0px; margin-left:20px; font-size: 10px'),
           
           # QUESTION where should I put this so it only applies to THIS control and no others?
-          tags$style(".irs-from, .irs-to, .irs-min, .irs-max, .irs-single{display:none}"),
+          # this is still applying to EVERY sliderInput
+          # tags$style(".irs-from, .irs-to, .irs-min, .irs-max, .irs-single{display:none}"),
           div(
-            style="margin-top:-10px; margin-bottom:0px;padding-top:0px",
+            style="margin-top:-10px; margin-bottom:0px;padding-top:0px;",
             sliderInput("sidebarWidth", label = NULL, value = 250, min = 200, max = 400, step = 50, width = '80px', ticks = FALSE)
           )
         )

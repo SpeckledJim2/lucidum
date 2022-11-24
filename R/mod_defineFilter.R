@@ -11,7 +11,7 @@ mod_defineFilter_ui <- function(id){
   ns <- NS(id)
   tagList(
     div(
-      style = 'margin-top:0px; margin-bottom:-28px; padding-top:0px ; padding-bottom:0px;',
+      style = 'margin-top:0px; margin-bottom:-28px; padding-top:0px ; padding-bottom:0px; position:relative',
       radioGroupButtons(
         inputId = ns('train_test_filter'),
         label = 'Filter (0/0)',

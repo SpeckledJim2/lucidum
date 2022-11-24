@@ -26,8 +26,9 @@ app_server <- function(input, output,session) {
   BoostaR_models <- reactiveVal(list('when','will','I','see','you','again'))
   
   # model indices
-  GlimmaR_model_index <- reactiveVal(0)
-  BoostaR_model_index <- reactiveVal(0)
+  kpi <- reactiveVal(NULL)
+  GlimmaR_idx <- reactiveVal(0)
+  BoostaR_idx <- reactiveVal(0)
   
   # menuItems
   showModule(output, 'Specs', 'chevron-right', golem::get_golem_options('show_DevelopaR'))
@@ -39,9 +40,14 @@ app_server <- function(input, output,session) {
   updateTabItems(session, 'tabs', 'DataR')
   
   # sidebar servers
-  response <- mod_selectColumn_server('response', d, dt_update, TRUE, NULL, NULL)
-  weight <- mod_selectColumn_server('weight', d, dt_update, TRUE, NULL, 'N')
-  nav_options <- mod_navigator_server("navigator", kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_model_index, BoostaR_model_index)
+  weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)
+  response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec, weight)
+  nav_options <- mod_navigator_server("navigator", kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
+  
+  # read out the kpi and model indices from the sidebar navigator
+  observeEvent(nav_options(), {
+    kpi(nav_options()$kpi)
+  })
   
   # header servers
   observeEvent(input$dataset, ignoreInit = TRUE, {
