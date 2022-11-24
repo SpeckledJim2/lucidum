@@ -18,6 +18,16 @@ mod_MappaR_ui <- function(id){
   tagList(
     # height argument ensures map resizes well with browser
     leaflet::leafletOutput(ns('map'), height = 'calc(99vh - 69px)'),
+    
+    # QUESTION - better way to do the following?
+    # not sure how I could move to an external file because of the ns
+    tags$head(tags$style(HTML(paste0('#', ns('map'), '{background-color: rgb(36,45,49)}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('controls'), '{background-color: rgba(255,255,255,0.9)}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('controls'), '{border-width: 2px; border-color: rgb(255,255,255)}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('panel_title'), ' {font-size: 48px; font-weight: 300; text-align:center}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('panel_location'), '{font-size: 20px; text-align:center}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('filters'), '{margin-top:10px; font-size: 12px; text-align:center; font-style: italic}')))),
+    tags$script(paste0("Shiny.addCustomMessageHandler('background-color', function(color) {var map = document.getElementById('" , ns('map') , "') ;map.style.backgroundColor = color;});")),
     absolutePanel(id = ns('controls'),
                   class = 'panel panel-default',
                   top = '25%',
@@ -142,8 +152,8 @@ mod_MappaR_ui <- function(id){
                             label = NULL,
                             justified = TRUE,
                             size = 'xs',
-                            choices = c('Christmas','Spectral','Greys'),
-                            selected = 'Christmas'
+                            choices = c('Divergent','Spectral','Viridis'),
+                            selected = 'Divergent'
                           )
                         )
                       ),
@@ -182,6 +192,7 @@ mod_MappaR_ui <- function(id){
 #' @param kpi_spec data.table containing the kpi_specification
 #' 
 #' @importFrom htmlwidgets onRender
+#' @importFrom shinyWidgets updateSpectrumInput updateRadioGroupButtons
 #' @importFrom leaflet leafletProxy
 #' 
 #' @noRd
@@ -233,5 +244,38 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec){
         viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
       }
     })
+    observeEvent(input$map_shape_mouseover,{
+      pointId <- input$map_shape_mouseover$id
+      output$panel_title <- renderText({pointId})
+      output$panel_location <- renderUI(({return_mouse_hover_postcode(pointId)}))
+    })
+    observeEvent(input$dark_mode, {
+      if(input$dark_mode){
+        session$sendCustomMessage("background-color", "#242d31")
+      } else {
+        session$sendCustomMessage("background-color", "#FFFFFF")
+      }
+    })
+    observeEvent(input$palettes, {
+      p <- input$palettes
+      if(p=='Spectral'){
+        updateSpectrumInput(session, 'colour1', selected = 'blue')
+        updateSpectrumInput(session, 'colour2', selected = 'yellow')
+        updateSpectrumInput(session, 'colour3', selected = 'red')
+      } else if(p=='Divergent') {
+        updateSpectrumInput(session, 'colour1', selected = 'green')
+        updateSpectrumInput(session, 'colour2', selected = 'white')
+        updateSpectrumInput(session, 'colour3', selected = 'red')
+      } else if(p=='Viridis'){
+        updateSpectrumInput(session, 'colour1', selected = 'purple')
+        updateSpectrumInput(session, 'colour2', selected = 'green')
+        updateSpectrumInput(session, 'colour3', selected = 'yellow')
+      }
+    })
+    observeEvent(c(input$colour1, input$colour2, input$colour3), ignoreInit = TRUE, {
+      updateRadioGroupButtons(session, inputId = 'palettes', selected = character(0))
+    })
   })
 }
+
+

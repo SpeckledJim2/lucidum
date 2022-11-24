@@ -19,7 +19,6 @@ app_ui <- function(request) {
       dashboardHeader(
         title = "glucidum",
         titleWidth = 250,
-        
         # controls placed in the header
         insertDashboardHeader(div('Models', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px;margin-right: 10px')),
         insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR', label = 'GBMs', icon = icon('rocket'), style = ' font-size:80%')),
@@ -28,6 +27,7 @@ app_ui <- function(request) {
         insertDashboardHeader(actionButton(inputId = 'GoTo_kpi_spec', label = 'KPIs', icon = icon('gears'), style = ' font-size:80%')),
         insertDashboardHeader(actionButton(inputId = 'GoTo_feature_spec', label = 'Features', icon = icon('list'), style = ' font-size:80%')),
         insertDashboardHeader(actionButton(inputId = 'GoTo_filter_spec', label = 'Filters', icon = icon('filter'), style = ' font-size:80%')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_shinyAce', label = 'shinyAce', icon = icon('chevron-right'), style = ' font-size:80%')),
         insertDashboardHeader(div('Dataset', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px')),
         insertDashboardHeader(
           div(
@@ -57,31 +57,19 @@ app_ui <- function(request) {
           mod_defineFilter_ui("filter"),
           
           # developer text
-          div(
-            style = 'margin-top:0px; margin-bottom:0px; margin-left:20px; font-size: 10px',
-            textOutput('selection_text')
-          ),
+          div(textOutput('selection_text'), style = 'margin-top:0px; margin-bottom:0px; margin-left:20px; font-size: 10px'),
           
-          # where should I put this so it only applies to this control?
-          # tags$style(HTML('.irs-from, .irs-to, .irs-min, .irs-max, .irs-single {visibility: hidden !important;}')),
+          # QUESTION where should I put this so it only applies to THIS control and no others?
+          tags$style(".irs-from, .irs-to, .irs-min, .irs-max, .irs-single{display:none}"),
           div(
             style="margin-top:-10px; margin-bottom:0px;padding-top:0px",
-            sliderInput("sidebarWidth", label = NULL, ticks = FALSE, value = 250, min = 200, max = 400, step = 50, width = '80px')
+            sliderInput("sidebarWidth", label = NULL, value = 250, min = 200, max = 400, step = 50, width = '80px', ticks = FALSE)
           )
         )
       ),
       dashboardBody(
         tabItems(
-          tabItem(tabName = 'Specs',
-                  shinyAce::aceEditor(
-                    "shinyAce_code",
-                    height = "calc(50vh - 10px)",
-                    mode = "r",
-                    wordWrap = FALSE,
-                    autoScrollEditorIntoView = TRUE,
-                    placeholder = ''
-                    )
-                  ),
+          tabItem(tabName = 'Specs', mod_DevelopaR_ui('DevelopaR')),
           tabItem(tabName = 'DataR', mod_DataR_ui('DataR')),
           tabItem(tabName = 'ChartaR', mod_ChartaR_ui('ChartaR')),
           tabItem(tabName = 'MappaR', mod_MappaR_ui('MappaR')),

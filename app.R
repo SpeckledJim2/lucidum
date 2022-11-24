@@ -5,7 +5,5 @@
 pkgload::load_all(export_all = FALSE,helpers = FALSE,attach_testthat = FALSE)
 options( "golem.app.prod" = TRUE)
 glucidum::glucidum(insurance,
-                   show_ChartaR = FALSE,
-                   show_DevelopaR = FALSE,
-                   show_GlimmaR = FALSE,
-                   show_BoostaR = FALSE) # add parameters here (if any)
+                   show_BoostaR = F,
+                   show_GlimmaR = F)

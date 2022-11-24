@@ -1,6 +1,7 @@
 inst/doc
 /doc/
 /Meta/
+/data-raw/
 .Rproj.user
 .Rhistory
 .Rdata

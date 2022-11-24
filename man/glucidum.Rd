@@ -8,9 +8,10 @@ glucidum(
   data = NULL,
   BoostaR_models = NULL,
   GlimmaR_models = NULL,
-  feature_spec = NULL,
-  filter_spec = NULL,
   kpi_spec = NULL,
+  filter_spec = NULL,
+  feature_spec = NULL,
+  show_DataR = TRUE,
   show_ChartaR = TRUE,
   show_MappaR = TRUE,
   show_BoostaR = TRUE,
@@ -25,11 +26,13 @@ glucidum(
 
 \item{GlimmaR_models}{character, path to .rds file containing GlimmaR_models.}
 
-\item{feature_spec}{character, path to feature specification.}
+\item{kpi_spec}{character, path to kpi specification.}
 
 \item{filter_spec}{character, path to filter specification.}
 
-\item{kpi_spec}{character, path to kpi specification.}
+\item{feature_spec}{character, path to feature specification.}
+
+\item{show_DataR}{logical, TRUE (not default) will show the DataR menu item.}
 
 \item{show_ChartaR}{logical, TRUE (default) will show the ChartaR menu item.}
 

@@ -6,16 +6,14 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList 
+#' @importFrom shiny NS tagList span
 mod_DataR_ui <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(
-      column(
-        width = 12,
-        DT::DTOutput(ns('my_data'), height = '90vh')
-      )
-    )
+    tabsetPanel(id = 'DataR_tabsetPanel',
+                tabPanel(span(tagList(icon('bars'), 'Dataset viewer')), mod_datasetViewer_ui(ns('datasetViewer'))),
+                tabPanel(span(tagList(icon('table-columns'), 'Column summary')), mod_columnSummary_ui(ns('columnSummary')))
+    ),
   )
 }
     
@@ -25,9 +23,7 @@ mod_DataR_ui <- function(id){
 mod_DataR_server <- function(id, d, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    output$my_data <- DT::renderDT({
-      dt_update()
-      format_table(d())
-    })
+    mod_datasetViewer_server('datasetViewer', d, dt_update)
+    mod_columnSummary_server('columnSummary', d, dt_update)
   })
 }

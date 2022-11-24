@@ -23,6 +23,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
      response != 'select feature'){
     
     # summarise data and merge the area_summary onto the shapefile
+    area_summary <- NULL
     if('PostcodeArea' %in% names(d)){
       area_summary <- postcode_summary(d, response, weight, 'PostcodeArea')
       if(!is.null(area_summary)){
@@ -67,7 +68,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
                              smoothFactor = 0,
                              fillColor = area_fillColor,
                              fillOpacity = map_options$opacity * opacity_area_modifier,
-                             label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>','area_labels'), HTML),
+                             label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',areas_sf$area_plot), HTML),
                              labelOptions = labelOptions(textOnly = FALSE, style=label_style),
                              highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
                              options = pathOptions(pane = "area_polygons")
@@ -146,3 +147,11 @@ maxN <- function(x, N=2){
   sort(x,partial=len-N+1)[len-N+1]
 }
 
+return_mouse_hover_postcode <- function(pointId){
+  if(nchar(pointId)>2){
+    pointId_area <- substr(pointId,1,regexpr('[0-9]', pointId)-1)
+  } else {
+    pointId_area <- pointId
+  }
+  postcode_area_name_mapping[PostcodeArea==pointId_area, PostcodeArea_name]
+}
