@@ -43,7 +43,7 @@ mod_histogram_ui <- function(id){
             width = 3,
             radioGroupButtons(
               label = 'y axis type',
-              inputId = ns('hist_normalise'),
+              inputId = ns('normalise'),
               choices = c('Sum'='','Probability'='probability'),
               individual = FALSE,
               size = 'xs',
@@ -75,24 +75,7 @@ mod_histogram_ui <- function(id){
           )
         ),
         br(),
-        shinycssloaders::withSpinner(plotlyOutput(ns('histogram'))),
-        # tags$head(tags$script('
-        #                                     // Define function to set height of "histogram"
-        #                                     setHeightChartaR_histogram = function() {
-        #                                       var window_height = $(window).height();
-        #                                       var header_height = $(".main-header").height();
-        #                                       var boxHeight = (window_height - header_height) - 220;
-        #                                       $("#histogram").height(boxHeight);
-        #                                     };
-        #                                     // Set input$box_height when the connection is established
-        #                                     $(document).on("shiny:connected", function(event) {
-        #                                       setHeightChartaR_histogram();
-        #                                     });
-        #                                     // Refresh the box height on every window resize event
-        #                                     $(window).on("resize", function(){
-        #                                       setHeightChartaR_histogram();
-        #                                     });
-        #                                   '))
+        plotlyOutput(ns('histogram'), height = 'calc(85vh - 100px)')
       )
     )
   )
@@ -101,12 +84,19 @@ mod_histogram_ui <- function(id){
 #' histogram Server Functions
 #'
 #' @noRd 
+#' 
+#' 
+#' @importFrom plotly renderPlotly layout
 mod_histogram_server <- function(id, d, dt_update, response, weight, kpi_spec){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     output$summary_table <- DT::renderDataTable({
       dt_update()
       histogram_DT(histogram_table(d(), response(), weight(), kpi_spec()))
+    })
+    output$histogram <- renderPlotly({
+      dt_update()
+      histogram_chart(d(), response(), weight(), input$num_bins, input$log_scale, input$normalise, input$inc_cum, input$use_sample)
     })
   })
 }
@@ -194,3 +184,51 @@ histogram_DT <- function(d){
     formatStyle(1:2, fontSize = '85%', lineHeight='20%')
 }
 
+#' @importFrom plotly plot_ly layout
+histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise, inc_cum, use_sample){
+  if(!is.null(response)){
+    # only proceed if d and the filters have the same length
+    if(response %in% names(d) &
+       weight %in% c(names(d), 'N')
+    ){
+      if(weight=='N'){
+        values <- d[total_filter==1,..response][[1]]
+      } else {
+        values <- d[total_filter==1,..response][[1]]/d[total_filter==1,..weight][[1]]
+      }
+      # sample down if selected
+      if(use_sample=='Use 100k'){
+        num_rows <- length(values)
+        if(num_rows>100000){
+          values <- values[sample(1:num_rows, 100000, replace = FALSE)]
+        }
+      }
+      # divide by weight
+      if(weight=='N'){
+        title <- response
+      } else {
+        title <- paste(response, '/', weight)
+      }
+      # make title bold
+      title <- paste('<b>', title, '</b>')
+      # set the number of bins, if NULL then plotly will automatically pick the number of bins
+      num_bins <- as.numeric(num_bins)
+      num_bins <- min(10000,num_bins)
+      # parse the log scale choice
+      x_scale <- ifelse(log_scale %in% c('X axis','Both'), 'log','')
+      y_scale <- ifelse(log_scale %in% c('Y axis','Both'), 'log','')
+      # render the plot
+      p <- plot_ly(x = ~values,
+                   type = "histogram",
+                   nbinsx = num_bins,
+                   histnorm = normalise,
+                   cumulative = list(enabled=as.logical(as.numeric(inc_cum)))) |>
+        layout(hovermode = 'x') %>%
+        layout(margin = list(l = 50, r = 50, b = 10, t = 70, pad = 4)) |>
+        layout(xaxis = list(title = '', type = x_scale)) |>
+        layout(yaxis = list(title = NULL, type = y_scale)) |>
+        layout(title = list(text = title, y = 0.95, font = list(size = 14))) |>
+        layout(bargap=0.1)
+    }
+  }
+}

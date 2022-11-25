@@ -49,16 +49,6 @@ app_server <- function(input, output,session) {
   showModule(output, 'GlimmaR', 'star', golem::get_golem_options('show_GlimmaR'))
   updateTabItems(session, 'tabs', 'DataR')
   
-  # sidebar servers
-  weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)
-  response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec, weight)
-  nav_options <- mod_navigator_server("navigator", kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
-  
-  # read out the kpi and model indices from the sidebar navigator
-  observeEvent(nav_options(), {
-    kpi(nav_options()$kpi)
-  })
-  
   # header servers
   observeEvent(input$dataset, ignoreInit = TRUE, {
     d(setDT(get(input$dataset)))
@@ -86,10 +76,20 @@ app_server <- function(input, output,session) {
     updateNavbarPage(session = session, inputId = "DevelopaR-tabsetPanel", selected = 'shinyAce')
   })
   
+  # sidebar servers
+  weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)
+  response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec, weight)
+  nav_options <- mod_navigator_server("navigator", kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
+  
+  # read out the kpi and model indices from the sidebar navigator
+  observeEvent(nav_options(), {
+    kpi(nav_options()$kpi)
+  })
+  
   # filter server
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
-  # module servers
+  # tab servers
   mod_DevelopaR_server('DevelopaR')
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec)

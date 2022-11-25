@@ -14,10 +14,11 @@ app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
+    tags$head(tags$style(HTML('select {resize: vertical; overflow: auto;}'))),
     # List the first level UI elements here 
     dashboardPage(
       dashboardHeader(
-        title = span(tagList(tags$img(src='www/favicon.ico', height='40px', width='44px'),'lucidum')),
+        title = span(tagList(tags$img(src='www/favicon.ico', height='48px', width='48px'),'')),
         titleWidth = 250,
         # controls placed in the header
         insertDashboardHeader(div('Models', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px;margin-right: 10px')),

@@ -25,18 +25,18 @@ mod_defineFilter_ui <- function(id){
     #tags$style(paste0("#",ns('free_filter')," {margin-bottom:-30px;}")),
     #tags$style(paste0("#",ns('filter_list')," {margin-bottom:0px; margin-top:0px;}")),
     fluidRow(
-      style = 'margin-bottom: 0px; margin-left:0px; margin-right:0px;padding-left:0px',
+      style = 'margin-bottom: -20px; margin-left:0px; margin-right:0px;padding-left:0px',
       column(
         width = 10,
-        style = 'margin-left:0px; margin-right:0px;padding-left:0px; padding-right:0px',
+        style = 'margin-bottom: -7px; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:0px',
         div(
-          style = 'margin-left:0px; margin-right:0px;padding-left:0px; padding-right:0px',
+          style = 'margin-bottom:-20px; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:0px',
           textInput(inputId = ns('free_filter'), placeholder = 'enter filter...', label = NULL, width = '100%')
         )
       ),
       column(
         width = 2,
-        style = 'display: inline; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:20px',
+        style = 'margin-bottom: -7px; display: inline; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:20px',
         div(
           style = 'margin-top:12px; margin-left:-30px; margin-right:10px;padding-left:0px; padding-right:0px',
           actionButton(
@@ -50,7 +50,7 @@ mod_defineFilter_ui <- function(id){
       )
     ),
     div(
-      style = 'margin-top:-27px; margin-bottom:-30px; position:relative',
+      style = 'margin-top:0px; margin-bottom:-30px; position:relative',
       selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 6, selectize = FALSE, multiple = TRUE,
                   choices = c('no filter',
                               "make=='PORSCHE'",

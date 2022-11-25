@@ -4,4 +4,6 @@ globalVariables(c('PostcodeArea',
                   'total_filter',
                   'value',
                   'count',
-                  'response'))
+                  'train_test',
+                  '..response',
+                  '..weight'))
