@@ -11,7 +11,10 @@ mod_ChartaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png', height="20px", width="18px"), 'Histogram')), br()),
+                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png', height="20px", width="22px"), 'Histogram')),
+                         br(),
+                         mod_histogram_ui(ns('histogram_tab'))
+                         ),
                 tabPanel(value = '1-way line and bar', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="25px"), '1-way line and bar')), br()),
                 tabPanel(value = '2-way line and bar', title = span(tagList(icon('chart-line'), '2-way line and bar')), br()),
                 tabPanel(value = 'Box plot', title = span(tagList(icon('chart-line'), 'Box plot')), br()),
@@ -23,10 +26,10 @@ mod_ChartaR_ui <- function(id){
 #' ChartaR Server Functions
 #'
 #' @noRd 
-mod_ChartaR_server <- function(id){
+mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
- 
+    mod_histogram_server('histogram_tab', d, dt_update, response, weight, kpi_spec)
   })
 }
     

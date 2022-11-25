@@ -36,13 +36,13 @@ mod_selectResponseColumn_ui <- function(id, label = 'label', ...){
 mod_selectResponseColumn_server <- function(id, d, dt_update, numerical_cols, subset, special_options, kpi, kpi_spec, weight){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    observeEvent(dt_update(), {
+    observeEvent(c(d(), dt_update()), {
       if(nrow(d())>0){
-        current_selection <- input$col
         choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
-        selected <- input$col
-        if(selected %not_in% choices){
+        if(input$col %not_in% choices){
           selected <- choices[[1]]
+        } else {
+          selected <- input$col
         }
         updateSelectInput(
           inputId = 'col',
@@ -59,14 +59,14 @@ mod_selectResponseColumn_server <- function(id, d, dt_update, numerical_cols, su
     observeEvent(c(input$col, weight(), dt_update()), ignoreInit = TRUE, {
       if(input$col %in% names(d()) &
          weight() %in% c('N', names(d()))){
-        if('user_filter' %in% names(d())){
+        if('total_filter' %in% names(d())){
           if(weight()=='N'){
-            num <- d()[which(user_filter==1), sum(.SD), .SDcols=input$col]
-            den <- d()[, sum(user_filter)]
+            num <- d()[which(total_filter==1), sum(.SD), .SDcols=input$col]
+            den <- d()[, sum(total_filter)]
             val <- num/den
           } else {
-            num <- d()[which(user_filter==1), sum(.SD), .SDcols=input$col]
-            den <- d()[which(user_filter==1), sum(.SD), .SDcols=weight()]
+            num <- d()[which(total_filter==1), sum(.SD), .SDcols=input$col]
+            den <- d()[which(total_filter==1), sum(.SD), .SDcols=weight()]
             val <- num/den
           }
         } else {
@@ -104,25 +104,46 @@ kpi_numerator_denominator <- function(kpi, kpi_spec){
 response_text <- function(d, response, weight){
   if(nrow(d)>0 & weight!='' & response !=''){
     # get numerator
-    if('user_filter' %in% names(d)){
-      num <- d[which(user_filter==1), sum(.SD, na.rm = TRUE), .SDcols = response]
+    if('total_filter' %in% names(d)){
+      num <- d[which(total_filter==1), sum(.SD, na.rm = TRUE), .SDcols = response]
     } else {
       num <- d[, sum(.SD, na.rm = TRUE), .SDcols = response]
     }
     # get denominator
     if(weight=='N'){
-      if('user_filter' %in% names(d)){
-        den <- sum(d[['user_filter']], na.rm = TRUE)
+      if('total_filter' %in% names(d)){
+        den <- sum(d[['total_filter']], na.rm = TRUE)
       } else {
         den <- nrow(d)
       }
     } else {
-      if('user_filter' %in% names(d)){
-        den <- d[which(user_filter==1), sum(.SD, na.rm = TRUE), .SDcols = weight]
+      if('total_filter' %in% names(d)){
+        den <- d[which(total_filter==1), sum(.SD, na.rm = TRUE), .SDcols = weight]
       } else {
         den <- d[, sum(.SD, na.rm = TRUE), .SDcols = weight]
       }
     }
     paste0('= ', format(num/den, big.mark = ',', digits = 4))
   }
+}
+
+getColumnChoices <- function(d, numerical_cols = FALSE, subset = NULL, special_options = NULL){
+  cols <- NULL
+  if(!is.null(d)){
+    if(ncol(d)>0){
+      if(numerical_cols){
+        cols <- names(d)[which(sapply(d,is.numeric))]
+      } else {
+        cols <- names(d)
+      }
+      if(!is.null(subset)){
+        cols <- setdiff(subset, cols)
+      }
+      if(!is.null(special_options)){
+        cols <- c(special_options, cols)
+      }
+    }
+    
+  }
+  return(cols)
 }

@@ -1,5 +1,7 @@
 globalVariables(c('PostcodeArea',
                   'PostcodeArea_name',
                   'user_filter',
+                  'total_filter',
                   'value',
-                  'count'))
+                  'count',
+                  'response'))

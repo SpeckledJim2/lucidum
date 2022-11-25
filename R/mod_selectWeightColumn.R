@@ -36,7 +36,7 @@ mod_selectWeightColumn_ui <- function(id, label = 'label', ...){
 mod_selectWeightColumn_server <- function(id, d, dt_update, numerical_cols, subset, special_options, kpi, kpi_spec){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    observeEvent(dt_update(), {
+    observeEvent(c(d(), dt_update()), {
       if(nrow(d())>0){
         current_selection <- input$col
         choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
@@ -88,14 +88,14 @@ kpi_numerator_denominator <- function(kpi, kpi_spec){
 weight_text <- function(d, weight){
   if(nrow(d)>0 & weight!=''){
     if(weight=='N'){
-      if('user_filter' %in% names(d)){
-        val <- sum(d[['user_filter']], na.rm = TRUE)
+      if('total_filter' %in% names(d)){
+        val <- sum(d[['total_filter']], na.rm = TRUE)
       } else {
         val <- nrow(d)
       }
     } else {
-      if('user_filter' %in% names(d)){
-        val <- d[which(user_filter==1), sum(.SD, na.rm = TRUE), .SDcols = weight]
+      if('total_filter' %in% names(d)){
+        val <- d[which(total_filter==1), sum(.SD, na.rm = TRUE), .SDcols = weight]
       } else {
         val <- d[, sum(.SD, na.rm = TRUE), .SDcols = weight]
       }

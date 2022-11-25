@@ -72,8 +72,8 @@ get_column_summary <- function(d, sample){
                          countNAs = '')
   } else {
     names_col <- names(d)
-    if('user_filter' %in% names_col){
-      d_filter <- d[which(user_filter==1)]
+    if('total_filter' %in% names_col){
+      d_filter <- d[which(total_filter==1)]
     } else {
       d_filter <- d 
     }
@@ -124,7 +124,7 @@ countNAs <- function(x){
 }
 get_feature_summary <- function(d, col){
   if(col %in% names(d)){
-    x <- d[which(user_filter==1)][[col]]
+    x <- d[which(total_filter==1)][[col]]
     if(is.null(x)){
       # do nothing
     } else if(class(x)[1] %in% c('numeric','logical','integer','POSIXct','Date','IDate')){

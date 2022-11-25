@@ -17,16 +17,17 @@ Imports:
     htmlwidgets,
     leaflet,
     pkgload,
+    plotly,
     sf,
     shiny,
     shinyAce,
+    shinycssloaders,
     shinydashboard,
     shinyWidgets,
     stats,
     utils
 Suggests: 
-    knitr,
-    testthat (>= 3.0.0)
+    knitr
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3

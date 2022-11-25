@@ -13,6 +13,16 @@ app_server <- function(input, output,session) {
   dt_update <- reactiveVal(0)
   d(setDT(golem::get_golem_options('data')))
   
+  # d() contains a data.table
+  # when columns in d are updated by reference, this does not trigger any reactivity
+  # only when d is assigned to a new value (e.g. selecting a new dataset)
+  observeEvent(d(), {
+    if(!is.null(d())){
+      d()[, user_filter := 1]
+      d()[, total_filter := 1]
+    }
+  })
+  
   # load specifications from the golem options
   feature_spec <- reactiveVal()
   filter_spec <- reactiveVal()
@@ -82,7 +92,7 @@ app_server <- function(input, output,session) {
   # module servers
   mod_DevelopaR_server('DevelopaR')
   mod_DataR_server('DataR', d, dt_update)
-  mod_ChartaR_server('ChartaR')
+  mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec)
   mod_BoostaR_server('BoostaR', d, dt_update)
 

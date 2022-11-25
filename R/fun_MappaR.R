@@ -88,7 +88,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
 #' @noRd
 #'
 postcode_summary <- function(d, response, weight, resolution){
-  rows_to_summarise <- d[user_filter==1,which=TRUE]
+  rows_to_summarise <- d[total_filter==1,which=TRUE]
   if(length(rows_to_summarise)==nrow(d)){
     if(weight %in% c('N','no weights')){
       d_cols <- d[, .SD, .SDcols = c(resolution, response)]

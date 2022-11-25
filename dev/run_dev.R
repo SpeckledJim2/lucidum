@@ -1,4 +1,4 @@
-# Set options here
+# Set options her
 options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mode
 
 # Comment this if you don't want the app to be served on a random port
@@ -12,10 +12,11 @@ rm(list=ls(all.names = TRUE))
 golem::document_and_reload()
 
 # load some data
-atlas <- data.table::fread('~/Dropbox/Datasets/Higgs/atlas.csv', stringsAsFactors = TRUE)
+atlas <- data.table::fread('~/Dropbox/Datasets/Higgs/atlas.csv',
+                           stringsAsFactors = TRUE)
 
 # Run the application
-glucidum(data = atlas,
+glucidum(data = insurance,
          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
          feature_spec = 'data-raw/insurance_feature_spec.csv',
          filter_spec = 'data-raw/insurance_filter_spec.csv',

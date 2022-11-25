@@ -12,7 +12,15 @@ mod_defineFilter_ui <- function(id){
   tagList(
     div(
       style = 'margin-top:0px; margin-bottom:-28px; padding-top:0px ; padding-bottom:0px; position:relative',
-      uiOutput(ns('filter_ui')),
+      radioGroupButtons(
+        inputId = ns('train_test_filter'),
+        label = 'Filter (0/0)',
+        choices = c('All','Train','Test'),
+        selected = 'All',
+        justified = TRUE,
+        size = 'xs',
+        width = '100%',
+      )
     ),
     #tags$style(paste0("#",ns('free_filter')," {margin-bottom:-30px;}")),
     #tags$style(paste0("#",ns('filter_list')," {margin-bottom:0px; margin-top:0px;}")),
@@ -80,23 +88,6 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
     ns <- session$ns
     free_filter <- reactiveVal(FALSE)
     stop_update <- reactiveVal(FALSE)
-    
-    # render the TRAIN/TEST buttons if column called 'train_test' is present
-    observeEvent(c(d(), dt_update()), {
-      output$filter_ui <- renderUI({
-        if('train_test' %in% names(d())){
-          radioGroupButtons(
-            inputId = ns('train_test_filter'),
-            label = 'Filter (0/0)',
-            choices = c('All','Train','Test'),
-            selected = 'All',
-            justified = TRUE,
-            size = 'xs',
-            width = '100%',
-          )
-        }
-      })
-    })
 
     observeEvent(dt_update(), {
       if(!stop_update()){
@@ -105,7 +96,7 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
         } else {
           flt <- combine_filters(filters = input$filter_list, input$filter_operation)
         }
-        message <- apply_filter(d(), flt)
+        message <- apply_filter(d(), flt, input$train_test_filter)
         output$message <- renderText({message})
         updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
         free_filter(FALSE)
@@ -115,29 +106,17 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
     observeEvent(input$apply_filter, {
       free_filter(TRUE)
       dt_update(dt_update()+1)
-      message <- apply_filter(d(), input$free_filter)
+      message <- apply_filter(d(), input$free_filter, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
     })
-    observeEvent(c(input$filter_list, input$filter_operation), ignoreInit = TRUE, {
+    observeEvent(c(input$filter_list, input$filter_operation, input$train_test_filter), ignoreInit = TRUE, {
       dt_update(dt_update()+1)
-      if(length(input$filter_list)==0){
-        # nothing selected
-        d()[, user_filter:=1]
-        message <- 'no filter'
-      } else {
-        if(input$filter_list[1]=='no filter'){
-        # no filter
-          d()[, user_filter:=1]
-          message <- 'no filter'
-        } else {
-          filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
-          updateTextInput(inputId = 'free_filter', value = filter_formula)
-          message <- apply_filter(d(), filter_formula)
-        }
-      }
-      updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
+      message <- apply_filter(d(), filter_formula, input$train_test_filter)
       output$message <- renderText({message})
+      updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      updateTextInput(inputId = 'free_filter', value = filter_formula)
       stop_update(TRUE)
     })
     observeEvent(feature_spec(), {
@@ -147,8 +126,8 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
 }
 
 filter_text <- function(d){
-  na_count <- sum(is.na(d[['user_filter']]))
-  rows_in_filter <- format(sum(d[['user_filter']], na.rm = TRUE), big.mark = ',')
+  na_count <- sum(is.na(d[['total_filter']]))
+  rows_in_filter <- format(sum(d[['total_filter']], na.rm = TRUE), big.mark = ',')
   rows <- format(nrow(d), big.mark = ',')
   if(na_count>0){
     na_count <- format(na_count, big.mark = ',')
@@ -159,24 +138,28 @@ filter_text <- function(d){
 
 }
 
-apply_filter <- function(d, filter){
+apply_filter <- function(d, filter, train_test_filter){
   user_filter <- NULL
+  total_filter <- NULL
+  if(is.null(train_test_filter) | 'train_test' %not_in% names(d)){
+    train_test_filter <- 'All'
+  }
   if(nrow(d)>0){
     if(is.null(filter)){
       # no filter
-      d[, user_filter := TRUE]
+      d[, user_filter := 1]
       message <- 'no filter'
     } else {
-      if(filter[[1]]==''){
+      if(filter[[1]] %in% c('','no filter')){
         # no filter
-        d[, user_filter := TRUE]
+        d[, user_filter := 1]
         message <- 'no filter'
       } else {
         f <- tryCatch({d[, eval(parse(text=filter))]}, error = function(e){e})
         if('logical' %in% class(f)){
-          d[, user_filter := f]
+          d[, user_filter := as.numeric(f)]
         } else {
-          d[, user_filter := TRUE]
+          d[, user_filter := 1]
         }
         if('error' %in% class(f)){
           message <- f$message
@@ -190,8 +173,15 @@ apply_filter <- function(d, filter){
         }
       }
     }
-
-  message
+    # make the total filter from the user_filter and train_test
+    if(train_test_filter=='All'){
+      d[, total_filter := user_filter]
+    } else if (train_test_filter=='Train'){
+      d[, total_filter := user_filter*(1-train_test)]
+    } else if (train_test_filter=='Test'){
+      d[, total_filter := user_filter*train_test]
+    }
+    message
   }
 }
 
@@ -217,5 +207,42 @@ combine_filters <- function(filters, operation){
 no_filter <- function(x){
   if(x[[1]]!='no filter'){
     x <- c('no filter', x)
+  }
+}
+
+filter_idx <- function(d, train_test){
+  if(nrow(d)>0){
+    if(is.null(train_test)){
+      if('user_filter' %in% names(d)){
+        idx <- d[user_filter==1, which = TRUE]
+      } else {
+        idx <- 1:nrow(d)
+      }
+    } else if (!('train_test' %in% names(d))){
+      if('user_filter' %in% names(d)){
+        idx <- d[user_filter==1, which = TRUE]
+      } else {
+        idx <- 1:nrow(d)
+      }
+    } else if (train_test == 'All'){
+      if('user_filter' %in% names(d)){
+        idx <- d[user_filter==1, which = TRUE]
+      } else {
+        idx <- 1:nrow(d)
+      }
+    } else if (train_test == 'Train'){
+      if('user_filter' %in% names(d)){
+        idx <- d[user_filter==1 & train_test==0, which = TRUE]
+      } else {
+        idx <- d[train_test==0, which = TRUE]
+      }
+    } else if (train_test == 'Test'){
+      if('user_filter' %in% names(d)){
+        idx <- d[user_filter==1 & train_test==1, which = TRUE]
+      } else {
+        idx <- d[train_test==1, which = TRUE]
+      }
+    }
+    idx
   }
 }
