@@ -11,8 +11,11 @@ rm(list=ls(all.names = TRUE))
 # Document and reload your package
 golem::document_and_reload()
 
+# load some data
+atlas <- data.table::fread('~/Dropbox/Datasets/Higgs/atlas.csv', stringsAsFactors = TRUE)
+
 # Run the application
-glucidum(data = insurance,
+glucidum(data = atlas,
          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
          feature_spec = 'data-raw/insurance_feature_spec.csv',
          filter_spec = 'data-raw/insurance_filter_spec.csv',

@@ -57,20 +57,23 @@ mod_selectResponseColumn_server <- function(id, d, dt_update, numerical_cols, su
       updateSelectInput(inputId = 'col', selected = selected)
     })
     observeEvent(c(input$col, weight(), dt_update()), ignoreInit = TRUE, {
-      if('user_filter' %in% names(d())){
-        if(weight()=='N'){
-          num <- d()[which(user_filter==1), sum(.SD), .SDcols=input$col]
-          den <- d()[, sum(user_filter)]
-          val <- num/den
+      if(input$col %in% names(d()) &
+         weight() %in% c('N', names(d()))){
+        if('user_filter' %in% names(d())){
+          if(weight()=='N'){
+            num <- d()[which(user_filter==1), sum(.SD), .SDcols=input$col]
+            den <- d()[, sum(user_filter)]
+            val <- num/den
+          } else {
+            num <- d()[which(user_filter==1), sum(.SD), .SDcols=input$col]
+            den <- d()[which(user_filter==1), sum(.SD), .SDcols=weight()]
+            val <- num/den
+          }
         } else {
-          num <- d()[which(user_filter==1), sum(.SD), .SDcols=input$col]
-          den <- d()[which(user_filter==1), sum(.SD), .SDcols=weight()]
-          val <- num/den
+          val <- d()[, mean(.SD), .SDcols=input$col]
         }
-      } else {
-        val <- d()[, mean(.SD), .SDcols=input$col]
+        updateSelectInput(inputId = 'col', label = paste0('Response ', response_text(d(), input$col, weight())))
       }
-      updateSelectInput(inputId = 'col', label = paste0('Response ', response_text(d(), input$col, weight())))
     })
     return(reactive({input$col}))
   })
@@ -109,7 +112,7 @@ response_text <- function(d, response, weight){
     # get denominator
     if(weight=='N'){
       if('user_filter' %in% names(d)){
-        den <- sum(d[['user_filter']])
+        den <- sum(d[['user_filter']], na.rm = TRUE)
       } else {
         den <- nrow(d)
       }

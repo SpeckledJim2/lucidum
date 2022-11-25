@@ -12,15 +12,7 @@ mod_defineFilter_ui <- function(id){
   tagList(
     div(
       style = 'margin-top:0px; margin-bottom:-28px; padding-top:0px ; padding-bottom:0px; position:relative',
-      radioGroupButtons(
-        inputId = ns('train_test_filter'),
-        label = 'Filter (0/0)',
-        choices = c('All','Train','Test'),
-        selected = 'All',
-        justified = TRUE,
-        size = 'xs',
-        width = '100%',
-      )
+      uiOutput(ns('filter_ui')),
     ),
     #tags$style(paste0("#",ns('free_filter')," {margin-bottom:-30px;}")),
     #tags$style(paste0("#",ns('filter_list')," {margin-bottom:0px; margin-top:0px;}")),
@@ -88,6 +80,24 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
     ns <- session$ns
     free_filter <- reactiveVal(FALSE)
     stop_update <- reactiveVal(FALSE)
+    
+    # render the TRAIN/TEST buttons if column called 'train_test' is present
+    observeEvent(c(d(), dt_update()), {
+      output$filter_ui <- renderUI({
+        if('train_test' %in% names(d())){
+          radioGroupButtons(
+            inputId = ns('train_test_filter'),
+            label = 'Filter (0/0)',
+            choices = c('All','Train','Test'),
+            selected = 'All',
+            justified = TRUE,
+            size = 'xs',
+            width = '100%',
+          )
+        }
+      })
+    })
+
     observeEvent(dt_update(), {
       if(!stop_update()){
         if(free_filter()){
@@ -137,9 +147,16 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
 }
 
 filter_text <- function(d){
-  rows_in_filter <- format(sum(d[['user_filter']]), big.mark = ',')
+  na_count <- sum(is.na(d[['user_filter']]))
+  rows_in_filter <- format(sum(d[['user_filter']], na.rm = TRUE), big.mark = ',')
   rows <- format(nrow(d), big.mark = ',')
-  paste0('Filter (', rows_in_filter,'/', rows, ')')
+  if(na_count>0){
+    na_count <- format(na_count, big.mark = ',')
+    paste0('Filter (', rows_in_filter,'/', rows, ', ', 'NAs)')
+  } else {
+    paste0('Filter (', rows_in_filter,'/', rows, ')')
+  }
+
 }
 
 apply_filter <- function(d, filter){

@@ -89,7 +89,7 @@ weight_text <- function(d, weight){
   if(nrow(d)>0 & weight!=''){
     if(weight=='N'){
       if('user_filter' %in% names(d)){
-        val <- sum(d[['user_filter']])
+        val <- sum(d[['user_filter']], na.rm = TRUE)
       } else {
         val <- nrow(d)
       }

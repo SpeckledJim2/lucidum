@@ -33,7 +33,7 @@ app_ui <- function(request) {
           div(
             style="margin-left: 6px; margin-right: 14px; margin-top:10px; margin-bottom:-20px;",
             div(
-              selectInput(inputId = "dataset", width = 320, label = NULL, choices = c('insurance','iris','mtcars')), style = 'font-weight: 600')
+              selectInput(inputId = "dataset", width = 320, label = NULL, choices = c('insurance','iris','mtcars','atlas')), style = 'font-weight: 600')
             )
           )
         ),
