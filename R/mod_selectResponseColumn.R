@@ -37,18 +37,20 @@ mod_selectResponseColumn_server <- function(id, d, dt_update, numerical_cols, su
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(c(d(), dt_update()), {
-      if(nrow(d())>0){
-        choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
-        if(input$col %not_in% choices){
-          selected <- choices[[1]]
-        } else {
-          selected <- input$col
+      if(!is.null(d())){
+        if(nrow(d())>0){
+          choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
+          if(input$col %not_in% choices){
+            selected <- choices[[1]]
+          } else {
+            selected <- input$col
+          }
+          updateSelectInput(
+            inputId = 'col',
+            choices = choices,
+            selected = selected
+          )
         }
-        updateSelectInput(
-          inputId = 'col',
-          choices = choices,
-          selected = selected
-        )
       }
     })
     observeEvent(kpi(), {
@@ -136,6 +138,7 @@ getColumnChoices <- function(d, numerical_cols = FALSE, subset = NULL, special_o
       } else {
         cols <- names(d)
       }
+      cols <- sort(cols)
       if(!is.null(subset)){
         cols <- setdiff(subset, cols)
       }

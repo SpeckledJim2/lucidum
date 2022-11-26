@@ -5,14 +5,16 @@
 #' @importFrom DT datatable renderDT
 app_server <- function(input, output,session) {
 
+  init_lucidum(session, golem::get_golem_options('data'))  
   # d is the dataset being analysed by lucidum
   # the golem option 'data' specifies the dataset
   # dt_update is used to trigger reactivity when d is changed
   # required because d is a data.table and can be changed by reference
-  d <- reactiveVal(data.table::data.table())
+  d <- reactiveVal()
   dt_update <- reactiveVal(0)
-  d(setDT(golem::get_golem_options('data')))
-  
+  #d(setDT(golem::get_golem_options('data')))
+  d(load_dataset(golem::get_golem_options('data')))
+
   # d() contains a data.table
   # when columns in d are updated by reference, this does not trigger any reactivity
   # only when d is assigned to a new value (e.g. selecting a new dataset)
@@ -24,9 +26,9 @@ app_server <- function(input, output,session) {
   })
   
   # load specifications from the golem options
+  kpi_spec <- reactiveVal()
   feature_spec <- reactiveVal()
   filter_spec <- reactiveVal()
-  kpi_spec <- reactiveVal()
   kpi_spec(load_specification(golem::get_golem_options('kpi_spec'), 'kpi'))
   filter_spec(load_specification(golem::get_golem_options('filter_spec'), 'filter'))
   feature_spec(load_specification(golem::get_golem_options('feature_spec'), 'feature'))
@@ -47,12 +49,14 @@ app_server <- function(input, output,session) {
   showModule(output, 'MappaR', 'map', golem::get_golem_options('show_MappaR'))
   showModule(output, 'BoostaR', 'rocket', golem::get_golem_options('show_BoostaR'))
   showModule(output, 'GlimmaR', 'star', golem::get_golem_options('show_GlimmaR'))
-  updateTabItems(session, 'tabs', 'DataR')
+  updateTabItems(session, 'tabs', 'Specs')
   
   # header servers
   observeEvent(input$dataset, ignoreInit = TRUE, {
-    d(setDT(get(input$dataset)))
-    dt_update(dt_update()+1)
+    if(input$dataset %not_in% c('loaded from .csv file', 'choose dataset','user supplied dataset')){
+      d(setDT(get(input$dataset)))
+      dt_update(dt_update()+1)
+    }
   })
   observeEvent(nav_options, {
     output$selection_text <- renderText({
@@ -90,7 +94,7 @@ app_server <- function(input, output,session) {
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
   # tab servers
-  mod_DevelopaR_server('DevelopaR')
+  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, feature_spec, filter_spec)
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec)

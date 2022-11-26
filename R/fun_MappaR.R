@@ -68,7 +68,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
                              smoothFactor = 0,
                              fillColor = area_fillColor,
                              fillOpacity = map_options$opacity * opacity_area_modifier,
-                             label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',areas_sf$area_plot), HTML),
+                             label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',signif(areas_sf$area_plot,6)), HTML),
                              labelOptions = labelOptions(textOnly = FALSE, style=label_style),
                              highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
                              options = pathOptions(pane = "area_polygons")

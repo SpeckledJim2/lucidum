@@ -144,44 +144,47 @@ apply_filter <- function(d, filter, train_test_filter){
   if(is.null(train_test_filter) | 'train_test' %not_in% names(d)){
     train_test_filter <- 'All'
   }
-  if(nrow(d)>0){
-    if(is.null(filter)){
-      # no filter
-      d[, user_filter := 1]
-      message <- 'no filter'
-    } else {
-      if(filter[[1]] %in% c('','no filter')){
+  if(!is.null(d)){
+    message <- 'no filter'
+    if(nrow(d)>0){
+      if(is.null(filter)){
         # no filter
         d[, user_filter := 1]
         message <- 'no filter'
       } else {
-        f <- tryCatch({d[, eval(parse(text=filter))]}, error = function(e){e})
-        if('logical' %in% class(f)){
-          d[, user_filter := as.numeric(f)]
-        } else {
+        if(filter[[1]] %in% c('','no filter')){
+          # no filter
           d[, user_filter := 1]
-        }
-        if('error' %in% class(f)){
-          message <- f$message
-          loc_start <- gregexpr('is a single symbol but column name',message)
-          loc_end <- gregexpr('is not found',message)
-          if(loc_start>0){
-            message <- paste0(substring(message, loc_start[[1]]+35, loc_end[[1]]-1), 'not found')
-          }
+          message <- 'no filter'
         } else {
-          message <- filter
+          f <- tryCatch({d[, eval(parse(text=filter))]}, error = function(e){e})
+          if('logical' %in% class(f)){
+            d[, user_filter := as.numeric(f)]
+          } else {
+            d[, user_filter := 1]
+          }
+          if('error' %in% class(f)){
+            message <- f$message
+            loc_start <- gregexpr('is a single symbol but column name',message)
+            loc_end <- gregexpr('is not found',message)
+            if(loc_start>0){
+              message <- paste0(substring(message, loc_start[[1]]+35, loc_end[[1]]-1), 'not found')
+            }
+          } else {
+            message <- filter
+          }
         }
       }
+      # make the total filter from the user_filter and train_test
+      if(train_test_filter=='All'){
+        d[, total_filter := user_filter]
+      } else if (train_test_filter=='Train'){
+        d[, total_filter := user_filter*(1-train_test)]
+      } else if (train_test_filter=='Test'){
+        d[, total_filter := user_filter*train_test]
+      }
+      message
     }
-    # make the total filter from the user_filter and train_test
-    if(train_test_filter=='All'){
-      d[, total_filter := user_filter]
-    } else if (train_test_filter=='Train'){
-      d[, total_filter := user_filter*(1-train_test)]
-    } else if (train_test_filter=='Test'){
-      d[, total_filter := user_filter*train_test]
-    }
-    message
   }
 }
 

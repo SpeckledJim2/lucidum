@@ -18,7 +18,7 @@ app_ui <- function(request) {
     # List the first level UI elements here 
     dashboardPage(
       dashboardHeader(
-        title = span(tagList(tags$img(src='www/favicon.ico', height='48px', width='48px'),'')),
+        title = span(tagList(tags$img(src='www/dashboard_title.png', height='40px', width='220px'),'')),
         titleWidth = 250,
         # controls placed in the header
         insertDashboardHeader(div('Models', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px;margin-right: 10px')),
@@ -34,7 +34,7 @@ app_ui <- function(request) {
           div(
             style="margin-left: 6px; margin-right: 14px; margin-top:10px; margin-bottom:-20px;",
             div(
-              selectInput(inputId = "dataset", width = 320, label = NULL, choices = c('insurance','iris','mtcars','atlas')), style = 'font-weight: 600')
+              selectInput(inputId = "dataset", width = 320, label = NULL, choices = NULL), style = 'font-weight: 600')
             )
           )
         ),

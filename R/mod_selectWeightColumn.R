@@ -37,18 +37,20 @@ mod_selectWeightColumn_server <- function(id, d, dt_update, numerical_cols, subs
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(c(d(), dt_update()), {
-      if(nrow(d())>0){
-        current_selection <- input$col
-        choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
-        selected <- input$col
-        if(selected %not_in% choices){
-          selected <- choices[[1]]
+      if(!is.null(d())){
+        if(nrow(d())>0){
+          current_selection <- input$col
+          choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
+          selected <- input$col
+          if(selected %not_in% choices){
+            selected <- choices[[1]]
+          }
+          updateSelectInput(
+            inputId = 'col',
+            choices = choices,
+            selected = selected
+          )
         }
-        updateSelectInput(
-          inputId = 'col',
-          choices = choices,
-          selected = selected
-        )
       }
     })
     observeEvent(kpi(), {
@@ -57,7 +59,9 @@ mod_selectWeightColumn_server <- function(id, d, dt_update, numerical_cols, subs
       updateSelectInput(inputId = 'col', selected = selected)
     })
     observeEvent(c(input$col, dt_update()), {
-      updateSelectInput(inputId = 'col', label = paste0('Weight ', weight_text(d(), input$col)))
+      if(!is.null(d())){
+        updateSelectInput(inputId = 'col', label = paste0('Weight ', weight_text(d(), input$col)))
+      }
     })
     return(reactive({input$col}))
   })

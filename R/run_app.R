@@ -17,18 +17,18 @@
 #' @importFrom shiny shinyApp
 #' @importFrom golem with_golem_options
 glucidum <- function(data=NULL,
-                    BoostaR_models = NULL,
-                    GlimmaR_models = NULL,
-                    kpi_spec = NULL,
-                    filter_spec = NULL,
-                    feature_spec = NULL,
-                    show_DataR = TRUE,
-                    show_ChartaR = TRUE,
-                    show_MappaR = TRUE,
-                    show_BoostaR = TRUE,
-                    show_GlimmaR = TRUE,
-                    show_DevelopaR = TRUE
-                    ) {
+                     BoostaR_models = NULL,
+                     GlimmaR_models = NULL,
+                     kpi_spec = NULL,
+                     filter_spec = NULL,
+                     feature_spec = NULL,
+                     show_DataR = TRUE,
+                     show_ChartaR = TRUE,
+                     show_MappaR = TRUE,
+                     show_BoostaR = TRUE,
+                     show_GlimmaR = TRUE,
+                     show_DevelopaR = TRUE
+                     ) {
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
     golem_opts = list(data=data,
