@@ -41,8 +41,64 @@ mod_DevelopaR_ui <- function(id){
                          tags$hr(style="border-color: black; margin-bottom: 6px"),
                          mod_editSpecification_ui(ns('kpi'))
                          ),
-                tabPanel(value = 'Feature specification', title = span(tagList(icon('list'), 'Feature specification')), br()),
-                tabPanel(value = 'Filter specification', title = span(tagList(icon('filter'), 'Filter specification')), br()),
+                tabPanel(value = 'Feature specification', title = span(tagList(icon('list'), 'Feature specification')),
+                         br(),
+                         fluidRow(
+                           column(
+                             width = 4,
+                             div(
+                               p("Use the feature specification to define feature groupings
+                                       and set GlimmaR model export base levels and bandings")
+                             ),
+                             style = 'font-size: 20px; font-weight: 400'
+                           ),
+                           column(
+                             width = 8,
+                             div(
+                               p('feature: the name of the KPI', style = 'margin: 0 0 0 0'),
+                               p('base_level: level set to 1.000 in GlimmaR table export', style = 'margin: 0 0 0 0'),
+                               p('min: minimum value for continuous features', style = 'margin: 0 0 0 0'),
+                               p('max: maximum value for continuous features', style = 'margin: 0 0 0 0'),
+                               p('banding: banding for continuous features', style = 'margin: 0 0 0 0'),
+                               p('monotonicity: for BoostaR models', style = 'margin: 0 0 0 0'),
+                               p('interaction_grouping: for feature selection', style = 'margin: 0 0 0 0'),
+                               p('use subsequent columns to define feature scenarios for BoostaR models with the word "feature"', style = 'margin: 0 0 0 0')
+                             ),
+                             style = 'font-size: 12px; font-weight: 400;'
+                           )
+                         ),
+                         tags$hr(style="border-color: black; margin-bottom: 6px"),
+                         mod_editSpecification_ui(ns('feature'))
+                         ),
+                tabPanel(value = 'Filter specification', title = span(tagList(icon('filter'), 'Filter specification')),
+                         br(),
+                         fluidRow(
+                           column(
+                             width = 4,
+                             div(
+                               p("Use the filter specification to define filters to apply to charts and tables")
+                             ),
+                             style = 'font-size: 20px; font-weight: 400'
+                           ),
+                           column(
+                             width = 8,
+                             div(
+                               p('the filter expression is an R statement', style = 'margin: 0 0 0 0'),
+                               p('that evaluates to TRUE/FALSE or 1/0', style = 'margin: 0 0 0 0'),
+                               p('using the dataset column names', style = 'margin: 0 0 0 0'),
+                               p('e.g. my_column>5 or my_column=="my_text"', style = 'margin: 0 0 0 0'),
+                               p('use == for equality', style = 'margin: 0 0 0 0'),
+                               p('use & for logical AND', style = 'margin: 0 0 0 0'),
+                               p('use | for logical OR', style = 'margin: 0 0 0 0'),
+                               p(' ', style = 'margin: 0 0 0 0'),
+                               p(' ', style = 'margin: 0 0 0 0')
+                             ),
+                             style = 'font-size: 12px; font-weight: 400;'
+                           )
+                         ),
+                         tags$hr(style="border-color: black; margin-bottom: 6px"),
+                         mod_editSpecification_ui(ns('filter'))
+                         ),
                 tabPanel(value = 'shinyAce', title = span(tagList(icon('chevron-right'), 'shinyAce')),
                          fluidRow(
                            column(
@@ -145,16 +201,22 @@ mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, featur
       updateAceEditor(session, editorId = 'shinyAce_code', fontSize = shinyAce_text_size())
     })
     updated_kpi_spec <- mod_editSpecification_server('kpi', kpi_spec, type = 'kpi')
+    updated_filter_spec <- mod_editSpecification_server('filter', filter_spec, type = 'filter')
+    updated_feature_spec <- mod_editSpecification_server('feature', feature_spec, type = 'feature')
     observeEvent(updated_kpi_spec(), {
       if(!identical(kpi_spec(), updated_kpi_spec())){
         kpi_spec(updated_kpi_spec())
       }
     })
+    observeEvent(updated_filter_spec(), {
+      if(!identical(filter_spec(), updated_filter_spec())){
+        filter_spec(updated_filter_spec())
+      }
+    })
+    observeEvent(updated_feature_spec(), {
+      if(!identical(feature_spec(), updated_feature_spec())){
+        feature_spec(updated_feature_spec())
+      }
+    })
   })
 }
-    
-## To be copied in the UI
-# mod_DevelopaR_ui("DevelopaR_1")
-    
-## To be copied in the server
-# mod_DevelopaR_server("DevelopaR_1")

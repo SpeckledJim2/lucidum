@@ -13,12 +13,11 @@ golem::document_and_reload()
 
 # Run the application
 glucidum(
-         data = '~/Dropbox/lucidum support/lucidum training/Dataset for training video/insurance.csv',
-         #data = insurance,
+         #data = '~/Dropbox/lucidum support/lucidum training/Dataset for training video/insurance.csv',
+         data = insurance,
          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
          feature_spec = 'data-raw/insurance_feature_spec.csv',
          filter_spec = 'data-raw/insurance_filter_spec.csv',
          show_GlimmaR = F,
          show_BoostaR = F)
-
 

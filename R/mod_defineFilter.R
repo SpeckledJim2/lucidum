@@ -83,7 +83,7 @@ mod_defineFilter_ui <- function(id){
 #' defineFilter Server Functions
 #'
 #' @noRd 
-mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
+mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     free_filter <- reactiveVal(FALSE)
@@ -116,11 +116,16 @@ mod_defineFilter_server <- function(id, d, dt_update, feature_spec){
       message <- apply_filter(d(), filter_formula, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
-      updateTextInput(inputId = 'free_filter', value = filter_formula)
+      if(filter_formula=='no filter'){
+        updateTextInput(inputId = 'free_filter', value = '')
+      } else {
+        updateTextInput(inputId = 'free_filter', value = filter_formula)
+      }
+
       stop_update(TRUE)
     })
-    observeEvent(feature_spec(), {
-      updateSelectInput(inputId = 'filter_list', choices = no_filter(feature_spec()[[1]]))
+    observeEvent(filter_spec(), {
+      updateSelectInput(inputId = 'filter_list', choices = no_filter(filter_spec()[[1]]))
     })
   })
 }
@@ -211,6 +216,7 @@ no_filter <- function(x){
   if(x[[1]]!='no filter'){
     x <- c('no filter', x)
   }
+  x
 }
 
 filter_idx <- function(d, train_test){
