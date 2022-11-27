@@ -24,16 +24,16 @@ mod_buildBoostaR_ui <- function(id){
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
             dropdownButton(
-              inputId = 'BoostaR_fics_dropdown',
+              inputId = ns('BoostaR_fics_dropdown'),
               right = TRUE,
               up = FALSE,
               circle = FALSE,
               label = 'Custom',
               margin = "20px",
               inline = TRUE,
-              checkboxInput(inputId = "BoostaR_use_custom_interaction_constraints",label = "Apply custom feature interaction constraints", value = FALSE),
+              checkboxInput(inputId = ns('BoostaR_use_custom_interaction_constraints'),label = "Apply custom feature interaction constraints", value = FALSE),
               textAreaInput(
-                inputId = 'BoostaR_custom_interaction_constraints',
+                inputId = ns('BoostaR_custom_interaction_constraints'),
                 value =
                   '# separate features with "x"
 # any features selected for the model
@@ -51,7 +51,7 @@ mod_buildBoostaR_ui <- function(id){
           column(
             width = 6,
             selectInput(
-              'BoostaR_feature_specification',
+              ns('BoostaR_feature_specification'),
               label = 'Feature specification',
               size = 10,
               selectize = FALSE,
@@ -62,7 +62,7 @@ mod_buildBoostaR_ui <- function(id){
           column(
             width = 6,
             selectInput(
-              inputId = 'BoostaR_interaction_contraints',
+              inputId = ns('BoostaR_interaction_contraints'),
               label = 'Feature interaction constraints',
               size = 10,
               multiple = TRUE,
@@ -75,35 +75,35 @@ mod_buildBoostaR_ui <- function(id){
         fluidRow(
           column(
             width = 5,
-            htmlOutput('BoostaR_num_features')
+            htmlOutput(ns('BoostaR_num_features'))
           ),
           column(
             width = 7,
             align = 'right',
             style='margin-top:16px; padding-bottom:0px',
             actionButton(
-              inputId = "BoostaR_add_features",
+              inputId = ns("BoostaR_add_features"),
               label = 'all',
               icon = icon("plus-circle")
             ),
             actionButton(
-              inputId = "BoostaR_clear_features",
+              inputId = ns("BoostaR_clear_features"),
               label = 'all',
               icon = icon("minus-circle")
             ),
             actionButton(
-              inputId = "BoostaR_clear_interaction_groups",
+              inputId = ns("BoostaR_clear_interaction_groups"),
               label = 'int groups',
               icon = icon("minus-circle")
             ),
             actionButton(
-              inputId = "BoostaR_goto_ChartaR",
+              inputId = ns("BoostaR_goto_ChartaR"),
               icon = icon('chart-line'),
               label = NULL
             )
           )
         ),
-        div(rhandsontable::rHandsontableOutput("BoostaR_features"), style = 'font-size: 12px')
+        div(rHandsontableOutput(ns("BoostaR_features")), style = 'font-size: 12px')
       ),
       column(
         width = 6,
@@ -117,7 +117,7 @@ mod_buildBoostaR_ui <- function(id){
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
             dropdownButton(
-              inputId = 'BoostaR_additional_options',
+              inputId = ns('BoostaR_additional_options'),
               right = TRUE,
               up = FALSE,
               circle = FALSE,
@@ -125,7 +125,7 @@ mod_buildBoostaR_ui <- function(id){
               margin = "20px",
               inline = TRUE,
               textAreaInput(
-                inputId = 'BoostaR_additional_parameters',
+                inputId = ns('BoostaR_additional_parameters'),
                 value =
                   '#boosting: gbdt
 #objective: gamma
@@ -244,7 +244,7 @@ mod_buildBoostaR_ui <- function(id){
               )
             ),
             actionButton(
-              inputId = "BoostaR_build_model",
+              inputId = ns("BoostaR_build_model"),
               icon = icon("chevron-right"),
               label = 'Build',
               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left'
@@ -258,14 +258,14 @@ mod_buildBoostaR_ui <- function(id){
               column(
                 width = 7,
                 textInput(
-                  'BoostaR_num_rounds',
+                  ns('BoostaR_num_rounds'),
                   'Max rounds',
                   value = 100)
               ),
               column(
                 width = 5,
                 textInput(
-                  'BoostaR_early_stopping',
+                  ns('BoostaR_early_stopping'),
                   'Stopping',
                   value = 20)
               )
@@ -274,7 +274,7 @@ mod_buildBoostaR_ui <- function(id){
               column(
                 width = 7,
                 radioGroupButtons(
-                  inputId = 'BoostaR_grid_search',
+                  inputId = ns('BoostaR_grid_search'),
                   label = 'Grid search',
                   width = '100%',
                   justified = TRUE,
@@ -284,7 +284,7 @@ mod_buildBoostaR_ui <- function(id){
               ),
               column(width = 5,
                      textInput(
-                       'BoostaR_grid_combinations',
+                       ns('BoostaR_grid_combinations'),
                        'Combinations',
                        value = 100
                      )
@@ -294,7 +294,7 @@ mod_buildBoostaR_ui <- function(id){
               column(
                 width = 12,
                 selectInput(
-                  inputId = 'BoostaR_objective',
+                  inputId = ns('BoostaR_objective'),
                   width = '100%',
                   label = 'Objective function',
                   choices = list('identity link' = list('mean_squared_error',
@@ -310,14 +310,14 @@ mod_buildBoostaR_ui <- function(id){
                 ),
                 div(style = "margin-top:-6px"),
                 selectInput(
-                  inputId = 'BoostaR_initial_score',
+                  inputId = ns('BoostaR_initial_score'),
                   width = '100%',
                   label = 'Initial score (response scale offset)',
                   choices = c('no offset')
                 ),
                 div(style = "margin-top:-6px"),
                 radioGroupButtons(
-                  inputId = 'BoostaR_calculate_SHAP_values',
+                  inputId = ns('BoostaR_calculate_SHAP_values'),
                   label = 'Calculate SHAP values',
                   width = '100%',
                   justified = TRUE,
@@ -329,15 +329,15 @@ mod_buildBoostaR_ui <- function(id){
           ),
           column(
             width = 6,
-            uiOutput('BoostaR_learning_rate_UI'),
+            uiOutput(ns('BoostaR_learning_rate_UI')),
             div(style = "margin-top:-10px"),
-            uiOutput('BoostaR_num_leaves_UI'),
+            uiOutput(ns('BoostaR_num_leaves_UI')),
             div(style = "margin-top:-10px"),
-            uiOutput('BoostaR_max_depth_UI'),
+            uiOutput(ns('BoostaR_max_depth_UI')),
             div(style = "margin-top:-10px"),
-            uiOutput('BoostaR_column_sample_rate_UI'),
+            uiOutput(ns('BoostaR_column_sample_rate_UI')),
             div(style = "margin-top:-10px"),
-            uiOutput('BoostaR_row_sample_rate_UI'),
+            uiOutput(ns('BoostaR_row_sample_rate_UI')),
           )
         ),
         fluidRow(
@@ -345,7 +345,7 @@ mod_buildBoostaR_ui <- function(id){
             width = 12,
             div(style = "margin-top:-15px; padding-top:0px"),
             h3('Evaluation log'),
-            plotly::plotlyOutput('BoostaR_evaluation_plot'),
+            plotlyOutput(ns('BoostaR_evaluation_plot')),
             tags$head(tags$script('
                                             // Define function to set height of "BoostaR_evaluation_plot"
                                             setHeight_BoostaR_evaluation_plot = function() {

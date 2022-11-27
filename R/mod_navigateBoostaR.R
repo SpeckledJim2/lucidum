@@ -8,13 +8,14 @@
 #'
 #' @importFrom shiny NS tagList 
 #' @importFrom DiagrammeR grVizOutput
+#' @importFrom DT DTOutput
 mod_navigateBoostaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
       column(
         width = 12,
-        DT::DTOutput('BoostaR_model_summary')
+        DTOutput(ns('BoostaR_model_summary'))
       )
     ),
     br(),
@@ -24,7 +25,7 @@ mod_navigateBoostaR_ui <- function(id){
         fluidRow(
           column(
             width = 12,
-            sliderInput("BoostaR_tree_selector",
+            sliderInput(ns("BoostaR_tree_selector"),
                         width = '100%',
                         label = NULL,
                         min = 0,
@@ -36,7 +37,7 @@ mod_navigateBoostaR_ui <- function(id){
             )
           )
         ),
-        grVizOutput("BoostaR_tree_diagram", width = '100%', height = '400px')
+        grVizOutput(ns("BoostaR_tree_diagram"), width = '100%', height = '400px')
       ),
       column(
         width = 6,
@@ -44,7 +45,7 @@ mod_navigateBoostaR_ui <- function(id){
           column(
             width = 2,
             actionButton(
-              inputId = "BoostaR_gain_table_goto_ChartaR",
+              inputId = ns("BoostaR_gain_table_goto_ChartaR"),
               icon = icon('chart-line'),
               label = ''
             )
@@ -52,7 +53,7 @@ mod_navigateBoostaR_ui <- function(id){
           column(
             width = 6,
             textInput(
-              'BoostaR_search_gain_table',
+              ns('BoostaR_search_gain_table'),
               label = NULL,
               width = '100%',
               placeholder = 'select feature'
@@ -61,8 +62,8 @@ mod_navigateBoostaR_ui <- function(id){
           column(
             width = 4,
             align = 'right',
-            shinyFiles::shinySaveButton(
-              id = 'BoostaR_save_model',
+            shinySaveButton(
+              id = ns('BoostaR_save_model'),
               label = 'Save LGBM',
               title = 'Save LightGBM model',
               filename = "",
@@ -73,7 +74,7 @@ mod_navigateBoostaR_ui <- function(id){
             )
           )
         ),
-        DT::DTOutput('BoostaR_gain_summary')
+        DTOutput(ns('BoostaR_gain_summary'))
       )
     )
   )

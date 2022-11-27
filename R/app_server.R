@@ -63,6 +63,14 @@ app_server <- function(input, output,session) {
       paste0('dt_update: ', dt_update())
     })
   })
+  observeEvent(input$GoTo_BoostaR, {
+    updateTabItems(session, inputId = 'tabs', selected = 'BoostaR')
+    updateNavbarPage(session = session, inputId = "BoostaR-tabsetPanel", selected = 'Model navigator')
+  })
+  observeEvent(input$GoTo_GlimmaR, {
+    updateTabItems(session, inputId = 'tabs', selected = 'GlimmaR')
+    updateNavbarPage(session = session, inputId = "GlimmaR-tabsetPanel", selected = 'Model navigator')
+  })
   observeEvent(input$GoTo_kpi_spec, {
     updateTabItems(session, inputId = 'tabs', selected = 'Specs')
     updateNavbarPage(session = session, inputId = "DevelopaR-tabsetPanel", selected = 'KPI specification')

@@ -11,10 +11,10 @@ mod_BoostaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = 'BoostaR_tabsetPanel',
-                tabPanel(span(tagList(icon('bars'), 'Features and parameters')),
+                tabPanel(value = 'Features and parameters', span(tagList(icon('bars'), 'Features and parameters')),
                          mod_buildBoostaR_ui(ns('buildBoostaR'))
                          ),
-                tabPanel(span(tagList(icon('table-columns'), 'Model navigator')),
+                tabPanel(value = 'Model navigator', span(tagList(icon('table-columns'), 'Model navigator')),
                          mod_navigateBoostaR_ui(ns('navigateBoostaR'))
                          )
     ),
