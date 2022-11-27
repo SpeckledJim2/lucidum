@@ -5,9 +5,9 @@ account: hanoverian
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7673982
-bundleId: 6559169
+bundleId: 6559451
 url: https://hanoverian.shinyapps.io/glucidum/
-when: 1669553749.13844
-lastSyncTime: 1669553749.13845
+when: 1669564956.75658
+lastSyncTime: 1669564956.75659
 asMultiple: FALSE
 asStatic: FALSE

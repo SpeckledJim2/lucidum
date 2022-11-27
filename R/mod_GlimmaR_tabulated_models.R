@@ -7,7 +7,7 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_tabulatedGlimmaR_ui <- function(id){
+mod_GlimmaR_tabulated_models_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -53,7 +53,7 @@ mod_tabulatedGlimmaR_ui <- function(id){
 #' tabulatedGlimmaR Server Functions
 #'
 #' @noRd 
-mod_tabulatedGlimmaR_server <- function(id){
+mod_GlimmaR_tabulated_models_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
  

@@ -49,7 +49,7 @@ app_server <- function(input, output,session) {
   showModule(output, 'MappaR', 'map', golem::get_golem_options('show_MappaR'))
   showModule(output, 'BoostaR', 'rocket', golem::get_golem_options('show_BoostaR'))
   showModule(output, 'GlimmaR', 'star', golem::get_golem_options('show_GlimmaR'))
-  updateTabItems(session, 'tabs', 'Specs')
+  updateTabItems(session, 'tabs', 'DataR')
   
   # header servers
   observeEvent(input$dataset, ignoreInit = TRUE, {

@@ -8,7 +8,7 @@
 #'
 #' @importFrom shiny NS tagList 
 #' @importFrom DT DTOutput
-mod_navigateGlimmaR_ui <- function(id){
+mod_GlimmaR_navigate_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -23,7 +23,7 @@ mod_navigateGlimmaR_ui <- function(id){
 #' navigateGlimmaR Server Functions
 #'
 #' @noRd 
-mod_navigateGlimmaR_server <- function(id){
+mod_GlimmaR_navigate_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
  

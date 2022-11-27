@@ -7,7 +7,7 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_buildGlimmaR_ui <- function(id){
+mod_GlimmaR_build_model_ui <- function(id){
   ns <- NS(id)
   tagList(
     absolutePanel(id = ns("GlimmaR_helper_panel"),
@@ -286,7 +286,7 @@ mod_buildGlimmaR_ui <- function(id){
 #' buildGlimmaR Server Functions
 #'
 #' @noRd 
-mod_buildGlimmaR_server <- function(id){
+mod_GlimmaR_build_model_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
  

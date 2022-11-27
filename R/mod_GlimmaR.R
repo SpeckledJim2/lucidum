@@ -12,13 +12,13 @@ mod_GlimmaR_ui <- function(id){
   tagList(
     tabsetPanel(id = 'GlimmaR_tabsetPanel',
                 tabPanel(span(tagList(icon('bars'), 'Model formula')),
-                         mod_buildGlimmaR_ui(ns('buildGlimmaR'))
+                         mod_GlimmaR_build_model_ui(ns('buildGlimmaR'))
                          ),
                 tabPanel(span(tagList(icon('bars'), 'Tabulated models')),
-                         mod_tabulatedGlimmaR_ui(ns('tabulatedGlimmaR'))
+                         mod_GlimmaR_tabulated_models_ui(ns('tabulatedGlimmaR'))
                          ),
                 tabPanel(span(tagList(icon('table-columns'), 'Model navigator')),
-                         mod_navigateGlimmaR_ui(ns('navigateGlimmaR'))
+                         mod_GlimmaR_navigate_ui(ns('navigateGlimmaR'))
                          )
     ),
   )

@@ -8,7 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 #' @importFrom shinyWidgets dropdownButton
-mod_buildBoostaR_ui <- function(id){
+mod_BoostaR_build_model_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -373,7 +373,7 @@ mod_buildBoostaR_ui <- function(id){
 #' buildBoostaR Server Functions
 #'
 #' @noRd 
-mod_buildBoostaR_server <- function(id){
+mod_BoostaR_build_model_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
  

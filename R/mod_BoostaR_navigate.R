@@ -9,7 +9,7 @@
 #' @importFrom shiny NS tagList 
 #' @importFrom DiagrammeR grVizOutput
 #' @importFrom DT DTOutput
-mod_navigateBoostaR_ui <- function(id){
+mod_BoostaR_navigate_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -83,7 +83,7 @@ mod_navigateBoostaR_ui <- function(id){
 #' navigateBoostaR Server Functions
 #'
 #' @noRd 
-mod_navigateBoostaR_server <- function(id){
+mod_BoostaR_navigate_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
  

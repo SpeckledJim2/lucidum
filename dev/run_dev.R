@@ -12,9 +12,7 @@ golem::detach_all_attached()
 golem::document_and_reload()
 
 # Run the application
-glucidum(
-         #data = '~/Dropbox/lucidum support/lucidum training/Dataset for training video/insurance.csv',
-         data = insurance,
+glucidum(data = insurance,
          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
          feature_spec = 'data-raw/insurance_feature_spec.csv',
          filter_spec = 'data-raw/insurance_filter_spec.csv')
