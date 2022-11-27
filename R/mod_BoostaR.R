@@ -10,13 +10,14 @@
 mod_BoostaR_ui <- function(id){
   ns <- NS(id)
   tagList(
-    h2('BoostaR'),
-    fluidRow(
-      column(
-        width = 12,
-        actionButton(inputId=ns('add_col'), label = 'add_col'),
-      )
-    )
+    tabsetPanel(id = 'BoostaR_tabsetPanel',
+                tabPanel(span(tagList(icon('bars'), 'Features and parameters')),
+                         mod_buildBoostaR_ui(ns('buildBoostaR'))
+                         ),
+                tabPanel(span(tagList(icon('table-columns'), 'Model navigator')),
+                         mod_navigateBoostaR_ui(ns('navigateBoostaR'))
+                         )
+    ),
   )
 }
     

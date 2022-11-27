@@ -1,4 +1,4 @@
-# Set options her
+# Set options here
 options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mode
 
 # Comment this if you don't want the app to be served on a random port
@@ -17,7 +17,5 @@ glucidum(
          data = insurance,
          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
          feature_spec = 'data-raw/insurance_feature_spec.csv',
-         filter_spec = 'data-raw/insurance_filter_spec.csv',
-         show_GlimmaR = F,
-         show_BoostaR = F)
+         filter_spec = 'data-raw/insurance_filter_spec.csv')
 
