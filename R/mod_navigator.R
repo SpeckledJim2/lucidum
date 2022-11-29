@@ -114,8 +114,4 @@ nav_label <- function(type, kpi_spec, BoostaR_models, GlimmaR_models){
   return(list(label=paste0(type,'s (',n,')'), icon=icon))
 }
 
-## To be copied in the UI
-# mod_navigator_ui("navigator_1")
-    
-## To be copied in the server
-# mod_navigator_server("navigator_1")
+

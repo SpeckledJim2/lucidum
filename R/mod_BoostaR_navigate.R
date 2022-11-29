@@ -141,11 +141,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
       # tree diagram
       if(length(BoostaR_models())>0){
         model_index <- BoostaR_idx()
-        # QUESTION - why doesn't this line trigger (or return an error)?
-        # the max on the SliderInput never gets updated
-        # even though I have namespaced the inputId
-        # works fine in old project without namespacing
-        updateSliderInput(session, inputId = ns('BoostaR_tree_selector'), max = BoostaR_models()[[model_index]]$lgbm$best_iter-1)
+        updateSliderInput(session, inputId = 'BoostaR_tree_selector', max = BoostaR_models()[[model_index]]$lgbm$best_iter-1)
         if(!is.na(model_index)){
           if(model_index %in% names(BoostaR_models())){
             tree_index <- NULL
@@ -177,7 +173,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
             } else {
               first_tree <- tree_table[which.max(match_rows)][['tree_index']]
             }
-            updateSliderInput(session, ns('BoostaR_tree_selector'), value = first_tree)
+            updateSliderInput(session, inputId = 'BoostaR_tree_selector', value = first_tree)
           }
           # limit number of rows
           n_rows <- pmin(1000, nrow(gain_summary))

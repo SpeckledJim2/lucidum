@@ -12,11 +12,11 @@ rm(list=ls(all.names = TRUE))
 golem::document_and_reload()
 
 # Run the application
-glucidum(insurance)
-# glucidum(data = insurance,
-#          starting_tab = 'BoostaR',
-#          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
-#          feature_spec = 'data-raw/insurance_feature_spec.csv',
-#          filter_spec = 'data-raw/insurance_filter_spec.csv')
+#glucidum(insurance)
+glucidum(data = insurance,
+         starting_tab = 'BoostaR',
+         kpi_spec = 'data-raw/insurance_kpi_spec.csv',
+         feature_spec = 'data-raw/insurance_feature_spec.csv',
+         filter_spec = 'data-raw/insurance_filter_spec.csv')
 
 
