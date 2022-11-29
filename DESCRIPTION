@@ -18,6 +18,7 @@ Imports:
     grDevices,
     htmlwidgets,
     leaflet,
+    lightgbm,
     pkgload,
     plotly,
     rhandsontable,
@@ -29,9 +30,11 @@ Imports:
     shinyFiles,
     shinyWidgets,
     stats,
+    stringr,
     utils
 Suggests: 
-    knitr
+    knitr,
+    testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3

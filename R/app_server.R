@@ -34,8 +34,8 @@ app_server <- function(input, output,session) {
   feature_spec(load_specification(golem::get_golem_options('feature_spec'), 'feature'))
 
   # load models from the golem options
-  GlimmaR_models <- reactiveVal(list('a','b','c'))
-  BoostaR_models <- reactiveVal(list('when','will','I','see','you','again'))
+  GlimmaR_models <- reactiveVal(NULL)
+  BoostaR_models <- reactiveVal(NULL)
   
   # model indices
   kpi <- reactiveVal(NULL)
@@ -58,10 +58,13 @@ app_server <- function(input, output,session) {
       dt_update(dt_update()+1)
     }
   })
-  observeEvent(nav_options, {
+  observeEvent(nav_options(), {
     output$selection_text <- renderText({
       paste0('dt_update: ', dt_update())
     })
+    kpi(nav_options()$kpi)
+    BoostaR_idx(nav_options()$gbm)
+    GlimmaR_idx(nav_options()$glm)
   })
   observeEvent(input$GoTo_BoostaR, {
     updateTabItems(session, inputId = 'tabs', selected = 'BoostaR')
@@ -93,20 +96,15 @@ app_server <- function(input, output,session) {
   response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec, weight)
   nav_options <- mod_navigator_server("navigator", kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
   
-  # read out the kpi and model indices from the sidebar navigator
-  observeEvent(nav_options(), {
-    kpi(nav_options()$kpi)
-  })
-  
   # filter server
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
   # tab servers
-  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec)
+  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models)
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec)
-  mod_BoostaR_server('BoostaR', d, dt_update)
+  mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
 
   # run on close browser - stops server
   session$onSessionEnded(function() {stopApp()})

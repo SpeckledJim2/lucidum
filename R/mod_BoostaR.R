@@ -24,13 +24,10 @@ mod_BoostaR_ui <- function(id){
 #' BoostaR Server Functions
 #'
 #' @noRd 
-mod_BoostaR_server <- function(id, d, dt_update){
+mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    observeEvent(input$add_col, {
-      add_col(d(), dt_update())
-      dt_update(dt_update()+1)
-    })
+    mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
   })
 }
     

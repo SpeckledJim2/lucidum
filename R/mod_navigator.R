@@ -73,7 +73,7 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
       updateSelectInput(inputId = 'glm_chooser', choices = setNames(1:length(GlimmaR_models()), GlimmaR_models()))
     })
     observeEvent(BoostaR_models(), {
-      updateSelectInput(inputId = 'gbm_chooser', choices = setNames(1:length(BoostaR_models()), BoostaR_models()))
+      updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()))
     })
     observeEvent(c(input$type, input$kpi_chooser, input$gbm_chooser, input$glm_chooser), {
       lbl_icn <- nav_label(input$type, kpi_spec(), BoostaR_models(), GlimmaR_models())
