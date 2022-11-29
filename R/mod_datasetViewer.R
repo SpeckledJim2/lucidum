@@ -58,7 +58,7 @@ format_dataset_for_DT <- function(d, transpose){
   dt <- DT::datatable(d_filter,
                       rownames= FALSE,
                       extensions = 'Buttons',
-                      class = 'white-space: nowrap',
+                      #class = 'white-space: nowrap',
                       options = list(pageLength = pg_length,
                                      #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                      dom = 'Brtip',

@@ -346,7 +346,7 @@ mod_BoostaR_build_model_ui <- function(id){
             width = 12,
             div(style = "margin-top:-15px; padding-top:0px"),
             h3('Evaluation log'),
-            plotlyOutput(ns('BoostaR_evaluation_plot')),
+            plotlyOutput(ns('BoostaR_evaluation_plot'), height = 'calc(100vh - 600px)'),
           )
         )
       ),
@@ -359,6 +359,7 @@ mod_BoostaR_build_model_ui <- function(id){
 #' @noRd 
 #' 
 #' @importFrom rhandsontable renderRHandsontable hot_to_r
+#' @importFrom shiny withProgress
 #' 
 mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
@@ -375,8 +376,27 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
     })
     observeEvent(d(), {
       output$BoostaR_features <- renderRHandsontable({
-        rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec(), ''), 500)
+        rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec()), 500)
         })
+    })
+    observeEvent(BoostaR_idx(), {
+      if(!is.null(BoostaR_idx())){
+        B <- BoostaR_models()[[BoostaR_idx()]]
+        update_GBM_parameters(session, output, B)
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, 500)})
+      }
+
+    })
+    observeEvent(input$BoostaR_feature_specification, ignoreInit = TRUE, {
+      fs <- feature_spec()
+      if(!is.null(input$BoostaR_feature_specification) & !is.null(fs)){
+        features <- fs[fs[[input$BoostaR_feature_specification]]=='feature', feature]
+        features <- remove_lucidum_cols(features)
+      } else {
+        features <- NULL
+      }
+      dt <- populate_BoostaR_feature_grid(names(d()), features, fs, BoostaR_feature_table())
+      output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, 500)})
     })
     observeEvent(input$BoostaR_features, {
       
@@ -450,33 +470,51 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         } else if(input$BoostaR_grid_search=='On') {
           main_params_combos <- setDT(get_main_params_combos(input))
         }
-        # get the additional parameters
+        # get the additional parameters plus monotones and fics if applied
         additional_params <- extract_additional_lgbm_parameters(input$BoostaR_additional_parameters)
+        montonicity_possible <- lgbm_objectives[objective==input$BoostaR_objective][['montonicity_possible']]
+        if(montonicity_possible){
+          additional_params <- c(additional_params, monotone_constraints = list(monotonicity_constraints))
+        }
+        if(!is.null(feature_interaction_constraints)){
+          additional_params <- c(additional_params, interaction_constraints = list(feature_interaction_constraints))
+        }
         # prepare the lgb.Dataset and rules (only need to do this just one when running a grid search)
         features <- BoostaR_feature_table()[include==TRUE, feature]
         lgb_dat <- make_lgb_train_test(d(), response(), weight(), input$BoostaR_initial_score, features, input$BoostaR_objective)
         # loop over the combinations of parameters and build models
         for(i in 1:nrow(main_params_combos)){
-          params <- c(main_params_combos[i], additional_params)
-          params$metric <- metric_from_objective(params$objective)
-          BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values)
-          BoostaR_model[['feature_table']] <- BoostaR_feature_table()
-          if(!is.null(BoostaR_model$lgbm)=='ok'){
-            # QUESTION - feels inefficient (copying large object), is there a better way?
-            new_list <- BoostaR_models()
+          withProgress(message = '', detail = 'training', {
             model_name <- make_unique_name(response(), names(BoostaR_models()))
-            new_list[[model_name]] <- BoostaR_model
-            BoostaR_models(new_list)
-          } else {
-            confirmSweetAlert(session = session, type = 'error', inputId = ns('BoostaR_error'), title = "Error", text = BoostaR_model$message, btn_labels = c('OK'))
-          }
+            if(nrow(main_params_combos)==1){
+              message <- 'BoostaR'
+            } else {
+              message <- paste0('BoostaR (', i,'/',nrow(main_params_combos),')')
+            }
+            setProgress(value = 0, message = message)
+            params <- c(main_params_combos[i], additional_params)
+            params$metric <- metric_from_objective(params$objective)
+            BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, BoostaR_feature_table())
+            BoostaR_model$name <- model_name
+            if(!is.null(BoostaR_model$lgbm)=='ok'){
+              # QUESTION - feels inefficient (copying large object), is there a better way?
+              new_list <- BoostaR_models()
+              new_list[[model_name]] <- BoostaR_model
+              BoostaR_models(new_list)
+            } else {
+              confirmSweetAlert(session = session, type = 'error', inputId = ns('BoostaR_error'), title = "Error", text = BoostaR_model$message, btn_labels = c('OK'))
+            }
+          })
         }
+        # turn off grid search and select last model
+        BoostaR_idx(names(BoostaR_models())[length(names(BoostaR_models()))])
+        updateRadioGroupButtons(session, inputId = 'BoostaR_grid_search', selected = 'Off')
       }
     })
     observeEvent(input$BoostaR_grid_search, {
       if(input$BoostaR_grid_search=='Off'){
         learning_rate <- 0.3
-        num_leaves <- 2
+        num_leaves <- 5
         max_depth <- 4
         col_sample_rate <- 1
         row_sample_rate <- 1
@@ -570,7 +608,7 @@ extract_feature_specifications <- function(d){
   }
   f_specs
 }
-make_BoostaR_feature_grid <- function(d, feature_spec, selected){
+make_BoostaR_feature_grid <- function(d, feature_spec){
   features <- remove_lucidum_cols(names(d))
   # make grid
   dt <- data.table(feature=features,
@@ -771,6 +809,8 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
   }
   return(
     list(
+      response = response,
+      weight = weight,
       l_train = l_train,
       l_test = l_test,
       rows_idx = rows_idx,
@@ -797,7 +837,7 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
 #' 
 #' @importFrom lightgbm lgb.train lgb.importance lgb.model.dt.tree lgb.get.eval.result
 #' @importFrom stats predict
-build_lgbm <- function(lgb_dat, params, offset, SHAP_sample){
+build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
   # build the model
   start_time <- Sys.time()
   lgbm <- tryCatch({
@@ -833,6 +873,8 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample){
   # extract feature importances and make predictions
   importances <- lgb.importance(lgbm, percentage = TRUE)
   importances[, 2:4] <- 100 * importances[, 2:4]
+  # merge the importances onto the feature table
+  new_feature_table <- post_model_update_BoostaR_feature_grid(feature_table, importances)
   # extract the evaluation log
   evaluation_log <- make_evaluation_log(lgbm, params)
   # extract the tree table
@@ -845,6 +887,14 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample){
     list(
       message = message,
       lgbm = lgbm,
+      rules = lgb_dat$rules,
+      response = lgb_dat$response,
+      weight = lgb_dat$weight,
+      params = params,
+      features = lgb_dat$features,
+      offset = lgb_dat$offset,
+      link = lgb_dat$link,
+      feature_table = new_feature_table,
       run_time = run_time,
       SHAP_run_time = SHAP_run_time,
       predictions = predictions,
@@ -889,13 +939,13 @@ BoostaR_extract_SHAP_values <- function(d, lgbm, features, sample, rows_idx){
 make_evaluation_log <- function(lgbm, params){
   train_log <- lgb.get.eval.result(lgbm, "train", params$metric)
   test_log <- lgb.get.eval.result(lgbm, "test", params$metric)
-  train_err <- train_log[lgbm$model$best_iter]
-  test_err <- test_log[lgbm$model$best_iter]
+  train_err <- train_log[lgbm$best_iter]
+  test_err <- test_log[lgbm$best_iter]
   evaluation_log <- list(train_log = train_log,
                          test_log = test_log,
                          train_err = train_err,
                          test_err = test_err,
-                         best_iteration = lgbm$model$best_iter,
+                         best_iteration = lgbm$best_iter,
                          metric = params$metric)
 }
 #' @importFrom stringr str_count
@@ -1046,4 +1096,115 @@ evaluation_plot <- function(evaluation_log){
              xaxis = list(titlefont = list(size=12)),
              yaxis = list(title = '', range = c(y_min - 0.05*y_range,y_max + 0.05*y_range)))
   }
+}
+
+update_GBM_parameters <- function(session, output, BoostaR_model){
+  ns <- session$ns
+  updateTextInput(session, inputId = ns('BoostaR_num_rounds'), value = BoostaR_model$params$num_iterations)
+  updateTextInput(session, inputId = ns('BoostaR_early_stopping'), value = BoostaR_model$params$early_stopping_round)
+  updateSelectInput(session, inputId = ns('BoostaR_objective'), selected = BoostaR_model$params$objective)
+  updateSelectInput(session, inputId = ns('BoostaR_initial_score'), selected = BoostaR_model$init_score)
+  updateRadioGroupButtons(session, inputId = ns('BoostaR_grid_search'), selected = 'Off')
+  output$BoostaR_learning_rate_UI <- renderUI({
+    sliderInput(
+      inputId = ns('BoostaR_learning_rate'),
+      label = 'Learning rate',
+      min = 0.01,
+      max = 1,
+      value = BoostaR_model$params$learning_rate,
+      step = 0.01,
+      ticks = FALSE,
+      width = '100%'
+    )
+  })
+  output$BoostaR_num_leaves_UI <- renderUI({
+    sliderInput(
+      inputId = ns('BoostaR_num_leaves'),
+      label = 'Number of leaves',
+      min = 2,
+      max = 30,
+      value = BoostaR_model$params$num_leaves,
+      step = 1,
+      ticks = FALSE,
+      width = '100%'
+    )
+  })
+  output$BoostaR_max_depth_UI <- renderUI({
+    sliderInput(
+      inputId = ns('BoostaR_max_depth'),
+      label = 'Max depth',
+      min = 2,
+      max = 10,
+      value = BoostaR_model$params$max_depth,
+      step = 1,
+      ticks = FALSE,
+      width = '100%'
+    )
+  })
+  output$BoostaR_column_sample_rate_UI <- renderUI({
+    sliderInput(
+      inputId = ns('BoostaR_column_sample_rate'),
+      label = 'Column sample rate',
+      min = 0,
+      max = 1,
+      value = BoostaR_model$params$feature_fraction,
+      step = 0.05,
+      ticks = FALSE,
+      width = '100%'
+    )
+  })
+  output$BoostaR_row_sample_rate_UI <- renderUI({
+    sliderInput(
+      inputId = ns('BoostaR_row_sample_rate'),
+      label = 'Row sample rate',
+      min = 0,
+      max = 1,
+      value = BoostaR_model$params$bagging_fraction,
+      step = 0.05,
+      ticks = FALSE,
+      width = '100%'
+    )
+  })
+}
+populate_BoostaR_feature_grid <- function(all_features, selected_features, feature_spec, current_grid){
+  feature <- NULL
+  include <- NULL
+  interaction_grouping <- NULL
+  monotonicity <- NULL
+  gain <- NULL
+  if(!is.null(feature_spec) & !is.null(all_features)){
+    all_features <- remove_lucidum_cols(all_features)
+    dt <- data.table(feature = all_features, include = FALSE)
+    dt[feature %in% selected_features, include := TRUE]
+    setkey(dt, feature)
+    setkey(feature_spec, feature)
+    dt <- feature_spec[, c('feature','monotonicity','interaction_grouping')][dt]
+    dt[is.na(dt)] <- ''
+    if(!is.null(current_grid)){
+      # merge on gains
+      setkey(current_grid, feature)
+      dt <- current_grid[, c('feature','gain')][dt]
+      dt[is.na(gain), gain := 0]
+      setorder(dt, -gain, -include, feature)
+    } else {
+      dt[, gain := 0]
+      setorder(dt, -include, feature)
+    }
+    setcolorder(dt, c('feature','gain','include','interaction_grouping','monotonicity'))
+  } else {
+    dt <- data.table(feature = all_features, gain = 0, include = TRUE, interaction_grouping = '', monotonicity = '')
+  }
+  dt
+}
+post_model_update_BoostaR_feature_grid <- function(original_feature_grid, feature_importances){
+  feature_importances <- feature_importances[, c('Feature','Gain')]
+  names(feature_importances) <- c('feature','gain')
+  setkey(original_feature_grid, feature)
+  setkey(feature_importances, feature)
+  original_feature_grid[, gain := NULL]
+  dt <- feature_importances[original_feature_grid]
+  dt[is.na(gain), gain := 0]
+  setorder(dt, -include, -gain, feature)
+  setcolorder(dt, c('feature','gain','include','interaction_grouping','monotonicity'))
+  return(dt)
 }

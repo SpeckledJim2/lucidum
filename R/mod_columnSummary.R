@@ -198,7 +198,6 @@ format_column_summary_DT <- function(d, selected_row){
                   #selection=list(mode="single", target="row"),
                   selection=list(mode="single", selected=selected_row),
                   extensions = 'Buttons',
-                  class = 'white-space: nowrap',
                   options = list(pageLength = pg_length,
                                  #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                  dom = 'Bfrtip',
@@ -208,7 +207,7 @@ format_column_summary_DT <- function(d, selected_row){
                   )
   ) |>
     formatStyle(1:ncol(d), lineHeight='0%', fontSize = '12px') |>
-    formatStyle(c('mean','min','max'), 'white-space'='nowrap')
+    formatStyle(c('mean','min','max'))
 }
 
 #' @importFrom DT datatable formatStyle
@@ -217,7 +216,6 @@ format_feature_summary_DT <- function(d){
     datatable(
     rownames= FALSE,
     extensions = 'Buttons',
-    class = 'white-space: nowrap',
     selection = list(mode="single", target="row"),
     options = list(
       pageLength = min(100, nrow(d)),

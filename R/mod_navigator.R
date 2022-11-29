@@ -63,7 +63,7 @@ mod_navigator_ui <- function(id){
 #' @importFrom stats setNames
 #'
 #' @noRd 
-mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_model_index, BoostaR_model_index){
+mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_model_index, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(kpi_spec(), {
@@ -73,7 +73,24 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
       updateSelectInput(inputId = 'glm_chooser', choices = setNames(1:length(GlimmaR_models()), GlimmaR_models()))
     })
     observeEvent(BoostaR_models(), {
-      updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()))
+      if(!is.null(BoostaR_models())){
+        current_selection <- input$gbm_chooser
+        model_names <- names(BoostaR_models())
+        if(is.null(current_selection)){
+          selected <- model_names[length(model_names)]
+        }
+        else if(current_selection %in% model_names){
+          selected <- current_selection
+        } else {
+          selected <- model_names[length(model_names)]
+        }
+        updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = selected)
+      }
+    })
+    observeEvent(BoostaR_idx(), {
+      if(!is.null(BoostaR_idx())){
+        updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = BoostaR_idx())
+      }
     })
     observeEvent(c(input$type, input$kpi_chooser, input$gbm_chooser, input$glm_chooser), {
       lbl_icn <- nav_label(input$type, kpi_spec(), BoostaR_models(), GlimmaR_models())

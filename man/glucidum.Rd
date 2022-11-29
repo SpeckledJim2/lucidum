@@ -16,7 +16,8 @@ glucidum(
   show_MappaR = TRUE,
   show_BoostaR = TRUE,
   show_GlimmaR = TRUE,
-  show_DevelopaR = TRUE
+  show_DevelopaR = TRUE,
+  starting_tab = "DataR"
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ glucidum(
 \item{show_GlimmaR}{logical, TRUE (default) will show the GlimmaR menu item.}
 
 \item{show_DevelopaR}{logical, TRUE (not default) will show the ShinyAce console.}
+
+\item{starting_tab}{character, name of tab to show on startup.}
 }
 \description{
 Launch glucidum

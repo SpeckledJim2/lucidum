@@ -11,5 +11,6 @@ globalVariables(c('PostcodeArea',
                   'feature',
                   'monotonicity',
                   '..features',
-                  'objective')
+                  'objective',
+                  'gain')
                 )

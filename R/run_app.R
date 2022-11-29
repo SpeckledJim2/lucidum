@@ -12,6 +12,7 @@
 #' @param show_BoostaR logical, TRUE (default) will show the BoostaR menu item.
 #' @param show_GlimmaR logical, TRUE (default) will show the GlimmaR menu item.
 #' @param show_DevelopaR logical, TRUE (not default) will show the ShinyAce console.
+#' @param starting_tab character, name of tab to show on startup.
 #'
 #' @export
 #' @importFrom shiny shinyApp
@@ -27,7 +28,8 @@ glucidum <- function(data=NULL,
                      show_MappaR = TRUE,
                      show_BoostaR = TRUE,
                      show_GlimmaR = TRUE,
-                     show_DevelopaR = TRUE
+                     show_DevelopaR = TRUE,
+                     starting_tab = 'DataR'
                      ) {
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
@@ -40,6 +42,8 @@ glucidum <- function(data=NULL,
                       show_MappaR = show_MappaR,
                       show_BoostaR = show_BoostaR,
                       show_GlimmaR = show_GlimmaR,
-                      show_DevelopaR = show_DevelopaR)
+                      show_DevelopaR = show_DevelopaR,
+                      starting_tab = starting_tab
+                      )
   )
 }
