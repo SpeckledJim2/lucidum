@@ -116,12 +116,16 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       message <- apply_filter(d(), filter_formula, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
-      if(filter_formula=='no filter'){
-        updateTextInput(inputId = 'free_filter', value = '')
+      if(!is.null(filter_formula)){
+        if(filter_formula=='no_filter'){
+          value <- ''
+        } else {
+          value <- filter_formula
+        }
+        updateTextInput(inputId = 'free_filter', value = value)
       } else {
-        updateTextInput(inputId = 'free_filter', value = filter_formula)
+        updateTextInput(inputId = 'free_filter', value = '')
       }
-
       stop_update(TRUE)
     })
     observeEvent(filter_spec(), {

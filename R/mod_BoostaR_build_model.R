@@ -287,7 +287,7 @@ mod_BoostaR_build_model_ui <- function(id){
                      textInput(
                        ns('BoostaR_grid_combinations'),
                        'Combinations',
-                       value = 100
+                       value = 10
                      )
               )
             ),
@@ -496,6 +496,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             params$metric <- metric_from_objective(params$objective)
             BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, BoostaR_feature_table())
             BoostaR_model$name <- model_name
+            BoostaR_model$additional_params <- additional_params
             if(!is.null(BoostaR_model$lgbm)=='ok'){
               # QUESTION - feels inefficient (copying large object), is there a better way?
               new_list <- BoostaR_models()
@@ -587,6 +588,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       })
     })
     output$BoostaR_evaluation_plot <- plotly::renderPlotly({
+      # QUESTION - better to use ObserveEvent on BoostaR_models and BoostaR_idx?
       if(!is.null(BoostaR_idx())){
         evaluation_plot(BoostaR_models()[[BoostaR_idx()]]$evaluation_log)
       }
@@ -811,6 +813,7 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
     list(
       response = response,
       weight = weight,
+      init_score = init_score,
       l_train = l_train,
       l_test = l_test,
       rows_idx = rows_idx,
@@ -853,6 +856,15 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
   if(inherits(lgbm,'simpleError')){
     message <- lgbm$error
     lgbm <- NULL
+    new_feature_table <- NULL
+    importances <- NULL
+    evaluation_log <- NULL
+    tree_table <- NULL
+    gain_summary <- NULL
+    SHAP_cols <- NULL
+    SHAP_run_time <- NULL
+    SHAP_rows <- NULL
+    predictions <- NULL
   } else {
     # get predictions (these are pre-offset)
     predictions <- predict(lgbm, as.matrix(lgb_dat$data), rawscore = TRUE)
@@ -869,19 +881,19 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]
+    # extract feature importances and make predictions
+    importances <- lgb.importance(lgbm, percentage = TRUE)
+    importances[, 2:4] <- 100 * importances[, 2:4]
+    # merge the importances onto the feature table
+    new_feature_table <- post_model_update_BoostaR_feature_grid(feature_table, importances)
+    # extract the evaluation log
+    evaluation_log <- make_evaluation_log(lgbm, params)
+    # extract the tree table
+    tree_table <- lgb.model.dt.tree(lgbm)
+    # extract the gain summarised by tree's feature combinations
+    gain_summary <- create_gain_summary_from_tree_summary(tree_table)
+    gain_summary <- gain_summary[order(-gain_summary$gain),]
   }
-  # extract feature importances and make predictions
-  importances <- lgb.importance(lgbm, percentage = TRUE)
-  importances[, 2:4] <- 100 * importances[, 2:4]
-  # merge the importances onto the feature table
-  new_feature_table <- post_model_update_BoostaR_feature_grid(feature_table, importances)
-  # extract the evaluation log
-  evaluation_log <- make_evaluation_log(lgbm, params)
-  # extract the tree table
-  tree_table <- lgb.model.dt.tree(lgbm)
-  # extract the gain summarised by tree's feature combinations
-  gain_summary <- create_gain_summary_from_tree_summary(tree_table)
-  gain_summary <- gain_summary[order(-gain_summary$gain),]
   # return list
   return(
     list(
@@ -890,6 +902,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
       rules = lgb_dat$rules,
       response = lgb_dat$response,
       weight = lgb_dat$weight,
+      init_score = lgb_dat$init_score,
       params = params,
       features = lgb_dat$features,
       offset = lgb_dat$offset,
@@ -1063,9 +1076,9 @@ evaluation_plot <- function(evaluation_log){
     # if we plot too many points it can slow down the browser - limit to 100 rows
     # always keep the first and last row
     ex_rows <- 1:2
-    if(nrow(eval_results)>100){
+    if(nrow(eval_results)>1000){
       # make sure first and last row are kept
-      rows_to_keep <- c(1, floor(1:100 * nrow(eval_results)/100), evaluation_log$best_iteration, nrow(eval_results))
+      rows_to_keep <- c(1, floor(1:1000 * nrow(eval_results)/1000), evaluation_log$best_iteration, nrow(eval_results))
       rows_to_keep <- unique(rows_to_keep)
       eval_results <- eval_results[rows_to_keep,]
       ex_rows <- 1:5

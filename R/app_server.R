@@ -5,16 +5,27 @@
 #' @importFrom DT datatable renderDT
 app_server <- function(input, output,session) {
 
+  # reactiveVals
+  d <- reactiveVal(NULL)
+  GlimmaR_models <- reactiveVal(NULL)
+  BoostaR_models <- reactiveVal(NULL)
+  kpi <- reactiveVal(NULL)
+  GlimmaR_idx <- reactiveVal(0)
+  BoostaR_idx <- reactiveVal(0)
+  
   init_lucidum(session, golem::get_golem_options('data'))  
   # d is the dataset being analysed by lucidum
   # the golem option 'data' specifies the dataset
   # dt_update is used to trigger reactivity when d is changed
   # required because d is a data.table and can be changed by reference
-  d <- reactiveVal()
   dt_update <- reactiveVal(0)
-  #d(setDT(golem::get_golem_options('data')))
   d(load_dataset(golem::get_golem_options('data')))
 
+  # specification files
+  kpi_spec <- reactiveVal()
+  feature_spec <- reactiveVal()
+  filter_spec <- reactiveVal()
+  
   # d() contains a data.table
   # when columns in d are updated by reference, this does not trigger any reactivity
   # only when d is assigned to a new value (e.g. selecting a new dataset)
@@ -22,26 +33,13 @@ app_server <- function(input, output,session) {
     if(!is.null(d())){
       d()[, user_filter := 1]
       d()[, total_filter := 1]
+      # load specification files
+      kpi_spec(load_specification(d(), golem::get_golem_options('kpi_spec'), 'kpi'))
+      filter_spec(load_specification(d(), golem::get_golem_options('filter_spec'), 'filter'))
+      feature_spec(load_specification(d(), golem::get_golem_options('feature_spec'), 'feature'))
     }
   })
-  
-  # load specifications from the golem options
-  kpi_spec <- reactiveVal()
-  feature_spec <- reactiveVal()
-  filter_spec <- reactiveVal()
-  kpi_spec(load_specification(golem::get_golem_options('kpi_spec'), 'kpi'))
-  filter_spec(load_specification(golem::get_golem_options('filter_spec'), 'filter'))
-  feature_spec(load_specification(golem::get_golem_options('feature_spec'), 'feature'))
 
-  # load models from the golem options
-  GlimmaR_models <- reactiveVal(NULL)
-  BoostaR_models <- reactiveVal(NULL)
-  
-  # model indices
-  kpi <- reactiveVal(NULL)
-  GlimmaR_idx <- reactiveVal(0)
-  BoostaR_idx <- reactiveVal(0)
-  
   # menuItems
   showModule(output, 'Specs', 'chevron-right', golem::get_golem_options('show_DevelopaR'))
   showModule(output, 'DataR', 'bars', golem::get_golem_options('show_DataR'))

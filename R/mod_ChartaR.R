@@ -11,7 +11,7 @@ mod_ChartaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png', height="20px", width="20px"), 'Histogram')),
+                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png', height="25px", width="25px"), 'Histogram')),
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
                          ),

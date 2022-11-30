@@ -12,26 +12,34 @@
 mod_BoostaR_navigate_ui <- function(id){
   ns <- NS(id)
   tagList(
-    br(),
     fluidRow(
-      column(width = 6,
-             actionButton(
-               inputId = ns("BoostaR_make_active"),
-               label = 'Make active model',
-               icon = icon("chevron-right")
-               )
-             ),
+      column(
+        width = 6,
+        h3('BoostaR model summary')
+      ),
       column(width = 6,
              align = 'right',
+             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
              actionButton(
-               inputId = ns("BoostaR_delete_model"),
-               label = 'Delete selected model(s)',
-               icon = icon("minus-circle")
+               inputId = ns('BoostaR_delete_model'),
+               label = 'Delete',
+               icon = icon("minus-circle"),
+               class = 'btn-danger'
              ),
+             actionButton(
+               inputId = ns('BoostaR_make_active'),
+               label = 'Make active',
+               icon = icon("chevron-right")
+               ),
+             actionButton(
+               inputId = ns('BoostaR_generate_predictions'),
+               label = 'Predict',
+               icon = icon("chevron-right")
+               ),
              shinySaveButton(
                id = ns('BoostaR_save_model'),
-               label = 'Save selected model',
-               title = 'Save selected model',
+               label = 'Save model',
+               title = 'Save model',
                filename = "",
                filetype = list(txt="txt"),
                icon = icon('upload'),
@@ -40,57 +48,43 @@ mod_BoostaR_navigate_ui <- function(id){
                )
              )
     ),
-    br(),
     fluidRow(
-      column(
-        width = 12,
-        DTOutput(ns('BoostaR_model_summary'))
+      column(width = 12,
+             align = 'right',
+             DTOutput(ns('BoostaR_model_summary')
+             )
       )
     ),
-    br(),
     fluidRow(
       column(
-        width = 6,
+        width = 4,
         fluidRow(
           column(
             width = 12,
-            sliderInput(ns("BoostaR_tree_selector"),
-                        width = '100%',
-                        label = NULL,
-                        min = 0,
-                        max = 2000,
-                        step = 1,
-                        value = 0,
-                        ticks = FALSE,
-                        animate = TRUE
-            )
+            h3('Model details'),
           )
         ),
-        grVizOutput(ns("BoostaR_tree_diagram"), width = '100%', height = '400px')
+        DTOutput(ns('BoostaR_detailed_model_summary'))
       ),
       column(
-        width = 6,
+        width = 8,
         fluidRow(
           column(
-            width = 2,
-            actionButton(
-              inputId = ns("BoostaR_gain_table_goto_ChartaR"),
-              icon = icon('chart-line'),
-              label = ''
-            )
-          ),
-          column(
-            width = 6,
-            textInput(
-              ns('BoostaR_search_gain_table'),
-              label = NULL,
-              width = '100%',
-              placeholder = 'select feature'
-            )
+            width = 8,
+            h3('Gain summary')
           ),
           column(
             width = 4,
-            align = 'right'
+            align = 'right',
+            div(
+              style = 'margin-top:16px; margin-bottom:-16px',
+              textInput(
+                ns('BoostaR_search_gain_table'),
+                label = NULL,
+                width = '100%',
+                placeholder = 'highlight feature'
+              )
+            )
           )
         ),
         DTOutput(ns('BoostaR_gain_summary'))
@@ -112,48 +106,51 @@ mod_BoostaR_navigate_ui <- function(id){
 mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    output$BoostaR_model_summary <- DT::renderDT({
-      # model summary table
-      dt <- BoostaR_model_summary(BoostaR_models())
-      dt %>%
-        DT::datatable(rownames= FALSE,
-                      extensions = 'Buttons',
-                      selection=list(mode="multiple", target="row"),
-                      options = list(pageLength = nrow(dt),
-                                     initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
-                                     dom = 'Bfrt',
-                                     scrollX = T,
-                                     scrollY = 'calc(20vh)',
-                                     searchHighlight=TRUE,
-                                     buttons =
-                                       list('colvis', 'copy', list(
-                                         extend = 'collection',
-                                         buttons = list(list(extend='csv',filename = ''),
-                                                        list(extend='excel',filename = ''),
-                                                        list(extend='pdf',filename= '')),
-                                         text = 'Download')
-                                       )
-                      )
-        ) %>%
-        DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+    observeEvent(BoostaR_models(), {
+      output$BoostaR_model_summary <- DT::renderDT({
+        # model summary table
+        dt <- BoostaR_model_summary(BoostaR_models())
+        dt |>
+          DT::datatable(rownames= FALSE,
+                        extensions = 'Buttons',
+                        selection=list(mode="multiple", target="row"),
+                        options = list(pageLength = nrow(dt),
+                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                       dom = 'Bfrt',
+                                       scrollX = T,
+                                       scrollY = 'calc(20vh)',
+                                       searchHighlight=TRUE,
+                                       buttons =
+                                         list('colvis', 'copy', list(
+                                           extend = 'collection',
+                                           buttons = list(list(extend='csv',filename = ''),
+                                                          list(extend='excel',filename = ''),
+                                                          list(extend='pdf',filename= '')),
+                                           text = 'Download')
+                                         )
+                        )
+          ) |>
+          DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+      })
+      output$BoostaR_detailed_model_summary <- DT::renderDT({
+        # model summary table
+        dt <- BoostaR_detailed_summary(BoostaR_models()[[BoostaR_idx()]])
+        dt |>
+          DT::datatable(rownames= FALSE,
+                        selection=list(mode="multiple", target="row"),
+                        options = list(pageLength = nrow(dt),
+                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                       dom = 'rt',
+                                       scrollX = T,
+                                       scrollY = 'calc(80vh - 380px)',
+                                       searchHighlight=TRUE
+                        )
+          ) |>
+          DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+      })
     })
-    output$BoostaR_tree_diagram <-   renderGrViz({
-      # tree diagram
-      if(length(BoostaR_models())>0){
-        model_index <- BoostaR_idx()
-        updateSliderInput(session, inputId = 'BoostaR_tree_selector', max = BoostaR_models()[[model_index]]$lgbm$best_iter-1)
-        if(!is.na(model_index)){
-          if(model_index %in% names(BoostaR_models())){
-            tree_index <- NULL
-            tree_table <- BoostaR_models()[[model_index]]$tree_table
-            rules <- BoostaR_models()[[model_index]]$rules
-            tree <- tree_table[tree_index==input$BoostaR_tree_selector,]
-            my_graph <- BoostaR_render_tree_graph(tree, rules)
-            render_graph(my_graph)
-          }
-        }
-      }
-    })
+    # QUESTION - this seems to work
+    # but should I wrap in an observeEvent?
     output$BoostaR_gain_summary <- DT::renderDataTable({
       # gain summary
       if(length(BoostaR_models())>0){
@@ -173,7 +170,6 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
             } else {
               first_tree <- tree_table[which.max(match_rows)][['tree_index']]
             }
-            updateSliderInput(session, inputId = 'BoostaR_tree_selector', value = first_tree)
           }
           # limit number of rows
           n_rows <- pmin(1000, nrow(gain_summary))
@@ -184,6 +180,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
             datatable(rownames= FALSE,
                       selection = 'single',
                       options = list(pageLength = n_rows,
+                                     initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                      dom = 'rt',
                                      scrollX = T,
                                      scrollY = 'calc(80vh - 380px)'
@@ -226,152 +223,69 @@ BoostaR_model_summary_row <- function(BoostaR_model){
                       0,
                       length(BoostaR_model$params$interaction_constraints)-1)
     x <- data.table(name = BoostaR_model$name,
-                    run_time = round(BoostaR_model$run_time, 1),
-                    SHAP_run_time = round(BoostaR_model$SHAP_run_time, 1),
-                    #data = BoostaR_model$dataset,
-                    response = BoostaR_model$response,
-                    weight = BoostaR_model$weight,
-                    #offset = BoostaR_model$offset,
-                    obj = BoostaR_model$params$objective,
+                    test = signif(BoostaR_model$evaluation_log$test_err, 6),
+                    train = signif(BoostaR_model$evaluation_log$train_err, 6),
                     best_iter = BoostaR_model$evaluation_log$best_iteration,
-                    test_err = signif(BoostaR_model$evaluation_log$test_err, 6),
-                    train_err = signif(BoostaR_model$evaluation_log$train_err, 6),
                     lr = BoostaR_model$params$learning_rate,
                     leaves = BoostaR_model$params$num_leaves,
                     depth = BoostaR_model$params$max_depth,
-                    row_smp = BoostaR_model$params$bagging_fraction,
-                    col_smp = BoostaR_model$params$feature_fraction,
+                    `row%` = BoostaR_model$params$bagging_fraction,
+                    `col%` = BoostaR_model$params$feature_fraction,
                     n_feat = length(BoostaR_model$features),
-                    ICs = num_ICs
+                    time = round(as.numeric(BoostaR_model$run_time), 1)
     )
   }
   return(x)
 }
+BoostaR_detailed_summary <- function(BoostaR_model){
 
-replace_lgbm_levels_with_names <- function(x, feature_name, rules){
-  lvls <- rules[[feature_name]]
-  result <- strsplit(x,'||', fixed = TRUE)
-  result <- lapply(result, as.numeric)
-  levels_to_names <- function(x){names(lvls)[as.numeric(x)]}
-  result <- lapply(result, levels_to_names)
-  result <- lapply(result, paste, collapse = '\n')
-}
+  # calculate the number of feature interaction constraints
+  if(is.null(BoostaR_model$params$interaction_constraints)){
+    num_interaction_constraints <- 0
+  } else {
+    num_interaction_constraints <- length(BoostaR_model$params$interaction_constraints)
+  }
+  # calculate the number of monotone constraints
+  if(is.null(BoostaR_model$params$monotone_constraints)){
+    num_monotone_constraints <- 0
+  } else {
+    num_monotone_constraints <- sum(abs(BoostaR_model$params$monotone_constraints)>0)
+  }
 
-#' @importFrom DiagrammeR create_edge_df create_graph add_global_graph_attrs
-BoostaR_render_tree_graph <- function(dt, rules = NULL){
-  Value <- NULL
-  leaf_value <-  NULL
-  internal_value <- NULL
-  Quality <- NULL
-  Feature <- NULL
-  Cover <- NULL
-  internal_count <- NULL
-  leaf_count <- NULL
-  Node <- NULL
-  split_index <- NULL
-  leaf_index <- NULL
-  ID <- NULL
-  Tree <- NULL
-  parent <- NULL
-  node_parent <- NULL
-  leaf_parent <- NULL
-  Yes <- NULL
-  No <- NULL
-  default_left <- NULL
-  Missing <- NULL
-  label <- NULL
-  shape <- NULL
-  filledcolor <- NULL
-  Split <- NULL
-  decision_type <- NULL
-  setnames(dt, old = c('tree_index','split_feature','threshold','split_gain'), new = c('Tree','Feature','Split','Quality'))
-  dt[, Value := leaf_value]
-  dt[is.na(Value), Value := internal_value]
-  dt[is.na(Quality), Quality := leaf_value]
-  dt[is.na(Feature), Feature := 'Leaf']
-  dt[, Cover := internal_count][Feature=='Leaf', Cover := leaf_count]
-  dt[, c('leaf_count', 'internal_count','leaf_value','internal_value'):= NULL]
-  dt[, Node := split_index]
-  max_node <- max(dt[['Node']], na.rm = TRUE)
-  dt[is.na(Node), Node := max_node + leaf_index +1]
-  dt[, ID := paste(Tree, Node, sep = '-')]
-  dt[, c('depth','leaf_index') := NULL]
-  dt[, parent := node_parent][is.na(parent), parent := leaf_parent]
-  dt[, c('node_parent', 'leaf_parent','split_index') := NULL]
-  dt[, Yes := dt$ID[match(dt$Node, dt$parent)]]
-  dt <- dt[nrow(dt):1,]
-  dt[, No := dt$ID[match(dt$Node, dt$parent)]]
-  dt[default_left==TRUE, Missing := Yes]
-  dt[default_left==FALSE, Missing := No]
-  dt[, c('parent', 'default_left') := NULL]
-  setcolorder(dt, c('Tree','Node','ID','Feature','decision_type','Split','Yes','No','Missing','Quality','Cover','Value'))
-  
-  dt[, label:= paste0(Feature,
-                      "\nCover: ", Cover,
-                      ifelse(Feature == "Leaf", "", "\nGain: "), ifelse(Feature == "Leaf", "", round(Quality, 4)),
-                      "\nValue: ", round(Value, 4)
-  )]
-  dt[Node == 0, label := paste0("Tree ", Tree, "\n", label)]
-  dt[, shape:= "rectangle"][Feature == "Leaf", shape:= "oval"]
-  dt[, filledcolor:= "Beige"][Feature == "Leaf", filledcolor:= "Khaki"]
-  # in order to draw the first tree on top:
-  dt <- dt[order(-Tree)]
-  
-  nodes <- DiagrammeR::create_node_df(
-    n         = nrow(dt),
-    ID        = dt$ID,
-    label     = dt$label,
-    fillcolor = dt$filledcolor,
-    shape     = dt$shape,
-    data      = dt$Feature,
-    fontcolor = "black")
-  
-  # format the edge labels
-  numeric_idx <- !is.na(as.numeric(dt[['Split']]))
-  dt[numeric_idx, Split := round(as.numeric(Split),4)]
-  
-  # replace indices with feature levels if rules supplied
-  if(!is.null(rules)){
-    for (f in names(rules)){
-      dt[Feature==f & decision_type == '==',
-         Split := replace_lgbm_levels_with_names(Split, f, rules)]
+  x <- data.table(name = BoostaR_model$name,
+                  objective = BoostaR_model$params$objective,
+                  metric = BoostaR_model$params$metric,
+                  response = BoostaR_model$response,
+                  weight = BoostaR_model$weight,
+                  offset = BoostaR_model$init_score,
+                  test = signif(BoostaR_model$evaluation_log$test_err, 6),
+                  train = signif(BoostaR_model$evaluation_log$train_err, 6),
+                  number_of_features = length(BoostaR_model$features),
+                  interaction_constraints = num_interaction_constraints,
+                  monotone_constraints = num_monotone_constraints,
+                  model_build_time = round(as.numeric(BoostaR_model$run_time), 1),
+                  SHAP_build_time = round(as.numeric(BoostaR_model$SHAP_run_time), 1),
+                  num_iterations = BoostaR_model$params$num_iterations,
+                  early_stopping_round = BoostaR_model$params$early_stopping_round,
+                  best_iter = BoostaR_model$evaluation_log$best_iteration,
+                  lr = BoostaR_model$params$learning_rate,
+                  leaves = BoostaR_model$params$num_leaves,
+                  depth = BoostaR_model$params$max_depth,
+                  bagging_fraction = BoostaR_model$params$bagging_fraction,
+                  bagging_frequency = BoostaR_model$params$bagging_freq,
+                  feature_fraction = BoostaR_model$params$feature_fraction
+  )
+  x <- data.table(parameter=names(x), value = t(x[1]))
+  setnames(x, c('parameter','value'))
+  if(!is.null(BoostaR_model$additional_params)){
+    add_params <- BoostaR_model$additional_params
+    add_params$interaction_constraints <- NULL
+    add_params$monotone_constraints <- NULL
+    if(length(add_params)>0){
+      extra_rows <- data.table(name = names(add_params), value = add_params)
+      x <- rbindlist(list(x, extra_rows))
     }
   }
-  
-  # replace long split names
-  dt[nchar(Split)>500, Split := 'Split too long to render']
-  
-  edges <- DiagrammeR::create_edge_df(
-    from  = match(dt[Feature != "Leaf", c(ID)] %>% rep(2), dt$ID),
-    to    = match(dt[Feature != "Leaf", c(Yes, No)], dt$ID),
-    label = dt[Feature != "Leaf", paste(decision_type, Split)] %>%
-      c(rep("", nrow(dt[Feature != "Leaf"]))),
-    style = dt[Feature != "Leaf", ifelse(Missing == Yes, "bold", "solid")] %>%
-      c(dt[Feature != "Leaf", ifelse(Missing == No, "bold", "solid")]),
-    rel   = "leading_to")
-  
-  graph <- DiagrammeR::create_graph(
-    nodes_df = nodes,
-    edges_df = edges,
-    attr_theme = NULL
-  ) %>%
-    DiagrammeR::add_global_graph_attrs(
-      attr_type = "graph",
-      attr  = c("layout", "rankdir"),
-      value = c("dot", "LR")
-    ) %>%
-    DiagrammeR::add_global_graph_attrs(
-      attr_type = "node",
-      attr  = c("color", "style", "fontname"),
-      value = c("DimGray", "filled", "Helvetica")
-    ) %>%
-    DiagrammeR::add_global_graph_attrs(
-      attr_type = "edge",
-      attr  = c("color", "arrowsize", "arrowhead", "fontname"),
-      value = c("DimGray", "1.5", "vee", "Helvetica"))
-  
-  
-  
+  x
 }
-    
 

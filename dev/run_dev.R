@@ -15,8 +15,8 @@ golem::document_and_reload()
 #glucidum(insurance)
 glucidum(data = insurance,
          starting_tab = 'BoostaR',
+         show_MappaR = F,
          kpi_spec = 'data-raw/insurance_kpi_spec.csv',
          feature_spec = 'data-raw/insurance_feature_spec.csv',
          filter_spec = 'data-raw/insurance_filter_spec.csv')
-
 

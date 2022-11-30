@@ -133,3 +133,54 @@ check_specification <- function(d, spec_type){
                         filter = c('filter'))
   all(required_cols[[spec_type]] %in% names(d))
 }
+
+load_specification <- function(d, specification, specification_type){
+  # NULL - will check the working directory for folders called feature_spec etc
+  # function's operation depends on class of spec
+  # character - loads the csv
+  # data.frame 
+  x <- NULL
+  if(is.null(specification)){
+    # check the working directory for folders containing specifications
+    x <- specification_template(d, specification_type)
+  } else if (inherits(specification, 'character')){
+    # check it is a .csv file
+    x <- fread(specification)
+  } else if (inherits(specification, 'data.table')){
+    x <- setDT(specification)
+  }
+  if(!is.null(x)){
+    # check specification is in correct format
+    #x <- check_specification_format(x, type)
+  }
+  x
+}
+
+specification_template <- function(d, spec_type){
+  if(spec_type=='feature'){
+    spec <- data.table(feature=names(d),
+                       base_level='',
+                       min='',
+                       max='',
+                       banding='',
+                       monotonicity='',
+                       interaction_grouping='',
+                       scenario1='',
+                       scenario2='',
+                       scenario3='')
+  } else if (spec_type=='kpi'){
+    spec <- data.table(kpi_name='User defined',
+                       kpi_numerator='Numerator',
+                       kpi_denominator='Denominator',
+                       kpi_dp=0,
+                       kpi_signif=0,
+                       kpi_divisor=1,
+                       kpi_prefix='',
+                       kpi_suffix='')
+  } else if (spec_type=='filter'){
+    spec <- data.table(filter='no filter')
+  } else {
+    spec <- NULL
+  }
+  return(spec)
+}

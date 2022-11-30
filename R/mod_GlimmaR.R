@@ -10,14 +10,14 @@
 mod_GlimmaR_ui <- function(id){
   ns <- NS(id)
   tagList(
-    tabsetPanel(id = 'GlimmaR_tabsetPanel',
-                tabPanel(span(tagList(icon('bars'), 'Model formula')),
+    tabsetPanel(id = ns('tabsetPanel'),
+                tabPanel(value = 'Model formula', span(tagList(icon('bars'), 'Model formula')),
                          mod_GlimmaR_build_model_ui(ns('buildGlimmaR'))
                          ),
-                tabPanel(span(tagList(icon('bars'), 'Tabulated models')),
+                tabPanel(value = 'Tabulated models', span(tagList(icon('bars'), 'Tabulated models')),
                          mod_GlimmaR_tabulated_models_ui(ns('tabulatedGlimmaR'))
                          ),
-                tabPanel(span(tagList(icon('table-columns'), 'Model navigator')),
+                tabPanel(value = 'Model navigator', span(tagList(icon('table-columns'), 'Model navigator')),
                          mod_GlimmaR_navigate_ui(ns('navigateGlimmaR'))
                          )
     ),
