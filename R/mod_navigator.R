@@ -89,7 +89,12 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
     })
     observeEvent(BoostaR_idx(), {
       if(!is.null(BoostaR_idx())){
-        updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = BoostaR_idx())
+        if(is.null(input$gbm_chooser)){
+          updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = BoostaR_idx())
+          # QUESTION - next line stops circular reactivity between BoostaR_idx and input$gbm_chooser. Why does it work?
+        } else if(input$gbm_chooser != BoostaR_idx()){
+          updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = BoostaR_idx())
+        }
       }
     })
     observeEvent(c(input$type, input$kpi_chooser, input$gbm_chooser, input$glm_chooser), {

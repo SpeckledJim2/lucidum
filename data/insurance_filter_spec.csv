@@ -1,0 +1,6 @@
+filter
+age<25
+make=='BMW'
+make=='PORSCHE'
+make=='FORD'
+vehicle_kept=='Garage'

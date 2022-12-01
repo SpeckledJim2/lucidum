@@ -100,7 +100,7 @@ app_server <- function(input, output,session) {
   # tab servers
   mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models)
   mod_DataR_server('DataR', d, dt_update)
-  mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec)
+  mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec)
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
 

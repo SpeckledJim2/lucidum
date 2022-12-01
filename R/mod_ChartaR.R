@@ -11,12 +11,15 @@ mod_ChartaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'Histogram', title = span(tagList(tags$img(src='www/histogram.png', height="25px", width="25px"), 'Histogram')),
+                tabPanel(value = '1-way line and bar',
+                         title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px"),'1-way line and bar')),
+                         br(),
+                         mod_ChartaR_line_and_bar_ui(ns('line_and_bar'))
+                ),
+                tabPanel(value = 'Histogram',
+                         title = span(tagList(tags$img(src='www/histogram.png', height="25px", width="25px"),'Histogram')),
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
-                         ),
-                tabPanel(value = '1-way line and bar', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px"),'1-way line and bar')),
-                         br()
                          ),
                 tabPanel(value = '2-way line and bar', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px"), '2-way line and bar')), br()),
                 tabPanel(value = 'Box plot', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="18px", width="18px"), 'Box plot')), br()),
@@ -30,10 +33,11 @@ mod_ChartaR_ui <- function(id){
 #' ChartaR Server Functions
 #'
 #' @noRd 
-mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec){
+mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     mod_histogram_server('histogram_tab', d, dt_update, response, weight, kpi_spec)
+    mod_ChartaR_line_and_bar_server('line_and_bar', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx)
   })
 }
     

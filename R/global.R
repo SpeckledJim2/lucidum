@@ -21,6 +21,8 @@ globalVariables(
     'leaf_value',
     'leaf_count',
     'internal_value',
-    'internal_count'
+    'internal_count',
+    'idx',
+    'interaction_grouping'
     )
   )
