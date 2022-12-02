@@ -17,7 +17,8 @@ glucidum(
   show_BoostaR = TRUE,
   show_GlimmaR = TRUE,
   show_DevelopaR = TRUE,
-  starting_tab = "DataR"
+  starting_tab = "DataR",
+  starting_response = NULL
 )
 }
 \arguments{

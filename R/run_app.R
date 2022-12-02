@@ -29,7 +29,8 @@ glucidum <- function(data=NULL,
                      show_BoostaR = TRUE,
                      show_GlimmaR = TRUE,
                      show_DevelopaR = TRUE,
-                     starting_tab = 'DataR'
+                     starting_tab = 'DataR',
+                     starting_response = NULL
                      ) {
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
@@ -43,7 +44,8 @@ glucidum <- function(data=NULL,
                       show_BoostaR = show_BoostaR,
                       show_GlimmaR = show_GlimmaR,
                       show_DevelopaR = show_DevelopaR,
-                      starting_tab = starting_tab
+                      starting_tab = starting_tab,
+                      starting_response = starting_response
                       )
   )
 }

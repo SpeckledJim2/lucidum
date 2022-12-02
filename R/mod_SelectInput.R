@@ -219,14 +219,12 @@ selectInput_choices <- function(
           choices_dt <- feature_spec[, c('feature','interaction_grouping')][choices_dt][order(idx)]
           choices_dt[is.na(interaction_grouping), interaction_grouping := 'No grouping']
           choices_dt[, idx := NULL]
-          
           if(!is.null(search_choices)){
             if(length(search_choices)>0){
               search_choices <- data.table(feature = search_choices, interaction_grouping = '--- matching search ---')
               choices_dt <- rbindlist(list(search_choices,choices_dt))
             }
           }
-          
           choices <- split(choices_dt, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
           choices <- lapply(choices, function(d){d[[1]]}) # convert to character list
           choices <- lapply(choices, list_if_length_one) # so selectInput choices look right

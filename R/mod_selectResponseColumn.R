@@ -33,7 +33,18 @@ mod_selectResponseColumn_ui <- function(id, label = 'label', ...){
 #' selectColumn Server Functions
 #'
 #' @noRd 
-mod_selectResponseColumn_server <- function(id, d, dt_update, numerical_cols, subset, special_options, kpi, kpi_spec, weight){
+mod_selectResponseColumn_server <- function(
+    id,
+    d,
+    dt_update,
+    numerical_cols,
+    subset,
+    special_options,
+    kpi,
+    kpi_spec,
+    weight,
+    startup
+    ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(c(d(), dt_update()), {
@@ -75,6 +86,13 @@ mod_selectResponseColumn_server <- function(id, d, dt_update, numerical_cols, su
           val <- d()[, mean(.SD), .SDcols=input$col]
         }
         updateSelectInput(inputId = 'col', label = paste0('Response ', response_text(d(), input$col, weight())))
+      }
+    })
+    observeEvent(startup(), once = TRUE, {
+      if(!is.null(startup())){
+        if(startup() %in% numerical_cols(d())){
+          updateSelectInput(inputId = 'col', selected = startup())
+        }
       }
     })
     return(reactive({input$col}))

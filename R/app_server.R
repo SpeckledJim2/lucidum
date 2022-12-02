@@ -91,8 +91,26 @@ app_server <- function(input, output,session) {
   
   # sidebar servers
   weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)
-  response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec, weight)
-  nav_options <- mod_navigator_server("navigator", kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
+  response <- mod_selectResponseColumn_server(
+    'response',
+    d,
+    dt_update,
+    TRUE,
+    NULL,
+    NULL,
+    kpi,
+    kpi_spec,
+    weight,
+    reactive({golem::get_golem_options('starting_response')})
+    )
+  nav_options <- mod_navigator_server(
+    'navigator',
+    kpi_spec,
+    GlimmaR_models,
+    BoostaR_models,
+    GlimmaR_idx,
+    BoostaR_idx
+  )
   
   # filter server
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
