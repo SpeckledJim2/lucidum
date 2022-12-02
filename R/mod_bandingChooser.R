@@ -17,7 +17,7 @@ mod_bandingChooser_ui <- function(id){
 #' bandingChooser Server Functions
 #'
 #' @noRd 
-mod_bandingChooser_server <- function(id, d, user_col){
+mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     col_type <- reactiveVal('NULL')
@@ -43,13 +43,10 @@ mod_bandingChooser_server <- function(id, d, user_col){
       # calculate what banding should be chosen initially
       # and what should be shown on the widget
       if(type=='numeric'){
-        b <- banding_guesser(d()[[col]])
-        b_display <- banding_displayed(b)
+        b_display <- banding_displayed(initial_banding())
       } else if(type=='date'){
-        b <- banding_guesser_date(d()[[col]])
-        b_display <- banding_displayed_date(b)
+        b_display <- banding_displayed_date(initial_banding())
       } else {
-        b <- 1
         b_display <- 'Factor'
       }
       # render widget
@@ -58,7 +55,7 @@ mod_bandingChooser_server <- function(id, d, user_col){
           radioGroupButtons(
             inputId = ns('banding'),
             label = b_display,
-            choices = c('<','Day','Week','Month','Qtr','Year','>',`<i class='fa fa-lock'></i>` = 'lock'),
+            choices = c('<','Day','Week','Mnth','Qtr','Year','>',`<i class='fa fa-lock'></i>` = 'lock'),
             individual = FALSE,
             selected = character(0),
             size = 'xs')
@@ -74,7 +71,7 @@ mod_bandingChooser_server <- function(id, d, user_col){
             size = 'xs')
         })
       }
-      banding(b)
+      banding(initial_banding())
     })
     observeEvent(input$banding, {
       b <- banding()
@@ -94,9 +91,11 @@ mod_bandingChooser_server <- function(id, d, user_col){
           } else if(input$banding=='>'){
             new_banding <- modify_banding_level(b, +1)
           } else {
-            new_banding <- input$banding
+            new_banding <- as.numeric(input$banding)
           }
           updateRadioGroupButtons(inputId='banding', label = banding_displayed(new_banding), selected = character(0))
+        } else {
+          new_banding <- NULL
         }
         banding(new_banding)
       }
@@ -105,12 +104,6 @@ mod_bandingChooser_server <- function(id, d, user_col){
     return({banding})
   })
 }
-    
-## To be copied in the UI
-# mod_bandingChooser_ui("bandingChooser_1")
-    
-## To be copied in the server
-# mod_bandingChooser_server("bandingChooser_1")
 
 banding_guesser <- function(x){
   # speed up - just use first 10000 rows
@@ -142,11 +135,16 @@ banding_guesser_date <- function(x){
 banding_displayed <- function(b){
   paste0('Banding (',as.character(format(b, big.mark=',', scientific = FALSE)),')')
 }
-
 banding_displayed_date <- function(b){
-  paste0('Banding (',b,')')
+  if(b=='Mnth'){
+    b_display <- 'Month'
+  } else if(b=='Qtr'){
+    b_display <- 'Quarter'
+  } else {
+    b_display <- b
+  }
+  paste0('Banding (',b_display,')')
 }
-
 modify_banding_level <- function (current_banding_level, modifier){
   # the banding levels are
   # 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50 etc
@@ -155,6 +153,7 @@ modify_banding_level <- function (current_banding_level, modifier){
   if (modifier==0){
     1
   } else {
+    current_banding_level <- as.numeric(current_banding_level)
     exponent <- floor(log10(current_banding_level))
     mantissa <- current_banding_level / 10^exponent
     overrule <- NA
@@ -212,21 +211,20 @@ modify_banding_level <- function (current_banding_level, modifier){
     }
   }
 }
-
 modify_banding_level_date <- function(current_banding_level, modifier){
   # the banding levels are
   # Day, Week, Month, Qtr (Quarter), Year
   if(modifier==0){
-    'Month'
+    'Mnth'
   } else if (modifier==-1){
     if(current_banding_level=='Day'){
       'Day'
     } else if (current_banding_level=='Week'){
       'Day'
-    } else if (current_banding_level=='Month'){
+    } else if (current_banding_level=='Mnth'){
       'Week'
     } else if (current_banding_level=='Qtr'){
-      'Month'
+      'Mnth'
     } else if (current_banding_level=='Year'){
       'Qtr'
     }
@@ -234,8 +232,8 @@ modify_banding_level_date <- function(current_banding_level, modifier){
     if(current_banding_level=='Day'){
       'Week'
     } else if (current_banding_level=='Week'){
-      'Month'
-    } else if (current_banding_level=='Month'){
+      'Mnth'
+    } else if (current_banding_level=='Mnth'){
       'Qtr'
     } else if (current_banding_level=='Qtr'){
       'Year'

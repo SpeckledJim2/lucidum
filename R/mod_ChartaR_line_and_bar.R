@@ -51,13 +51,6 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           column(4,
                  align = 'right',
                  mod_bandingChooser_ui(ns('x_banding'))
-                 # radioGroupButtons(
-                 #   inputId = "ChartaR_1W_banding",
-                 #   label = "Banding",
-                 #   choices = c('<','0.01','0.1','1','5','10','100','>',`<i class='fa fa-lock'></i>` = 'lock'),
-                 #   individual = FALSE,
-                 #   size = 'xs',
-                 #   selected = -1)
           )
         ),
         fluidRow(
@@ -110,8 +103,8 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           id = 'ChartaR_one_way_tabs',
           type = 'tabs',
           tabPanel('Chart',
-                   h2('Chart'),
-                   htmlOutput(ns('test'))
+                   htmlOutput(ns('test')),
+                   DTOutput(ns('one_way_table')),
           ),
           tabPanel('Table',
                    h2('Table'),
@@ -129,26 +122,39 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
 mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    one_way_x_axis_feature <- selectInput_server(
-      id = 'x_axis_feature',
-      d,
-      dt_update,
-      feature_spec,
-      BoostaR_models,
-      BoostaR_idx,
-      FALSE
-    )
-    banding <- mod_bandingChooser_server('x_banding', d, one_way_x_axis_feature)
-    observeEvent(banding(), {
-      output$test <- renderUI({h3(banding())})
+    data_summary <- reactiveVal(NULL)
+    initial_banding <- reactiveVal(NULL)
+    banding <- reactiveVal(NULL)
+    x_col <- selectInput_server(id = 'x_axis_feature', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, FALSE)
+    add_cols <- NULL
+    observeEvent(x_col(), {
+      banding_guess <- banding_guesser_numeric_date(d(), x_col())
+      initial_banding(banding_guess)
+      banding(banding_guess)
     })
-    # one_way_add_columns <-  selectInput_server(
-    #   id = '1W_add_columns',
-    #   all_cols = reactive(names(d())),
-    #   feature_spec = feature_spec,
-    #   initial_selected = FALSE,
-    #   update = dt_update
-    # )
+    banding_new <- mod_bandingChooser_server('x_banding', d, x_col, initial_banding)
+    observeEvent(banding_new(), {
+      banding(banding_new())
+    })
+    observeEvent(c(dt_update(), response(), weight(), x_col(), banding(), kpi_spec()), {
+      data_summary(line_and_bar_summary(d(), response(), weight(), x_col(), banding(), kpi_spec()))
+    })
+    observeEvent(data_summary(), {
+      output$one_way_table <- DT::renderDT({
+        DT::datatable(
+          data_summary(),
+          rownames= FALSE,
+          options = list(pageLength = nrow(data_summary()),
+                         scrollX = T,
+                         scrollY = 'calc(60vh - 100px)'
+                         )
+          ) |>
+          DT::formatStyle(1:ncol(data_summary()), lineHeight='0%', fontSize = '12px')
+        })
+    })
+
+
+
   })
 }
     
@@ -157,3 +163,70 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     
 ## To be copied in the server
 # mod_ChartaR_line_and_bar_server("ChartaR_line_and_bar_1")
+
+line_and_bar_summary <- function(d, response, weight, group_by_col, banding, kpi_spec){
+  if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col)){
+    if(response!='' & weight !=''){
+      d_cols <- names(d)
+      if(response %in% d_cols & weight %in% c('N',d_cols)){
+        g <- d[[group_by_col]]
+        rows_idx <- which(d[['total_filter']]==1)
+        numeric_group_by_col <- FALSE
+        # band the variable if numeric or date
+        if(is.numeric(g)){
+          # band the numerical variable for plotting
+          banding <- as.numeric(banding)
+          numeric_group_by_col <- TRUE
+          new_colname <- paste0(group_by_col, '_banded')
+          banded <- floor(g/banding) * banding
+          group_by_col <- banded[rows_idx]
+        } else if (inherits(g,'Date')){
+          
+        } else {
+          
+        }
+        # assemble the columns we need in the summary
+        if(weight %in% c('N','no weights')){
+          cols_to_summarise <- c(response)
+        } else {
+          cols_to_summarise <- c(weight, response)
+        }
+        # summarise
+        if(length(rows_idx)==nrow(d)){
+          d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = cols_to_summarise]
+        } else {
+          d_summary <- d[rows_idx, c(count = .N,lapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = cols_to_summarise]
+        }
+        d_summary
+      }
+    }
+  }
+}
+
+banding_guesser_numeric_date <- function(d, col){
+  type <- 'NULL'
+  # get type of column
+  if(!is.null(col) & !is.null(d)){
+    if(col %in% names(d)){
+      if(inherits(d[[col]],c('factor','character'))){
+        type <- 'character'
+      } else if (inherits(d[[col]],c('numeric','integer'))){
+        type <- 'numeric'
+      } else if (inherits(d[[col]],'Date')){
+        type <- 'date'
+      } else if (col=='none'){
+        type <- 'NULL'
+      }
+    }
+  }
+  # calculate what banding should be chosen initially
+  # and what should be shown on the widget
+  if(type=='numeric'){
+    b <- banding_guesser(d[[col]])
+  } else if(type=='date'){
+    b <- banding_guesser_date(d[[col]])
+  } else {
+    b <- 0
+  }
+}
+

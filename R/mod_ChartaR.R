@@ -21,10 +21,6 @@ mod_ChartaR_ui <- function(id){
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
                          ),
-                tabPanel(value = '2-way line and bar', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px"), '2-way line and bar')), br()),
-                tabPanel(value = 'Box plot', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="18px", width="18px"), 'Box plot')), br()),
-                tabPanel(value = 'Scatterplot', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="15px", width="15px"), 'Scatterplot')), br()),
-                tabPanel(value = '2-way', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="15px", width="15px"), '2-way')), br()),
                 tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="15px", width="15px"), 'SHAP')), br())
                 )
   )
