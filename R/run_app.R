@@ -13,6 +13,7 @@
 #' @param show_GlimmaR logical, TRUE (default) will show the GlimmaR menu item.
 #' @param show_DevelopaR logical, TRUE (not default) will show the ShinyAce console.
 #' @param starting_tab character, name of tab to show on startup.
+#' @param starting_response character, name of response column to show on startup.
 #'
 #' @export
 #' @importFrom shiny shinyApp

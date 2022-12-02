@@ -50,13 +50,14 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           ),
           column(4,
                  align = 'right',
-                 radioGroupButtons(
-                   inputId = "ChartaR_1W_banding",
-                   label = "Banding",
-                   choices = c('<','0.01','0.1','1','5','10','100','>',`<i class='fa fa-lock'></i>` = 'lock'),
-                   individual = FALSE,
-                   size = 'xs',
-                   selected = -1)
+                 mod_bandingChooser_ui(ns('x_banding'))
+                 # radioGroupButtons(
+                 #   inputId = "ChartaR_1W_banding",
+                 #   label = "Banding",
+                 #   choices = c('<','0.01','0.1','1','5','10','100','>',`<i class='fa fa-lock'></i>` = 'lock'),
+                 #   individual = FALSE,
+                 #   size = 'xs',
+                 #   selected = -1)
           )
         ),
         fluidRow(
@@ -109,11 +110,12 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           id = 'ChartaR_one_way_tabs',
           type = 'tabs',
           tabPanel('Chart',
-                   h2('Chart')
+                   h2('Chart'),
+                   htmlOutput(ns('test'))
           ),
           tabPanel('Table',
-                   br(),
-                   h2('Table')
+                   h2('Table'),
+                   br()
           )
         )
       )
@@ -136,6 +138,10 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
       BoostaR_idx,
       FALSE
     )
+    banding <- mod_bandingChooser_server('x_banding', d, one_way_x_axis_feature)
+    observeEvent(banding(), {
+      output$test <- renderUI({h3(banding())})
+    })
     # one_way_add_columns <-  selectInput_server(
     #   id = '1W_add_columns',
     #   all_cols = reactive(names(d())),

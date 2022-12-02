@@ -47,6 +47,8 @@ glucidum(
 \item{show_DevelopaR}{logical, TRUE (not default) will show the ShinyAce console.}
 
 \item{starting_tab}{character, name of tab to show on startup.}
+
+\item{starting_response}{character, name of response column to show on startup.}
 }
 \description{
 Launch glucidum
