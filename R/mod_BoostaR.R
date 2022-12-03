@@ -40,6 +40,20 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
         preds <- BoostaR_models()[[BoostaR_idx()]]$predictions
         d()[rows_idx, lgbm_prediction := preds]
         dt_update(dt_update()+1)
+        # copy SHAP cols
+        if(!is.null(BoostaR_models()[[BoostaR_idx()]]$SHAP_cols)){
+          # copy SHAP values to d
+          existing_SHAP_cols <- names(d())[grep('_SHAP_', names(d()))] # get rid of any existing SHAP columns
+          if(length(existing_SHAP_cols)>0){
+            d()[, (existing_SHAP_cols) := NULL]
+          }
+          new_SHAP_idx <- BoostaR_models()[[BoostaR_idx()]]$SHAP_rows
+          new_SHAP_cols <- BoostaR_models()[[BoostaR_idx()]]$SHAP_cols
+          if(!is.null(new_SHAP_cols)){
+            SHAP_names <- names(new_SHAP_cols[,2:ncol(new_SHAP_cols)])
+            d()[new_SHAP_idx, (SHAP_names) := new_SHAP_cols[,2:ncol(new_SHAP_cols)]]
+          }
+        }
       }
     })
   })

@@ -847,6 +847,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     lgb.train(
       params = params,
       data = lgb_dat$l_train,
+      verbose = -1,
       valids = list('train'=lgb_dat$l_train,'test'=lgb_dat$l_test), # so we score both train and test data
       callbacks = list(cb.print.period(params$num_iterations)) # callback to enable progressbar to update
     )},
@@ -1087,8 +1088,8 @@ evaluation_plot <- function(evaluation_log){
     y_max <- max(eval_results$model_train_error[-ex_rows], eval_results$model_test_error[-ex_rows])
     y_range <- y_max - y_min
     plot_ly(eval_results, hovertemplate = paste('(%{x}, %{y})')) %>%
-      add_trace(x = ~iter, y = ~model_train_error, type = 'scatter', name = 'train', marker = list(color =  grDevices::rgb(255/255,0/255,0/255))) %>%
-      add_trace(x = ~iter, y = ~model_test_error, type = 'scatter', name = 'test', marker = list(color =  grDevices::rgb(0/255,0/255,0/255))) %>%
+      add_trace(x = ~iter, y = ~model_train_error, type = 'scatter', mode = 'markers', name = 'train', marker = list(color =  grDevices::rgb(255/255,0/255,0/255))) %>%
+      add_trace(x = ~iter, y = ~model_test_error, type = 'scatter', mode = 'markers', name = 'test', marker = list(color =  grDevices::rgb(0/255,0/255,0/255))) %>%
       config(displayModeBar = FALSE) %>%
       layout(legend = list(orientation = 'v', x = 1.05, y = 0.6)) %>%
       layout(hovermode = 'x') %>%

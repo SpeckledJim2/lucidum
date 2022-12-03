@@ -161,6 +161,11 @@ selectInput_choices <- function(
         SHAP_cols <- cols[grep('lgbm_SHAP', cols)]
         lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction'))
         all_cols <- c(current_model_prediction, importance_cols, lgbm_cols, SHAP_cols)
+        # replace blanks
+        if(length(current_model_prediction)==0) current_model_prediction <- 'none'
+        if(length(importance_cols)==0) importance_cols <- 'none'
+        if(length(lgbm_cols)==0) lgbm_cols <- 'none'
+        if(length(SHAP_cols)==0) SHAP_cols <- 'none'
         lucidum_choices <- rbindlist(
           list(
             data.table(feature = current_model_prediction, interaction_grouping = 'Current model'),
