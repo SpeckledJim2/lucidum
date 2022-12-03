@@ -130,7 +130,7 @@ banding_guesser <- function(x){
   banding
 }
 banding_guesser_date <- function(x){
-  'Month'
+  'Mnth'
 }
 banding_displayed <- function(b){
   paste0('Banding (',as.character(format(b, big.mark=',', scientific = FALSE)),')')

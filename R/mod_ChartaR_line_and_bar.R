@@ -30,7 +30,7 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           ),
           column(3,
                  radioGroupButtons(
-                   inputId = "ChartaR_1W_group_low_exposure",
+                   inputId = ns('group_low_exposure'),
                    label = "Group low weights",
                    choices = c(0,5,10,20,50,'1%'),
                    individual = FALSE,
@@ -136,21 +136,11 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     observeEvent(banding_new(), {
       banding(banding_new())
     })
-    observeEvent(c(dt_update(), response(), weight(), x_col(), banding(), kpi_spec()), {
-      data_summary(line_and_bar_summary(d(), response(), weight(), x_col(), banding(), kpi_spec()))
+    observeEvent(c(dt_update(), response(), weight(), x_col(), banding(), kpi_spec(), input$group_low_exposure), {
+      data_summary(line_and_bar_summary(d(), response(), weight(), x_col(), banding(), input$group_low_exposure, kpi_spec()))
     })
     observeEvent(data_summary(), {
-      output$one_way_table <- DT::renderDT({
-        DT::datatable(
-          data_summary(),
-          rownames= FALSE,
-          options = list(pageLength = nrow(data_summary()),
-                         scrollX = T,
-                         scrollY = 'calc(60vh - 100px)'
-                         )
-          ) |>
-          DT::formatStyle(1:ncol(data_summary()), lineHeight='0%', fontSize = '12px')
-        })
+      output$one_way_table <- DT::renderDT({format_table_DT(data_summary())})
     })
 
 
@@ -164,26 +154,56 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
 ## To be copied in the server
 # mod_ChartaR_line_and_bar_server("ChartaR_line_and_bar_1")
 
-line_and_bar_summary <- function(d, response, weight, group_by_col, banding, kpi_spec){
+line_and_bar_summary <- function(d, response, weight, group_by_col, banding, group_low_exposure, kpi_spec){
   if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col)){
     if(response!='' & weight !=''){
       d_cols <- names(d)
       if(response %in% d_cols & weight %in% c('N',d_cols)){
         g <- d[[group_by_col]]
         rows_idx <- which(d[['total_filter']]==1)
-        numeric_group_by_col <- FALSE
         # band the variable if numeric or date
         if(is.numeric(g)){
+          
           # band the numerical variable for plotting
           banding <- as.numeric(banding)
-          numeric_group_by_col <- TRUE
-          new_colname <- paste0(group_by_col, '_banded')
           banded <- floor(g/banding) * banding
-          group_by_col <- banded[rows_idx]
+          # if percentage hide_low_exposure selected, group the low exposure rows
+          if (group_low_exposure=='1%'){
+            q_low <- quantile(g[rows_idx], prob = 0.01, na.rm = TRUE)[[1]]
+            q_high <- quantile(g[rows_idx], prob = 0.99, na.rm = TRUE)[[1]]
+            q_low_banded <- floor(q_low/banding) * banding
+            q_high_banded <- (1+floor(q_high/banding)) * banding
+            banded <- pmax(q_low_banded, pmin(q_high_banded, banded))
+          }
+
+          banded_col <- banded[rows_idx]
+          new_colname <- paste0(group_by_col, '_banded')
         } else if (inherits(g,'Date')){
-          
+          if(banding=='Day'){
+            # day
+            banded <- g
+            new_colname <- paste0(group_by_col, '_day')
+          } else if (banding=='Week'){
+            # week
+            banded <- 100*year(g) + week(g)
+            new_colname <- paste0(group_by_col, '_week')
+          } else if (banding=='Mnth'){
+            # month
+            banded <- 100*year(g) + month(g)
+            new_colname <- paste0(group_by_col, '_month')
+          } else if (banding=='Qtr'){
+            # quarter
+            banded <- 100*year(g) + floor((month(g)-1)/3)+1
+            new_colname <- paste0(group_by_col, '_quarter')
+          } else if (banding=='Year'){
+            # year
+            banded <- year(g)
+            new_colname <- paste0(group_by_col, '_year')
+          }
+          banded_col <- banded[rows_idx]
         } else {
-          
+          banded_col <- group_by_col
+          new_colname <- group_by_col
         }
         # assemble the columns we need in the summary
         if(weight %in% c('N','no weights')){
@@ -193,11 +213,26 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, banding, kpi
         }
         # summarise
         if(length(rows_idx)==nrow(d)){
-          d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = cols_to_summarise]
+          d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
         } else {
-          d_summary <- d[rows_idx, c(count = .N,lapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = cols_to_summarise]
+          d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
         }
-        d_summary
+        # apply denominator
+        # divide by weight if specified
+        if(weight == 'N'){
+          first_col <- 3
+          # divide all summary columns (3rd onwards) by the weight column (2nd)
+          d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[2]]
+        } else if (weight != 'no weights'){
+          first_col <- 4
+          # divide all summary columns (4rd onwards) by the weight column (3rd)
+          d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[3]]
+        }
+
+        # change first column name
+        first_col <- names(d_summary)[[1]]
+        setnames(d_summary, old = first_col, new = new_colname)
+        setorderv(d_summary, new_colname)
       }
     }
   }
@@ -230,3 +265,17 @@ banding_guesser_numeric_date <- function(d, col){
   }
 }
 
+format_table_DT <- function(dt){
+  # format table prior to rendering with DT
+  dt[,3] <- round(dt[,3],2)
+  datatable(
+    dt,
+    rownames= FALSE,
+    options = list(pageLength = min(1000, nrow(dt)),
+                   scrollX = T,
+                   dom = 'tp',
+                   scrollY = 'calc(90vh - 300px)'
+    )
+  ) |>
+    formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '12px')
+}

@@ -197,7 +197,7 @@ mod_MappaR_ui <- function(id){
 #' 
 #' @noRd
 #' 
-mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec){
+mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show_MappaR){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     # setup map
@@ -233,8 +233,12 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec){
     
     # update map when one of the inputs up
     observe({
-      dt_update()
-      viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
+      # QUESTION - this "turns off" MappaR (no longer recalcs) - is there a better way?
+      # e.g. don't load up sf and leaflet if MappaR disabled
+      if(show_MappaR){
+        dt_update()
+        viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
+      }
     })
     
     observeEvent(input$tabs, {
