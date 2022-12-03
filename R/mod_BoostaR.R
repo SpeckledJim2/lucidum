@@ -33,6 +33,15 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
     mod_BoostaR_navigate_server('navigateBoostaR', BoostaR_models, BoostaR_idx)
     mod_BoostaR_tree_viewer_server('treeViewer', BoostaR_models, BoostaR_idx)
+    observeEvent(BoostaR_idx(), {
+      if(!is.null(BoostaR_idx())){
+        # copy model predictions to d
+        rows_idx <- BoostaR_models()[[BoostaR_idx()]]$pred_rows
+        preds <- BoostaR_models()[[BoostaR_idx()]]$predictions
+        d()[rows_idx, lgbm_prediction := preds]
+        dt_update(dt_update()+1)
+      }
+    })
   })
 }
     

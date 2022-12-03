@@ -2,7 +2,7 @@
 #' @importFrom data.table data.table setDT setkey
 #' @importFrom plotly style
 #' @importFrom utils head
-selectInput_ui <- function(id, label = 'your_label', height_divisor, height_adj, multiple = FALSE){
+selectInput_ui <- function(id, label = 'your_label', height_divisor, height_adj, multiple = FALSE, initial = 'Original'){
   ns <- NS(id)
   id_name <- ns("selectInput")
   # can't use - in js function name, replace with underscore
@@ -37,7 +37,7 @@ selectInput_ui <- function(id, label = 'your_label', height_divisor, height_adj,
         individual = FALSE,
         size = 'xs',
         justified = TRUE,
-        selected = 'Original'),
+        selected = initial),
       style = 'margin-top:0px; margin-bottom:-15px; padding-top:0px ; padding-bottom:0px'
     ),
     tags$head(tags$script(js_code)),
@@ -90,7 +90,7 @@ selectInput_ui <- function(id, label = 'your_label', height_divisor, height_adj,
       )
     )
 }
-selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, numeric_only) {
+selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, numeric_only, initial_selected) {
   moduleServer(id, function(input, output, session) {
     # QUESTION - when something depends on so many things it feels odd
     # is this a case where a plan observe would be neater?

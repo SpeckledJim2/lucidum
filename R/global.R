@@ -23,6 +23,7 @@ globalVariables(
     'internal_value',
     'internal_count',
     'idx',
-    'interaction_grouping'
+    'interaction_grouping',
+    'lgbm_prediction'
     )
   )
