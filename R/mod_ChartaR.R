@@ -21,7 +21,10 @@ mod_ChartaR_ui <- function(id){
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
                          ),
-                tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="15px", width="15px"), 'SHAP')), br())
+                tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="15px", width="15px"), 'SHAP')),
+                         br(),
+                         mod_ChartaR_SHAP_ui(ns('SHAP'))
+                         )
                 )
   )
 }
@@ -34,6 +37,7 @@ mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec, fea
     ns <- session$ns
     mod_histogram_server('histogram_tab', d, dt_update, response, weight, kpi_spec)
     mod_ChartaR_line_and_bar_server('line_and_bar', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx)
+    mod_ChartaR_SHAP_server('SHAP', d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec)
   })
 }
     
