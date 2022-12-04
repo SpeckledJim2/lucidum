@@ -69,7 +69,7 @@ mod_selectResponseColumn_server <- function(
       selected <- kpi_components$numerator
       updateSelectInput(inputId = 'col', selected = selected)
     })
-    observeEvent(c(input$col, weight(), dt_update()), ignoreInit = TRUE, {
+    observeEvent(c(input$col, weight(), dt_update(), kpi_spec()), ignoreInit = TRUE, {
       if(input$col %in% names(d()) &
          weight() %in% c('N', names(d()))){
         if('total_filter' %in% names(d())){
@@ -121,7 +121,6 @@ kpi_numerator_denominator <- function(kpi, kpi_spec){
   }
   return(components)
 }
-
 response_text <- function(d, response, weight, kpi_spec){
   if(nrow(d)>0 & weight!='' & response !=''){
     # get numerator
@@ -148,7 +147,6 @@ response_text <- function(d, response, weight, kpi_spec){
     paste0('= ', response_label)
   }
 }
-
 getColumnChoices <- function(d, numerical_cols = FALSE, subset = NULL, special_options = NULL){
   cols <- NULL
   if(!is.null(d)){
