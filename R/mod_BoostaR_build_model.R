@@ -521,7 +521,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         row_sample_rate <- 1
       } else {
         learning_rate <- c(0.1,0.5)
-        num_leaves <- c(1,5)
+        num_leaves <- c(2,10)
         max_depth <- c(3,6)
         col_sample_rate <- c(0.5,1.0)
         row_sample_rate <- c(0.5,1.0)
@@ -674,6 +674,10 @@ check_model_features_and_parameters <- function(d, response, weight, init_score,
     check <- 'No features selected'
   } else if (response %in% features){
     check <- 'Response included in features'
+  }
+  # check that none of the feature columns are dates (LightGBM will exclude)
+  if(any(sapply(d[,..features], inherits, 'Date'))){
+    check <- 'Date columns in features'
   }
   # check weight if not N
   if(weight!='N'){
@@ -1215,7 +1219,9 @@ post_model_update_BoostaR_feature_grid <- function(original_feature_grid, featur
   names(feature_importances) <- c('feature','gain')
   setkey(original_feature_grid, feature)
   setkey(feature_importances, feature)
-  original_feature_grid[, gain := NULL]
+  if('gain' %in% names(original_feature_grid)){
+    original_feature_grid[, gain := NULL]
+  }
   dt <- feature_importances[original_feature_grid]
   dt[is.na(gain), gain := 0]
   setorder(dt, -include, -gain, feature)
