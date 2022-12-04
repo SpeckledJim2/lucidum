@@ -173,60 +173,63 @@ mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, Bo
 
 #' @importFrom plotly add_surface
 viz_SHAP_chart <- function(d, weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, SHAP_quantile, rebase, SHAP_ribbons, feature_spec){
-  if(SHAP_quantile=='-'){
-    q <- 0
-  } else {
-    q <- as.numeric(substr(SHAP_quantile,1,nchar(SHAP_quantile)-1))/100
-  }
-  p <- plotly_empty(type = "scatter", mode = "markers") %>%
-    config(displayModeBar = FALSE) %>%
-    layout(title = list(text = 'No plot to show',yref = "paper", y = 0.5)
-    )
-  if(!is.null(d) & !is.null(weight) & !is.null(feature_1)){
-    c1 <- class(d[[feature_1]])
-    if(factor_1){
-      c1 <- 'factor'
-    }
-    if(is.null(feature_2)){
-      feature_2 <- 'none'
+  if(!is.null(d) & !is.null(weight)){
+    if(SHAP_quantile=='-'){
+      q <- 0
     } else {
-      if(feature_2!='none'){
-        c2 <- class(d[[feature_2]])
-        if(factor_2){
-          c2 <- 'factor'
+      q <- as.numeric(substr(SHAP_quantile,1,nchar(SHAP_quantile)-1))/100
+    }
+    p <- plotly_empty(type = "scatter", mode = "markers") %>%
+      config(displayModeBar = FALSE) %>%
+      layout(title = list(text = 'No plot to show',yref = "paper", y = 0.5)
+      )
+    if(!is.null(d) & !is.null(weight) & !is.null(feature_1)){
+      c1 <- class(d[[feature_1]])
+      if(factor_1){
+        c1 <- 'factor'
+      }
+      if(is.null(feature_2)){
+        feature_2 <- 'none'
+      } else {
+        if(feature_2!='none'){
+          c2 <- class(d[[feature_2]])
+          if(factor_2){
+            c2 <- 'factor'
+          }
+        }
+      }
+      if(weight=='N'){
+        idx <- 1:nrow(d)
+      } else {
+        idx <- which(d[[weight]]>0)
+      }
+      if(feature_2=='none'){
+        # 1D chart
+        if(c1 %in% c('integer','numeric') & !factor_1){
+          # flame chart by bands
+          p <- SHAP_flame(d[idx], weight, feature_1, banding_1, q, rebase, SHAP_ribbons, feature_spec)
+        } else {
+          # box and whisker in descending order by mean SHAP
+          p <- SHAP_box_and_whisker(d[idx], weight, feature_1, banding_1, factor_1, q, rebase, feature_spec)
+        }
+      } else {
+        # 2D chart
+        if(c1 %in% c('integer','numeric') & c2 %in% c('integer','numeric')){
+          # surface plot
+          p <- SHAP_surface(d[idx], weight, feature_1, feature_2, banding_1, banding_2, q)
+        } else if(!(c1 %in% c('integer','numeric')) & !(c2 %in% c('integer','numeric'))){
+          # heat map, sorted on c1 something
+          p <- SHAP_heatmap(d[idx], weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, q)
+        } else {
+          # average SHAP value in bands for numerical feature cut by non-numerical feature
+          p <- SHAP_lines(d[idx], weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, q)
         }
       }
     }
-    if(weight=='N'){
-      idx <- 1:nrow(d)
-    } else {
-      idx <- which(d[[weight]]>0)
-    }
-    if(feature_2=='none'){
-      # 1D chart
-      if(c1 %in% c('integer','numeric') & !factor_1){
-        # flame chart by bands
-        p <- SHAP_flame(d[idx], weight, feature_1, banding_1, q, rebase, SHAP_ribbons, feature_spec)
-      } else {
-        # box and whisker in descending order by mean SHAP
-        p <- SHAP_box_and_whisker(d[idx], weight, feature_1, banding_1, factor_1, q, rebase, feature_spec)
-      }
-    } else {
-      # 2D chart
-      if(c1 %in% c('integer','numeric') & c2 %in% c('integer','numeric')){
-        # surface plot
-        p <- SHAP_surface(d[idx], weight, feature_1, feature_2, banding_1, banding_2, q)
-      } else if(!(c1 %in% c('integer','numeric')) & !(c2 %in% c('integer','numeric'))){
-        # heat map, sorted on c1 something
-        p <- SHAP_heatmap(d[idx], weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, q)
-      } else {
-        # average SHAP value in bands for numerical feature cut by non-numerical feature
-        p <- SHAP_lines(d[idx], weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, q)
-      }
-    }
+    return(p)
   }
-  return(p)
 }
+
 SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons, feature_spec){
   col1 <- paste0('lgbm_SHAP_', feature_1)
   banded <- band_var(d[[feature_1]], q, banding_1)
