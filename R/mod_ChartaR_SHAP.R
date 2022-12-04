@@ -183,6 +183,7 @@ viz_SHAP_chart <- function(d, weight, feature_1, feature_2, banding_1, banding_2
       config(displayModeBar = FALSE) %>%
       layout(title = list(text = 'No plot to show',yref = "paper", y = 0.5)
       )
+    if(feature_1=='none') feature_1 <- NULL
     if(!is.null(d) & !is.null(weight) & !is.null(feature_1)){
       c1 <- class(d[[feature_1]])
       if(factor_1){
