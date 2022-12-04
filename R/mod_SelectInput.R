@@ -107,12 +107,17 @@ selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, B
           numeric_only
           )
       }
-      if(is.null(input$selectInput)){
-        selected <- character(0)
-      } else if(input$selectInput %not_in% unlist(choices, use.names = FALSE)){
-        selected <- character(0)
-      } else {
-        selected <- input$selectInput
+      # choose what should be selected
+      selected <- character(0) # default
+      if(length(choices)>0){ # override
+        if(choices[1] %not_in% c('none','No lucidum columns')){
+          selected <- choices[1]
+        }
+      } # override
+      if(!is.null(input$selectInput)){
+        if(all(input$selectInput %in% unlist(choices, use.names = FALSE))){
+          selected <- input$selectInput
+        }
       }
       updateSelectInput(
         session,
