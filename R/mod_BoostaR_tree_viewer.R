@@ -84,19 +84,22 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
     observeEvent(c(BoostaR_models(), BoostaR_idx(), input$BoostaR_tree_selector), {
       output$BoostaR_tree_summary <- DT::renderDT({
         # model summary table
-        dt <- tree_statistics(BoostaR_models()[[BoostaR_idx()]]$tree_table, input$BoostaR_tree_selector)
-        dt |>
-          DT::datatable(rownames= FALSE,
-                        selection=list(mode="multiple", target="row"),
-                        options = list(pageLength = nrow(dt),
-                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
-                                       dom = 'rt',
-                                       scrollX = T,
-                                       #scrollY = 'calc(80vh - 380px)',
-                                       searchHighlight=TRUE
-                        )
-          ) |>
-          DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+        if(length(BoostaR_models())>0){
+          if(BoostaR_idx() %in% names(BoostaR_models())){
+            dt <- tree_statistics(BoostaR_models()[[BoostaR_idx()]]$tree_table, input$BoostaR_tree_selector)
+            dt |>
+              DT::datatable(rownames= FALSE,
+                            selection=list(mode="multiple", target="row"),
+                            options = list(pageLength = nrow(dt),
+                                           initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                           dom = 'rt',
+                                           scrollX = T,
+                                           searchHighlight=TRUE
+                            )
+              ) |>
+              DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+          }
+        }
       })
     })
   })
