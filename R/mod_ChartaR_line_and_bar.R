@@ -152,7 +152,10 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
   if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col)){
     if(response!='' & weight !=''){
       d_cols <- names(d)
-      if(response %in% d_cols & weight %in% c('N',d_cols)){
+      if(response %in% d_cols &
+         group_by_col %in% d_cols &
+         all(add_cols %in% d_cols) &
+         weight %in% c('N',d_cols)){
         g <- d[[group_by_col]]
         rows_idx <- which(d[['total_filter']]==1)
         # band the variable if numeric or date

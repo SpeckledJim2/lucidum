@@ -156,7 +156,7 @@ selectInput_choices <- function(
       # get features
       if(!is.null(BoostaR_models) & !is.null(BoostaR_idx)){
         current_model_prediction <- intersect(cols, 'lgbm_prediction')
-        importance_cols <- BoostaR_models[[BoostaR_idx]]$importances$Feature
+        importance_cols <- intersect(BoostaR_models[[BoostaR_idx]]$importances$Feature, cols)
         lgbm_cols <- cols[grep('lgbm', cols)]
         SHAP_cols <- cols[grep('lgbm_SHAP', cols)]
         lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction'))
