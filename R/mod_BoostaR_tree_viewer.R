@@ -22,6 +22,7 @@ mod_BoostaR_tree_viewer_ui <- function(id){
             width = 6,
             div(
               style='margin-top:18px;',
+              align = 'right',
               radioGroupButtons(
                 inputId = ns('BoostaR_tree_colours'),
                 label = NULL,
