@@ -140,7 +140,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
       data_summary(line_and_bar_summary(d(), response(), weight(), x_col(), add_cols(), banding(), input$group_low_exposure, input$sort, kpi_spec()))
     })
     observeEvent(data_summary(), {
-      output$one_way_table <- DT::renderDT({format_table_DT(data_summary())})
+      output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), weight())})
       output$chart <- renderPlotly({format_plotly(data_summary(), response(), weight(),
                                                   input$show_labels, input$show_response)})
     })
@@ -270,9 +270,48 @@ banding_guesser_numeric_date <- function(d, col){
     b <- 0
   }
 }
-format_table_DT <- function(dt){
-  # format table prior to rendering with DT
+
+add_total_row <- function(dt, weight){
+  if(all(c('min','perc_5','mean','perc_95','max') %in% names(dt))) SHAP_cols <- TRUE else SHAP_cols <- FALSE
+  if(weight=='N'){
+    weight_cols <- 'N'
+    weight_extra <- 0
+  } else {
+    weight_cols <- c('N',weight)
+    weight_extra <- 1
+  }
+  wt <- dt[[weight]]
+  if(SHAP_cols){
+    response_cols <- names(dt)[(3+weight_extra):(ncol(dt)-5)]
+  } else {
+    response_cols <- names(dt)[(3+weight_extra):ncol(dt)]
+  }
+  first_col_name <- names(dt)[1]
+  total_cell <- dt[1,1]
+  total_cell[,1] <- as.character(total_cell[,1])
+  total_cell[1,1] <- 'Total'
+  weight_totals <- dt[,lapply(.SD,sum,na.rm=TRUE),.SDcols=weight_cols]
+  sumprod <- function(x,wt){sum(x*wt, na.rm=TRUE)}
+  response_totals <- dt[,lapply(.SD,sumprod,wt=wt),.SDcols=response_cols]
+  response_totals <- response_totals / weight_totals[[ncol(weight_totals)]]
+  if(SHAP_cols){
+    # fill in when done
+  } else {
+    total_row <- cbind(total_cell, weight_totals, response_totals)
+  }
+  dt[, (first_col_name) := lapply(.SD, as.character), .SDcols=first_col_name]
+  rbind(dt, total_row)
+}
+
+format_table_DT <- function(dt, weight){
+  # add a total row at the bottom
+  dt <- add_total_row(dt, weight)
   dt[,3:ncol(dt)] <- round(dt[,3:ncol(dt)],2)
+  if(weight=='N'){
+    weight_cols <- 'N'
+  } else {
+    weight_cols <- c('N', weight)
+  }
   datatable(
     dt,
     rownames= FALSE,
@@ -282,7 +321,9 @@ format_table_DT <- function(dt){
                    scrollY = 'calc(90vh - 300px)'
     )
   ) |>
-    formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '12px')
+    formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '12px') |>
+    formatStyle(names(dt), target = "row", fontWeight = DT::styleEqual('Total', 'bold')) |>
+    formatRound(weight_cols, digits = 0)
 }
 
 #' @importFrom plotly plotly_empty 
