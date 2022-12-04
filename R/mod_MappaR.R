@@ -41,6 +41,7 @@ mod_MappaR_ui <- function(id){
                            align = 'center',
                            textOutput(ns('panel_title')),
                            htmlOutput(ns('panel_location')),
+                           textOutput(ns('panel_value')),
                            textOutput(ns('filters'))
                     )
                   ),
@@ -226,7 +227,8 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show
           colour1 = input$colour1,
           colour2 = input$colour2,
           colour3 = input$colour3,
-          sectors = input$sectors
+          sectors = input$sectors,
+          label_size = input$label_size
         )
       )
     })
@@ -293,7 +295,7 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show
 #' 
 #' @import sf
 #' @importFrom leaflet leafletProxy clearShapes clearMarkers clearControls addMapPane colorBin
-#' @importFrom leaflet addPolygons labelOptions highlightOptions pathOptions
+#' @importFrom leaflet addPolygons labelOptions highlightOptions pathOptions addLabelOnlyMarkers
 #' @importFrom grDevices colorRamp rgb
 #' @importFrom stats quantile
 #'
@@ -320,13 +322,18 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
         areas_sf <- merge(x=uk_areas, y=area_summary, by = 'PostcodeArea', all.x = TRUE)
       }
     }
-    
     # clear the map
     m <- map |>
       leaflet::clearShapes() |>
       leaflet::clearMarkers() |>
       leaflet::clearControls()
-    
+    # show labels and label size
+    if(map_options$label_size==0){
+      show_area_labels <- FALSE
+    } else {
+      show_area_labels <- TRUE
+    }
+    label_size <- ifelse(map_options$label_size==0,0,map_options$label_size+5)
     # area bins, labels and opacity
     if(!is.null(area_summary)){
       bins_area <- unique(stats::quantile(round(area_summary$area_plot,6), na.rm = TRUE, probs = 0:20/20))
@@ -334,29 +341,38 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
       bins_area[length(bins_area)] <- bins_area[length(bins_area)] + 0.000001
       pal_area <- leaflet::colorBin(palette = grDevices::colorRamp(c(map_options$colour1,map_options$colour2,map_options$colour3), interpolate="linear"), domain = NULL, bins = bins_area)
       if(length(bins_area)>1){area_fillColor <- pal_area(areas_sf$area_plot)} else {area_fillColor <- 0}
-      #area_labels <- apply_kpi_format(areas_sf$area_plot, response, weight, kpi_spec)
+      area_labels <- apply_kpi_format(areas_sf$area_plot, response, weight, kpi_spec)
       opacity_area_modifier <- hot_spotted_opacity(areas_sf$area_plot, map_options$hotspots)
     }
-    
     # add on the area polygons
     label_style <- list('box-shadow' = '3px 3px rgba(0,0,0,0.25)','font-size' = '16px','border-color' = 'rgba(0,0,0,0.5)')
     if(!is.null(area_summary)){
       m |>
         leaflet::addMapPane('area_polygons', zIndex = 405) |>
-        leaflet::addPolygons(data = areas_sf,
-                             layerId = areas_sf$PostcodeArea,
-                             group = 'Area',
-                             weight = map_options$line_thickness,
-                             opacity = map_options$opacity,
-                             color = "black",
-                             smoothFactor = 0,
-                             fillColor = area_fillColor,
-                             fillOpacity = map_options$opacity * opacity_area_modifier,
-                             label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',signif(areas_sf$area_plot,6)), HTML),
-                             labelOptions = labelOptions(textOnly = FALSE, style=label_style),
-                             highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
-                             options = pathOptions(pane = "area_polygons")
-        )
+        leaflet::addPolygons(
+          data = areas_sf,
+          layerId = areas_sf$PostcodeArea,
+          group = 'Area',
+          weight = map_options$line_thickness,
+          opacity = map_options$opacity,
+          color = "black",
+          smoothFactor = 0,
+          fillColor = area_fillColor,
+          fillOpacity = map_options$opacity * opacity_area_modifier,
+          label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',area_labels), HTML),
+          labelOptions = labelOptions(textOnly = FALSE, style=label_style),
+          highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
+          options = pathOptions(pane = "area_polygons")) |>
+        addLabelOnlyMarkers(
+          lng = areas_sf$X,
+           lat = areas_sf$Y,
+           label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',area_labels), HTML),
+           labelOptions = labelOptions(
+             style = list('color' = "black", 'font-size' = paste0(label_size, 'px')),
+             noHide = show_area_labels,
+             direction = 'center',
+             textOnly = TRUE)
+          )
     }
   }
 }
@@ -393,7 +409,6 @@ postcode_summary <- function(d, response, weight, resolution){
   setnames(summary, c(resolution, response, weight))
   return(summary)
 }
-
 base_map <- function(){
   leaflet(options = leafletOptions(preferCanvas = TRUE, zoomControl = FALSE, attributionControl=TRUE)) |>
     addTiles(group = "OSM") |>
@@ -409,7 +424,6 @@ base_map <- function(){
     addEasyButton(easyButton(icon="fa-globe", title="Reset", onClick=JS("function(btn, map){map.setView([54.81,-1],6);}"))) |>
     setView(lng=-1,lat=54.81,zoom=6)
 }
-
 hot_spotted_opacity <- function(p, hotspots){
   if(hotspots==0){
     opacity_modifier <- 1
@@ -419,7 +433,6 @@ hot_spotted_opacity <- function(p, hotspots){
     opacity_modifier <- ifelse(!is.na(p) & p < -maxN(-p-1e-06, -hotspots),1,0)
   }
 }
-
 maxN <- function(x, N=2){
   len <- length(x)
   # replace NAs with smallest value in x
@@ -430,7 +443,6 @@ maxN <- function(x, N=2){
   }
   sort(x,partial=len-N+1)[len-N+1]
 }
-
 return_mouse_hover_postcode <- function(pointId){
   if(nchar(pointId)>2){
     pointId_area <- substr(pointId,1,regexpr('[0-9]', pointId)-1)
@@ -439,3 +451,48 @@ return_mouse_hover_postcode <- function(pointId){
   }
   postcode_area_name_mapping[PostcodeArea==pointId_area, PostcodeArea_name]
 }
+apply_kpi_format <- function(x, response, weight, kpi_spec){
+  kpi_numerator <- NULL
+  kpi_denominator <- NULL
+  # function to format the number x according to whatever format has been defined in the kpi_spec
+  if(is.numeric(x) & !is.null(response) & !is.null(weight)){
+    format_row <- kpi_spec[kpi_numerator==response & kpi_denominator==weight,]
+    if(nrow(format_row)>0){
+      significant_digits <- format_row$kpi_signif
+      divisor <- format_row$kpi_divisor
+      decimal_places <- format_row$kpi_dp
+      prefix <- format_row$kpi_prefix
+      suffix <- format_row$kpi_suffix
+      if(is.na(significant_digits)) significant_digits <- 6
+      if(is.na(divisor)) divisor <- 1
+      #if(is.na(decimal_places)) decimal_places <- 3
+      if(is.na(prefix)) prefix <- ''
+      if(is.na(suffix)) suffix <- ''
+      # format number
+      x_MappaR <- x / divisor
+      if(!is.na(decimal_places) & is.numeric(decimal_places)){
+        x_MappaR <- format(round(x_MappaR,decimal_places), nsmall = decimal_places, big.mark = ',')
+      } else {
+        x_MappaR <- format(x_MappaR, digits = significant_digits, big.mark = ',')
+      }
+      x_MappaR <- paste(sep = '', prefix, x_MappaR, suffix)
+    } else {
+      # simple format depending on magnitude of number
+      m <- mean(x, na.rm = TRUE)
+      if(!is.na(m)){
+        if(log10(abs(m)+1)<0){
+          x_MappaR <- format(round(x,3), nsmall = 3, big.mark = ',')
+        } else if (log10(abs(m)+1)<2){
+          x_MappaR <- format(round(x,3), nsmall = 2, big.mark = ',')
+        } else {
+          x_MappaR <- format(round(x,3), nsmall = 0, big.mark = ',')
+        }
+      } else {
+        x_MappaR <- NA
+      }
+    }
+  } else {
+    x_MappaR <- NA
+  }
+}
+
