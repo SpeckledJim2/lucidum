@@ -157,91 +157,92 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
          all(add_cols %in% d_cols) &
          weight %in% c('N',d_cols)){
         g <- d[[group_by_col]]
-        rows_idx <- which(d[['total_filter']]==1)
-        # band the variable if numeric or date
-        if(is.numeric(g) & banding!='0'){
-          # band the numerical variable for plotting
-          banding <- as.numeric(banding)
-          banded <- floor(g/banding) * banding
-          # if percentage hide_low_exposure selected, group the low exposure rows
-          if (group_low_exposure=='1%'){
-            q_low <- quantile(g[rows_idx], prob = 0.01, na.rm = TRUE)[[1]]
-            q_high <- quantile(g[rows_idx], prob = 0.99, na.rm = TRUE)[[1]]
-            q_low_banded <- floor(q_low/banding) * banding
-            q_high_banded <- (1+floor(q_high/banding)) * banding
-            banded <- pmax(q_low_banded, pmin(q_high_banded, banded))
-          }
-
-          banded_col <- banded[rows_idx]
-          new_colname <- paste0(group_by_col, '_banded')
-        } else if (inherits(g,'Date')){
-          if(banding=='Day'){
-            # day
-            banded <- g
-            new_colname <- paste0(group_by_col, '_day')
-          } else if (banding=='Week'){
-            # week
-            banded <- 100*year(g) + week(g)
-            new_colname <- paste0(group_by_col, '_week')
-          } else if (banding=='Mnth'){
-            # month
-            banded <- 100*year(g) + month(g)
-            new_colname <- paste0(group_by_col, '_month')
-          } else if (banding=='Qtr'){
-            # quarter
-            banded <- 100*year(g) + floor((month(g)-1)/3)+1
-            new_colname <- paste0(group_by_col, '_quarter')
-          } else if (banding=='Year'){
-            # year
-            banded <- year(g)
-            new_colname <- paste0(group_by_col, '_year')
-          }
-          banded_col <- banded[rows_idx]
-        } else {
-          banded_col <- group_by_col
-          new_colname <- group_by_col
-        }
-        # assemble the columns we need in the summary
-        if(weight %in% c('N','no weights')){
-          cols_to_summarise <- c(response, add_cols)
-        } else {
-          cols_to_summarise <- c(weight, response, add_cols)
-        }
-        # summarise
-        if(length(rows_idx)==nrow(d)){
-          d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
-        } else {
-          d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
-        }
-        # apply denominator
-        # divide by weight if specified
-        if(weight == 'N'){
-          first_col <- 3
-          # divide all summary columns (3rd onwards) by the weight column (2nd)
-          d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[2]]
-        } else if (weight != 'no weights'){
-          first_col <- 4
-          # divide all summary columns (4rd onwards) by the weight column (3rd)
-          d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[3]]
-        }
-        # change first column name
-        first_col <- names(d_summary)[[1]]
-        setnames(d_summary, old = first_col, new = new_colname)
-        # sort table
-        if(sort=='A-Z'){
-          setorderv(d_summary, new_colname)
-        } else if(sort=='Wt'){
-          setorderv(d_summary, weight, -1)
-        } else if(sort=='Act'){
-          setorderv(d_summary, response, -1)
-        } else if (sort=='Add'){
-          if(length(add_cols)>0){
-            setorderv(d_summary, response, -1)
+        if(!(is.numeric(g) & banding=='0')){
+          rows_idx <- which(d[['total_filter']]==1)
+          # band the variable if numeric or date
+          if(is.numeric(g) & banding!='0'){
+            # band the numerical variable for plotting
+            banding <- as.numeric(banding)
+            banded <- floor(g/banding) * banding
+            # if percentage hide_low_exposure selected, group the low exposure rows
+            if (group_low_exposure=='1%'){
+              q_low <- quantile(g[rows_idx], prob = 0.01, na.rm = TRUE)[[1]]
+              q_high <- quantile(g[rows_idx], prob = 0.99, na.rm = TRUE)[[1]]
+              q_low_banded <- floor(q_low/banding) * banding
+              q_high_banded <- (1+floor(q_high/banding)) * banding
+              banded <- pmax(q_low_banded, pmin(q_high_banded, banded))
+            }
+            banded_col <- banded[rows_idx]
+            new_colname <- paste0(group_by_col, '_banded')
+          } else if (inherits(g,'Date')){
+            if(banding=='Day'){
+              # day
+              banded <- g
+              new_colname <- paste0(group_by_col, '_day')
+            } else if (banding=='Week'){
+              # week
+              banded <- 100*year(g) + week(g)
+              new_colname <- paste0(group_by_col, '_week')
+            } else if (banding=='Mnth'){
+              # month
+              banded <- 100*year(g) + month(g)
+              new_colname <- paste0(group_by_col, '_month')
+            } else if (banding=='Qtr'){
+              # quarter
+              banded <- 100*year(g) + floor((month(g)-1)/3)+1
+              new_colname <- paste0(group_by_col, '_quarter')
+            } else if (banding=='Year'){
+              # year
+              banded <- year(g)
+              new_colname <- paste0(group_by_col, '_year')
+            }
+            banded_col <- banded[rows_idx]
           } else {
-            setorderv(d_summary, add_cols[1], -1)
+            banded_col <- group_by_col
+            new_colname <- group_by_col
           }
-        } else if (sort=='PD'){
-          setorderv(d_summary, new_colname)
+          # assemble the columns we need in the summary
+          if(weight %in% c('N','no weights')){
+            cols_to_summarise <- c(response, add_cols)
+          } else {
+            cols_to_summarise <- c(weight, response, add_cols)
+          }
+          # summarise
+          if(length(rows_idx)==nrow(d)){
+            d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
+          } else {
+            d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
+          }
+          # apply denominator
+          # divide by weight if specified
+          if(weight == 'N'){
+            first_col <- 3
+            # divide all summary columns (3rd onwards) by the weight column (2nd)
+            d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[2]]
+          } else if (weight != 'no weights'){
+            first_col <- 4
+            # divide all summary columns (4rd onwards) by the weight column (3rd)
+            d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[3]]
+          }
+          first_col_name <- names(d_summary)[1]
+          setnames(d_summary, old = first_col_name, new = new_colname)
+          # sort table
+          if(sort=='A-Z'){
+            setorderv(d_summary, new_colname)
+          } else if(sort=='Wt'){
+            setorderv(d_summary, weight, -1)
+          } else if(sort=='Act'){
+            setorderv(d_summary, response, -1)
+          } else if (sort=='Add'){
+            if(length(add_cols)>0){
+              first_add_col <- add_cols[1]
+              setorderv(d_summary, first_add_col, -1)
+            } else {
+              setorderv(d_summary, response, -1)
+            }
+          } else if (sort=='PD'){
+            setorderv(d_summary, new_colname)
+          }
         }
       }
     }
@@ -441,25 +442,24 @@ format_plotly <- function(dt, response, weight, show_labels, show_response){
         )
       }
     }
+    # format the chart
+    filter_text <- ''
+    train_test_filter_text <- ''
+    p <- p |> layout(xaxis = xform,
+                     yaxis = yform,
+                     yaxis2 = yform2,
+                     margin = list(r = 100, l = 50, t = 50),
+                     title = list(text = paste0(boldify(yform2$title), filter_text, ' ', train_test_filter_text), font = list(size = 16, face='bold'))
+    ) |>
+      layout(legend = list(traceorder = 'normal',
+                           orientation = 'v',
+                           title=list(text='<b> Click to show/hide</b>'),
+                           x = 1.05,
+                           y = 1.05,
+                           font = list(size = 10)
+                           )
+             )
   }
-  # format the chart
-  filter_text <- ''
-  train_test_filter_text <- ''
-  p <- p |> layout(xaxis = xform,
-                    yaxis = yform,
-                    yaxis2 = yform2,
-                    margin = list(r = 100, l = 50, t = 50),
-                    title = list(text = paste0(boldify(yform2$title), filter_text, ' ', train_test_filter_text), font = list(size = 16, face='bold'))
-  ) |>
-    layout(legend = list(traceorder = 'normal',
-                         orientation = 'v',
-                         title=list(text='<b> Click to show/hide</b>'),
-                         x = 1.05,
-                         y = 1.05,
-                         font = list(size = 10)
-                         )
-           )
-  
   p
 }
 
