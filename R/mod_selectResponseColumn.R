@@ -85,7 +85,8 @@ mod_selectResponseColumn_server <- function(
         } else {
           val <- d()[, mean(.SD), .SDcols=input$col]
         }
-        updateSelectInput(inputId = 'col', label = paste0('Response ', response_text(d(), input$col, weight())))
+        response_label <- 0
+        updateSelectInput(inputId = 'col', label = paste0('Response ', response_text(d(), input$col, weight(), kpi_spec())))
       }
     })
     observeEvent(startup(), once = TRUE, {
@@ -121,7 +122,7 @@ kpi_numerator_denominator <- function(kpi, kpi_spec){
   return(components)
 }
 
-response_text <- function(d, response, weight){
+response_text <- function(d, response, weight, kpi_spec){
   if(nrow(d)>0 & weight!='' & response !=''){
     # get numerator
     if('total_filter' %in% names(d)){
@@ -143,7 +144,8 @@ response_text <- function(d, response, weight){
         den <- d[, sum(.SD, na.rm = TRUE), .SDcols = weight]
       }
     }
-    paste0('= ', format(num/den, big.mark = ',', digits = 4))
+    response_label <- apply_kpi_format(num/den, response, weight, kpi_spec)
+    paste0('= ', response_label)
   }
 }
 
