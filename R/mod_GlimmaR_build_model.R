@@ -10,7 +10,7 @@
 mod_GlimmaR_build_model_ui <- function(id){
   ns <- NS(id)
   tagList(
-    absolutePanel(id = ns("GlimmaR_helper_panel"),
+    absolutePanel(id = ns("helper_panel"),
                   class = "panel panel-default",
                   top = '60px',
                   right = '14px',
@@ -21,7 +21,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                   style = "opacity: 1.0; z-index: 10;",
                   fluidRow(
                     column(width = 6,
-                           dropdownButton(inputId = ns('GlimmaR_helper_dropdown'),
+                           dropdownButton(inputId = ns('helper_dropdown'),
                                           width = 700,
                                           up = FALSE,
                                           circle = FALSE,
@@ -34,7 +34,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                               width = 6,
                                               div(
                                                 radioGroupButtons(
-                                                  inputId = ns('GlimmaR_helper_feature_choice'),
+                                                  inputId = ns('helper_feature_choice'),
                                                   choices = c('Original','A-Z','GBM'),
                                                   size = 's',
                                                   label = 'Feature',
@@ -44,7 +44,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                               ),
                                               div(
                                                 textInput(
-                                                  inputId = ns('GlimmaR_helper_search'),
+                                                  inputId = ns('helper_search'),
                                                   width = '100%',
                                                   label = NULL,
                                                   placeholder = 'filter'
@@ -52,7 +52,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                                 style = 'margin-top:0px; margin-bottom:-15px;'
                                               ),
                                               selectInput(
-                                                inputId = ns('GlimmaR_helper_feature'),
+                                                inputId = ns('helper_feature'),
                                                 label = NULL,
                                                 choices = NULL,
                                                 multiple = FALSE,
@@ -64,7 +64,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                               width = 6,
                                               div(
                                                 radioGroupButtons(
-                                                  inputId = ns('GlimmaR_helper_levels_choice'),
+                                                  inputId = ns('helper_levels_choice'),
                                                   choices = c('Single','Group'),
                                                   size = 's',
                                                   label = 'Factor grouping/function selection',
@@ -74,7 +74,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                               ),
                                               div(
                                                 textInput(
-                                                  inputId = ns('GlimmaR_helper_level_text'),
+                                                  inputId = ns('helper_level_text'),
                                                   width = '100%',
                                                   label = NULL,
                                                   placeholder = 'function arguments seperated by commas'
@@ -82,7 +82,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                                 style = 'margin-top:0px; margin-bottom:-15px;'
                                               ),
                                               selectInput(
-                                                inputId = ns('GlimmaR_helper_levels'),
+                                                inputId = ns('helper_levels'),
                                                 label = NULL,
                                                 choices = NULL,
                                                 multiple = TRUE,
@@ -95,7 +95,7 @@ mod_GlimmaR_build_model_ui <- function(id){
                                             column(
                                               width = 12,
                                               textAreaInput(
-                                                inputId = ns('GlimmaR_formula_suggestion'),
+                                                inputId = ns('formula_suggestion'),
                                                 label = NULL,
                                                 width = '100%',
                                                 height = '200px',
@@ -127,7 +127,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             align = 'right',
             br(),
             actionButton(
-              inputId = ns("GlimmaR_tabulate"),
+              inputId = ns('tabulate'),
               label = 'Tabulate',
               icon = icon("table"),
             ),
@@ -141,7 +141,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               multiple = FALSE
             ),
             shinySaveButton(
-              id = ns('GlimmaR_formula_save'),
+              id = ns('formula_save'),
               label = '',
               title = 'Choose location to save formula',
               filename = "",
@@ -157,7 +157,7 @@ mod_GlimmaR_build_model_ui <- function(id){
           column(
             width = 3,
             selectInput(
-              inputId = ns('GlimmaR_objective'),
+              inputId = ns('objective'),
               width = '100%',
               label = 'Family',
               choices = list('identity link' = list('gaussian'),
@@ -173,7 +173,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 4,
             align = 'right',
             radioGroupButtons(
-              inputId = ns('GlimmaR_tabulate_format'),
+              inputId = ns('tabulate_format'),
               label = 'Tabulate format',
               choices = c('solo','long'),
               selected = 'solo'
@@ -183,17 +183,23 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 5,
             align = 'right',
             radioGroupButtons(
-              inputId = ns('GlimmaR_tabulate_scale'),
+              inputId = ns('tabulate_scale'),
               label = 'Tabulate function',
               choices = c('link','response'),
               selected = 'response'
             )
           )
         ),
+        # QUESTION - need to move
         tags$style(".form-group.shiny-input-container { width: 100%; }"),
-        tags$style("#GlimmaR_glm_formula {font-size:14px;}"),
+        # QUESTION - better way re namespace?
+        tags$script("
+                         Shiny.addCustomMessageHandler('GlimmaR-buildGlimmaR-formula_text_size', function(size) {
+                          var box = document.getElementById('GlimmaR-buildGlimmaR-glm_formula');
+                          box.style.fontSize = size;
+                         });"),
         textAreaInput(
-          inputId = ns("GlimmaR_glm_formula"),
+          inputId = ns('glm_formula'),
           value = 'Edit the GLM formula...',
           label = NULL,
           height = '480px',
@@ -204,7 +210,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 6,
             align = 'right',
             radioGroupButtons(
-              inputId = ns("GlimmaR_data_to_use"),
+              inputId = ns('data_to_use'),
               justified =  TRUE,
               label = NULL,
               choices = c('All rows', 'Training only'),
@@ -215,12 +221,12 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 3,
             align = 'right',
             actionButton(
-              inputId = ns("GlimmaR_textsize_minus"),
+              inputId = ns('textsize_minus'),
               label = "A-",
               style = 'padding-left: 8px; padding-right:8px'
             ),
             actionButton(
-              inputId = ns("GlimmaR_textsize_plus"),
+              inputId = ns('textsize_plus'),
               label = "A+",
               style = 'padding-left: 6px; padding-right:6px'
             )
@@ -229,7 +235,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 3,
             align = 'right',
             actionButton(
-              inputId = ns("GlimmaR_build_GLM"),
+              inputId = ns('build_GLM'),
               label = "Build",
               icon = icon("chevron-right"),
               style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
@@ -248,24 +254,24 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 3,
             div(
               style = 'margin-left: 30px',
-              htmlOutput(ns('GlimmaR_model_dispersion'))
+              htmlOutput(ns('model_dispersion'))
             )
           ),
           column(
             width = 3,
-            htmlOutput(ns('GlimmaR_model_NAs'))
+            htmlOutput(ns('model_NAs'))
           ),
           column(
             width = 4,
             align = 'right',
             br(),
             actionButton(
-              inputId = ns("GlimmaR_goto_ChartaR"),
+              inputId = ns('goto_ChartaR'),
               label = "",
               icon = icon("chart-line")
             ),
             shinyFiles::shinySaveButton(
-              id = ns('GlimmaR_save_model'),
+              id = ns('save_model'),
               label = 'Save GLM',
               title = 'Save GLM model as .RDS',
               filename = "",
@@ -277,7 +283,7 @@ mod_GlimmaR_build_model_ui <- function(id){
           )
         ),
         br(),
-        DTOutput(ns('GlimmaR_glm_coefficients'))
+        DTOutput(ns('glm_coefficients'))
       )
     )
   )
@@ -286,15 +292,453 @@ mod_GlimmaR_build_model_ui <- function(id){
 #' buildGlimmaR Server Functions
 #'
 #' @noRd 
-mod_GlimmaR_build_model_server <- function(id){
+mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
- 
+    text_size <- reactiveVal(14)
+    observeEvent(input$build_GLM, {
+      GlimmaR_model <- GlimmaR_build_GLM(
+        session,
+        d(),
+        response(),
+        weight(),
+        input$data_to_use,
+        input$glm_formula,
+        input$objective
+        )
+      if(!is.null(GlimmaR_model$glm)=='ok'){
+        # QUESTION - feels inefficient (copying large object), is there a better way?}
+        model_name <- make_unique_name(response(), names(GlimmaR_models()), 'glm')
+        GlimmaR_model$name <- model_name
+        new_list <- GlimmaR_models()
+        new_list[[model_name]] <- GlimmaR_model
+        GlimmaR_models(new_list)
+        # select model
+        GlimmaR_idx(names(GlimmaR_models())[length(names(GlimmaR_models()))])
+      } else {
+        confirmSweetAlert(session = session, type = 'error', inputId = ns('GlimmaR_error'), title = "Error", text = GlimmaR_models$message, btn_labels = c('OK'))
+      }
+    })
+    observeEvent(input$textsize_minus, {
+      text_size(pmax(8,text_size()-1))
+      session$sendCustomMessage('GlimmaR-buildGlimmaR-formula_text_size', paste(sep = '', text_size(), 'px'))
+    })
+    observeEvent(input$textsize_plus, {
+      text_size(pmin(30,text_size()+1))
+      session$sendCustomMessage('GlimmaR-buildGlimmaR-formula_text_size', paste(sep = '', text_size(), 'px'))
+    })
+    observeEvent(GlimmaR_idx(), {
+      # update the coefficient table
+      output$glm_coefficients <- DT::renderDataTable({
+        if(GlimmaR_idx()>0){
+          g <- GlimmaR_models()[[GlimmaR_idx()]]
+          c <- g$coefficients
+          GlimmaR_coefficient_DT(c)
+        }
+      })
+    })
+    
   })
 }
+
+GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_formula, glm_objective){
+  l <- NULL
+  if(!(response %in% names(d))){
+  } else if (!(weight %in% c('N',names(d)))){
+  } else if (is.null(d)){
+  } else if (data_to_use=='Training only' & !('train_test' %in% names(d))){
+    # training data selected but no train test column
+    confirmSweetAlert(session = session,
+                      type = 'error',
+                      inputId = "build_error",
+                      title = 'No train_test column',
+                      text = 'Training only selected but there is no train_test column in the dataset',
+                      btn_labels = c('OK')
+    )
+  } else {
+    # attempt to turn text input into a formula
+    original_glm_formula <- glm_formula
+    glm_formula <- paste(response, ' ~ ', glm_formula)
+    glm_formula <- tryCatch({stats::as.formula(glm_formula)},error = function(e){NULL})
+    if(is.null(glm_formula)){
+      confirmSweetAlert(session = session,
+                        type = 'error',
+                        inputId = "build_error",
+                        title = 'Check model formula',
+                        text = '',
+                        btn_labels = c('OK')
+      )
+    } else if (all.vars(glm_formula)[1] %in% labels(stats::terms(glm_formula))){
+      # response (left hand side) is also in formula (right hand side)
+      confirmSweetAlert(session = session,
+                        type = 'error',
+                        inputId = "build_error",
+                        title = 'Response contained in formula',
+                        text = '',
+                        btn_labels = c('OK')
+      )
+    } else if (any(all.vars(glm_formula) %in% names(d)[sapply(d, is.character)])){
+      # formula contains character columns
+      # R glm uses factor columns, not character
+      confirmSweetAlert(session = session,
+                        type = 'error',
+                        inputId = "build_error",
+                        title = 'Character columns in formula',
+                        text = 'GLM requires factors: convert character columns to factors',
+                        btn_labels = c('OK')
+      )
+    } else {
+      # set the GLM family
+      if (glm_objective=='gaussian'){
+        family <- stats::gaussian(link='identity')
+      } else if (glm_objective=='binomial'){
+        family <- stats::binomial(link = 'logit')
+      } else if (glm_objective=='poisson'){
+        family <- stats::poisson(link = 'log')
+      } else if (glm_objective=='gamma'){
+        family <- stats::Gamma(link = 'log')
+      } else if (glm_objective=='tweedie'){
+        # link.power = 0 means log link which is usually what you want
+        family <- statmod::tweedie(var.power = 1.1, link.power = 0)
+      } else if (glm_objective=='quasipoisson'){
+        family <- stats::quasipoisson(link = 'log')
+      }
+      # use whole dataset or just training
+      if(data_to_use=='All rows'){
+        include <- 1:nrow(d)
+      } else {
+        include <- which(d[['train_test']]==0)
+      }
+      # get rid of rows with non-zero weights for the model fit
+      if(weight!='N'){
+        non_zero_weight_rows <- which(d[[weight]]>0)
+        include <- intersect(include, non_zero_weight_rows)
+      } else {
+        non_zero_weight_rows <- 1:nrow(d)
+      }
+      # build model
+      withProgress(message = 'GlimmaR', detail = 'building model', value = 0.5,{
+        start_time <- Sys.time()
+        glm_model <- tryCatch({stats::glm(formula = glm_formula,
+                                          model = FALSE,
+                                          data = d[include],
+                                          family = family)},
+                              error = function(e){e})
+        time <- as.numeric(difftime(Sys.time(), start_time, units = 's'))
+        # check if something went wrong
+        if(!(class(glm_model)[[1]]=='glm')){
+          # something went wrong
+          confirmSweetAlert(session = session,
+                            type = 'error',
+                            inputId = "build_error",
+                            title = 'GLM build error',
+                            text = glm_model$message,
+                            btn_labels = c('OK')
+          )
+        } else {
+          # get coefficient summary table in nice format
+          c <- broom::tidy(glm_model)
+          c$statistic <- NULL
+          c[, 2:4] <- signif(c[,2:4])
+          # predict on dataset
+          incProgress(0.1, detail = 'predicting')
+          fitted_glm <- tryCatch({stats::predict(glm_model, d, type = 'response')}, error = function(e){e})
+          if(class(fitted_glm)=='simpleError'){
+            confirmSweetAlert(session = session,
+                              type = 'error',
+                              inputId = "build_error",
+                              title = 'GLM prediction error',
+                              text = fitted_glm$message,
+                              btn_labels = c('OK'))
+          } else {
+            # append predictions to main dataset
+            fitted_glm[-non_zero_weight_rows] <- 0 # set predictions to zero for rows not used to build model
+            count_NAs <- sum(is.na(fitted_glm[non_zero_weight_rows])) # in case we supplied a factor with NAs to the model
+            # calculate linear predictor split by feature
+            incProgress(0.1, detail = 'LP terms')
+            LP_contributions <- gather_glm_terms(d[non_zero_weight_rows], glm_model)
+            # return GlimmaR_model
+            l <- list(time = time,
+                      predictions = fitted_glm,
+                      pred_rows = non_zero_weight_rows,
+                      glm = glm_model,
+                      training_data = data_to_use,
+                      formula = original_glm_formula,
+                      coefficients = c,
+                      num_terms = nrow(c),
+                      objective = glm_objective,
+                      response = response,
+                      weight = weight,
+                      rows_used = include,
+                      non_zero_weight_rows = non_zero_weight_rows,
+                      deviance = glm_model$deviance,
+                      AIC = glm_model$aic,
+                      dispersion = dispersion_estimate(glm_model),
+                      count_NAs = count_NAs,
+                      LP_contributions = LP_contributions
+            )
+          }
+        }
+      })
+    }
+  }
+  return(l)
+}
+
+gather_glm_terms <- function(d, model){
+  # takes input glm model
+  # outputs data table of each feature's contribution to the terms outputs
+  # get list of all features used in the model
+  # loop through each feature
+  # identify terms containing feature
+  # sum terms
+  # get the model features and model terms
+  features <- all.vars(model$formula)
+  model_terms <- attr(stats::terms(model), 'term.labels')
+  if(length(features)>1 & length(model_terms) >0){
+    features <- features[2:length(features)] # remove first element as is response
+    model_terms_formulae <- paste('y ~', model_terms)
+    model_terms_formulae <- lapply(model_terms_formulae, stats::as.formula)
+    model_terms_features <- lapply(model_terms_formulae, all.vars)
+    # create matrix to hold results
+    glm_feature_contributions <- matrix(0, nrow = nrow(d), ncol = length(features))
+    # get the linear prediction broken down into individual terms
+    terms_predictions <- stats::predict(model, d, type = 'terms')
+    # loop through each feature and create feature contributions to linear predictor
+    for (i in 1:length(features)){
+      cols <- rep(FALSE, length(features))
+      # identify GLM term columns containing the feature
+      feature <- features[i]
+      term_contains_feature <- lapply(model_terms_features, is.element, feature)
+      term_contains_feature <- lapply(term_contains_feature, sum)
+      term_contains_feature <- unlist(term_contains_feature)
+      cols <- ifelse(term_contains_feature>0,TRUE,FALSE)
+      glm_feature_contributions[,i] <- rowSums(terms_predictions[, cols, drop = FALSE])
+    }
+    glm_feature_contributions <- as.data.table(glm_feature_contributions)
+    names(glm_feature_contributions) <- paste(sep = '_', 'glm_LP', features)
+  } else {
+    glm_feature_contributions <- NULL
+  }
+  glm_feature_contributions
+}
+dispersion_estimate <- function(model){
+  if(model$family$family %in% c('poisson','binomial')){
+    1
+  } else {
+    sum((model$weights * model$residuals^2)[model$weights > 0])/model$df.residual
+  }
+}
+strip_glm <- function(cm) {
+  
+  # strips out stuff we don't need from GLM model to make it smaller when saving
+  cm$y <- c()
+  cm$model <- c()
+  
+  cm$residuals <- c()
+  cm$fitted.values <- c()
+  cm$effects <- c()
+  cm$qr$qr <- c()
+  cm$linear.predictors <- c()
+  cm$weights <- c()
+  cm$prior.weights <- c()
+  cm$data <- c()
+  cm$offset <- c()
+  
+  # following means glm unable to predict using type = 'terms'
+  cm$family$variance <- c()
+  cm$family$dev.resids <- c()
+  cm$family$aic <- c()
+  cm$family$validmu <- c()
+  cm$family$simulate <- c()
+  attr(cm$terms,".Environment") <- globalenv() # otherwise the object is huge
+  attr(cm$formula,".Environment") <- c()
+  
+  cm
+}
+make_GlimmaR_helper_features <- function(d, BoostaR_model, choice, search){
+  features <- NULL
+  if(!is.null(d)){
+    if(choice=='Original'){
+      features <- names(d)
+    } else if (choice=='A-Z'){
+      features <- sort(names(d))
+    } else if (choice=='GBM'){
+      if(!is.null(BoostaR_model)){
+        features <- BoostaR_model$importances$Feature
+      } else {
+        features <- '-- no GBMs built --'
+      }
+    }
+  }
+  # filter on search
+  search_choices <- NULL
+  if(!is.null(search) & search!=''){
+    features <- tryCatch({features[grepl(search, features)]}, error = function(e){e})
+    if(class(features)=='simpleError'){
+      features <- '-- no result --'
+    } else if(length(features)==0){
+      features <- '-- no result --'
+    }
+  }
+  return(features)
+}
+make_GlimmaR_helper_levels <- function(d, feature){
+  result <- '-- no feature selected --'
+  if(!is.null(d) & !is.null(feature)){
+    if(feature %in% names(d)){
+      if(class(d[[feature]])[1]=='factor'){
+        result <- levels(d[[feature]])
+        if(length(result)>1000){
+          result <- '-- too many levels (>1,000) --'
+        }
+      } else if (class(d[[feature]])[1] %in% c('integer','numeric')){
+        result <- c('Identity',
+                    'pmin(x, feature)',
+                    'pmax(x, feature)',
+                    'pmax(x, pmin(y, feature))',
+                    'Polynomial (order)',
+                    'log(feature)',
+                    'log(1+feature)',
+                    'sqrt(feature)',
+                    'Piecewise linear (breaks)',
+                    'if(feature=x,1,0)',
+                    'if(feature<x,1,0)',
+                    'if(feature>x,1,0)',
+                    'between(feature,x,y)',
+                    'Spline (df)',
+                    'Spline (knots)'
+        )
+      }
+    }
+  }
+  return(result)
+}
+make_GlimmaR_formula_suggestion <- function(d, feature, options, level_grouping, inputs){
+  if(!is.null(d) & !is.null(feature)){
+    comment_line <- paste0('# ', feature)
+    formula_lines <- NULL
+    if(class(d[[feature]])[1]=='factor'){
+      if(level_grouping=='Single'){
+        if(!is.null(options)){
+          if(length(options)>0){
+            formula_lines <- paste0("ifelse(", feature, "=='", options, "',1,0)")
+            formula_lines <- paste(formula_lines, collapse = ' + \n')
+            formula_lines <- paste(formula_lines, sep = '\n')
+          }
+        }
+      } else if (level_grouping=='Group'){
+        formula_lines <- paste(options, collapse = "','")
+        formula_lines <- paste0("c('", formula_lines, "')")
+        formula_lines <- paste0("ifelse(", feature, " %in% ", formula_lines, ",1,0)")
+      }
+    } else if(class(d[[feature]])[1] %in% c('integer','numeric')){
+      if(length(options)==1){
+        formula_lines <- make_numerical_feature_formula(feature, options, inputs)
+      }
+    }
+    result <- paste(comment_line, formula_lines, sep = '\n')
+  }
+}
+make_numerical_feature_formula <- function(feature, formula_type, inputs){
+  # inputs is a sequence of numbers separated by commas
+  inputs <- as.numeric(unlist(strsplit(inputs, ',')))
+  n <- length(inputs)
+  if(length(inputs)==0){
+    inputs <- c('x','y')
+  } else if (length(inputs)==1){
+    inputs <- c(inputs[1], 'y')
+  }
+  if(formula_type=='Identity'){
+    feature
+  } else if (formula_type=='pmin(x, feature)'){
+    paste0('pmin(', inputs[1], ', ', feature, ')')
+  } else if (formula_type=='pmax(x, feature)'){
+    paste0('pmax(', inputs[1], ', ', feature, ')')
+  } else if (formula_type=='pmax(x, pmin(y, feature))'){
+    paste0('pmax(', inputs[1], ', pmin(', inputs[2], ', ',feature, '))')
+  } else if (formula_type=='Polynomial (order)'){
+    paste0('poly(', feature, ', ', inputs[1], ')')
+  } else if (formula_type=='log(feature)'){
+    paste0('log(', feature, ')')
+  } else if (formula_type=='log(1+feature)'){
+    paste0('log(1+', feature, ')')
+  } else if (formula_type=='sqrt(feature)'){
+    paste0('sqrt(', feature, ')')
+  } else if (formula_type=='Piecewise linear (breaks)'){
+    if(n<=1){
+      paste0('pmin(', inputs[1], ', ', feature, ') +\n',
+             'pmax(', inputs[1], ', ', feature, ')')
+    } else if (n==2){
+      paste0('pmin(', inputs[1], ', ', feature, ') +\n',
+             'pmax(', inputs[1], ', pmin(', inputs[2], ', ',feature, ')) +\n',
+             'pmax(', inputs[2], ', ', feature, ')')
+    } else {
+      tstart <- paste0('pmin(', inputs[1], ', ', feature, ') +\n')
+      tmiddle <- ''
+      for(i in 2:n-1){
+        tmiddle <- paste0(tmiddle, 'pmax(', inputs[i], ', pmin(', inputs[i+1], ', ',feature, ')) +\n')
+      }
+      tend <- paste0('pmax(', inputs[n], ', ', feature, ')')
+      paste0(tstart, tmiddle, tend)
+    }
     
-## To be copied in the UI
-# mod_buildGlimmaR_ui("buildGlimmaR_1")
+  } else if (formula_type=='if(feature=x,1,0)'){
+    paste0('ifelse(', feature, "==", inputs[1], ",1,0)")
+  } else if (formula_type=='if(feature<x,1,0)'){
+    paste0('ifelse(', feature, "<", inputs[1], ",1,0)")
+  } else if (formula_type=='if(feature>x,1,0)'){
+    paste0('ifelse(', feature, ">", inputs[1], ",1,0)")
+  } else if (formula_type=='between(feature,x,y)'){
+    paste0('between(', feature, ',', inputs[1], ',', inputs[2],')')
+  } else if (formula_type=='Spline (df)'){
+    paste0('ns(', feature, ', ', inputs[1], ')')
+  } else if (formula_type=='Spline (knots)'){
+    inputs <- paste(inputs, collapse = ',')
+    paste0('ns(', feature, ', knots = c(', inputs, '))')
+  }
+  
+  
+  
+  
+}
+GlimmaR_coefficient_DT <- function(coefficients_dt){
+  if(!is.null(coefficients_dt)){
+    num_rows <- nrow(coefficients_dt)
+    coefficients_dt %>%
+      DT::datatable(rownames= TRUE,
+                    extensions = 'Buttons',
+                    selection = 'single',#HERE
+                    options = list(pageLength = num_rows,
+                                   dom = 'Bfrt',
+                                   buttons =
+                                     list('copy', list(
+                                       extend = 'collection',
+                                       buttons = list(list(extend='csv',filename = ''),
+                                                      list(extend='excel',filename = ''),
+                                                      list(extend='pdf',filename= '')),
+                                       text = 'Download')
+                                     ),
+                                   scrollX = T,
+                                   scrollY = 'calc(100vh - 338px)',
+                                   searchHighlight=TRUE,
+                                   columnDefs = list(list(width = '500px', targets =c(1))
+                                   )
+                                   
+                    )) %>%
+      DT::formatStyle(columns = 0:4, fontSize = '85%', lineHeight='70%') %>%
+      DT::formatPercentage(c("p.value"), 1) %>%
+      DT::formatSignif(c("estimate","std.error"), 4) %>%
+      DT::formatStyle('p.value',
+                      target = 'row',
+                      backgroundColor = DT::styleInterval(c(0.01,0.05,0.1),
+                                                          c(grDevices::rgb(210/255,255/255,210/255)
+                                                            ,grDevices::rgb(240/255,255/255,220/255)
+                                                            ,grDevices::rgb(255/255,255/255,220/255)
+                                                            ,grDevices::rgb(255/255,220/255,220/255)
+                                                          )
+                      )
+      )
     
-## To be copied in the server
-# mod_buildGlimmaR_server("buildGlimmaR_1")
+  }
+}

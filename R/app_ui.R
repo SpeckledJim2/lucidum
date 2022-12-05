@@ -25,10 +25,10 @@ app_ui <- function(request) {
         insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR', label = 'GBMs', icon = icon('rocket'), style = ' font-size:80%')),
         insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR', label = 'GLMs', icon = icon('star'), style = ' font-size:80%')),
         insertDashboardHeader(div('Specs', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px;margin-right: 10px')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_kpi_spec', label = 'KPIs', icon = icon('gears'), style = ' font-size:80%')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_feature_spec', label = 'Features', icon = icon('list'), style = ' font-size:80%')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_filter_spec', label = 'Filters', icon = icon('filter'), style = ' font-size:80%')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_shinyAce', label = 'shinyAce', icon = icon('chevron-right'), style = ' font-size:80%')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_kpi_spec', label = NULL, icon = icon('gears'), style = ' font-size:100%')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_feature_spec', label = NULL, icon = icon('list'), style = ' font-size:100%')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_filter_spec', label = NULL, icon = icon('filter'), style = ' font-size:100%')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_shinyAce', label = NULL, icon = icon('chevron-right'), style = ' font-size:100%')),
         insertDashboardHeader(div('Dataset', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px')),
         insertDashboardHeader(
           div(
@@ -51,7 +51,7 @@ app_ui <- function(request) {
           menuItemOutput('BoostaR'),
           menuItemOutput('GlimmaR'),
 
-          # response, weight, navigator and filter       
+          # response, weight, navigator and filter
           mod_selectResponseColumn_ui('response', label = 'Response', width = '100%'),
           mod_selectWeightColumn_ui('weight', label = 'Weight', width = '100%'),
           mod_navigator_ui("navigator"),

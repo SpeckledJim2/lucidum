@@ -27,10 +27,21 @@ mod_GlimmaR_ui <- function(id){
 #' GlimmaR Server Functions
 #'
 #' @noRd 
-mod_GlimmaR_server <- function(id){
+mod_GlimmaR_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
- 
+    mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
+    observeEvent(GlimmaR_idx(), {
+      if(!is.null(GlimmaR_idx())){
+        # copy model predictions to d
+        rows_idx <- GlimmaR_models()[[GlimmaR_idx()]]$pred_rows
+        preds <- GlimmaR_models()[[GlimmaR_idx()]]$predictions
+        d()[rows_idx, glm_prediction := preds]
+        dt_update(dt_update()+1)
+        # copy LP cols
+      }
+    })
+    
   })
 }
     

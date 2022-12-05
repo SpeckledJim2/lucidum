@@ -118,14 +118,14 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
 #' ChartaR_line_and_bar Server Functions
 #'
 #' @noRd 
-mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx){
+mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     data_summary <- reactiveVal(NULL)
     initial_banding <- reactiveVal(NULL)
     banding <- reactiveVal(NULL)
-    x_col <- selectInput_server(id = 'x_axis_feature', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, FALSE)
-    add_cols <- selectInput_server(id = 'add_columns', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, TRUE)
+    x_col <- selectInput_server(id = 'x_axis_feature', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, FALSE)
+    add_cols <- selectInput_server(id = 'add_columns', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, TRUE)
     observeEvent(x_col(), {
       banding_guess <- banding_guesser_numeric_date(d(), x_col())
       initial_banding(banding_guess)

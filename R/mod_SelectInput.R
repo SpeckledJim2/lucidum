@@ -90,41 +90,43 @@ selectInput_ui <- function(id, label = 'your_label', height_divisor, height_adj,
       )
     )
 }
-selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, numeric_only, initial_selected) {
+selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, numeric_only, initial_selected) {
   moduleServer(id, function(input, output, session) {
     # QUESTION - when something depends on so many things it feels odd
     # is this a case where a plan observe would be neater?
-    observeEvent(c(d(), dt_update(), feature_spec(), BoostaR_models(), BoostaR_idx(), input$selectChooser, input$search, input$selectChooserGroup), {
+    observeEvent(c(d(), dt_update(), feature_spec(), BoostaR_models(), BoostaR_idx(), GlimmaR_models(), GlimmaR_idx(), input$selectChooser, input$search, input$selectChooserGroup), {
       if(!is.null(d())){
         choices <- selectInput_choices(
           d(),
           feature_spec(),
           BoostaR_models(),
           BoostaR_idx(),
+          GlimmaR_models(),
+          GlimmaR_idx(),
           input$selectChooser,
           input$selectChooserGroup,
           input$search,
           numeric_only
           )
-      }
-      # choose what should be selected
-      selected <- character(0) # default
-      if(length(choices)>0){ # override
-        if(choices[1] %not_in% c('none','No lucidum columns')){
-          selected <- choices[1]
+        # choose what should be selected
+        selected <- character(0) # default
+        if(length(choices)>0){ # override
+          if(choices[1] %not_in% c('none','No lucidum columns')){
+            selected <- choices[1]
+          }
+        } # override
+        if(!is.null(input$selectInput)){
+          if(all(input$selectInput %in% unlist(choices, use.names = FALSE))){
+            selected <- input$selectInput
+          }
         }
-      } # override
-      if(!is.null(input$selectInput)){
-        if(all(input$selectInput %in% unlist(choices, use.names = FALSE))){
-          selected <- input$selectInput
-        }
+        updateSelectInput(
+          session,
+          inputId = 'selectInput',
+          choices = choices,
+          selected = selected
+        )
       }
-      updateSelectInput(
-        session,
-        inputId = 'selectInput',
-        choices = choices,
-        selected = selected
-      )
     })
     
     # observeEvent(input$clear_selection, {
@@ -140,6 +142,8 @@ selectInput_choices <- function(
     feature_spec,
     BoostaR_models,
     BoostaR_idx,
+    GlimmaR_models,
+    GlimmaR_idx,
     selectChooser,
     selectChooserGroup,
     search,
@@ -159,24 +163,31 @@ selectInput_choices <- function(
       choices <- sort(remove_lucidum_cols(cols))
     } else if(selectChooser=='lucidum'){
       # get features
-      if(!is.null(BoostaR_models) & !is.null(BoostaR_idx)){
-        current_model_prediction <- intersect(cols, 'lgbm_prediction')
+      if(length(BoostaR_models)>0 | length(GlimmaR_models)>0){
+        current_model_prediction <- intersect(cols, c('lgbm_prediction','glm_prediction'))
         importance_cols <- intersect(BoostaR_models[[BoostaR_idx]]$importances$Feature, cols)
         lgbm_cols <- cols[grep('lgbm', cols)]
         SHAP_cols <- cols[grep('lgbm_SHAP', cols)]
         lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction'))
-        all_cols <- c(current_model_prediction, importance_cols, lgbm_cols, SHAP_cols)
+        glm_cols <- cols[grep('glm', cols)]
+        LP_cols <- cols[grep('glm_LP', cols)]
+        glm_cols <- setdiff(glm_cols, c(LP_cols, 'glm_prediction'))
+        all_cols <- c(current_model_prediction, importance_cols, lgbm_cols, glm_cols, SHAP_cols, LP_cols)
         # replace blanks
         if(length(current_model_prediction)==0) current_model_prediction <- 'none'
         if(length(importance_cols)==0) importance_cols <- 'none'
         if(length(lgbm_cols)==0) lgbm_cols <- 'none'
+        if(length(glm_cols)==0) glm_cols <- 'none'
         if(length(SHAP_cols)==0) SHAP_cols <- 'none'
+        if(length(LP_cols)==0) LP_cols <- 'none'
         lucidum_choices <- rbindlist(
           list(
             data.table(feature = current_model_prediction, interaction_grouping = 'Current model'),
             data.table(feature = importance_cols, interaction_grouping = 'LGBM feature importance'),
             data.table(feature = lgbm_cols, interaction_grouping = 'LGBM predictions'),
-            data.table(feature = SHAP_cols, interaction_grouping = 'SHAP values')
+            data.table(feature = glm_cols, interaction_grouping = 'GLM predictions'),
+            data.table(feature = SHAP_cols, interaction_grouping = 'SHAP values'),
+            data.table(feature = LP_cols, interaction_grouping = 'GLM LP values')
             )
           )
         # create the choices list

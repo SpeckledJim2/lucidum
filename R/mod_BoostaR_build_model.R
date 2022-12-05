@@ -485,7 +485,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         # loop over the combinations of parameters and build models
         for(i in 1:nrow(main_params_combos)){
           withProgress(message = '', detail = 'training', {
-            model_name <- make_unique_name(response(), names(BoostaR_models()))
+            model_name <- make_unique_name(response(), names(BoostaR_models()), 'lgbm')
             if(nrow(main_params_combos)==1){
               message <- 'BoostaR'
             } else {
@@ -1018,21 +1018,26 @@ metric_from_objective <- function(x){
     metric <- 'fair'
   }
 }
-make_unique_name <- function(response, current_names){
+make_unique_name <- function(response, current_names, suffix){
   # models are called by the response column name and _lgbm_1, _lgbm_2 etc
+  suffix1 <- paste0('_',suffix,'_')
   if(is.null(current_names)){
     max_index <- 0
   } else {
-    matches <- current_names[grep(paste0(response, '_lgbm_'), current_names)]
-    end_pattern <- unlist(lapply(gregexpr('_lgbm_', matches),'[',1))
+    matches <- current_names[grep(paste0(response, suffix1), current_names)]
+    end_pattern <- unlist(lapply(gregexpr(suffix1, matches),'[',1))
     if(!is.null(end_pattern)){
-      current_indices <- as.numeric(substr(matches,end_pattern+6,nchar(matches)))
+      if(suffix=='lgbm'){
+        current_indices <- as.numeric(substr(matches,end_pattern+6,nchar(matches)))
+      } else if (suffix=='glm'){
+        current_indices <- as.numeric(substr(matches,end_pattern+5,nchar(matches)))
+      }
       max_index <- max(current_indices)
     } else {
       max_index <- 0
     }
   }
-  paste0(response, '_lgbm_', max_index+1)
+  paste0(response, suffix1, max_index+1)
 }
 get_main_params_combos <- function(input){
   num_combos <- as.numeric(input$BoostaR_grid_combinations)

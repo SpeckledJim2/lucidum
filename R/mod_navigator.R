@@ -63,14 +63,26 @@ mod_navigator_ui <- function(id){
 #' @importFrom stats setNames
 #'
 #' @noRd 
-mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_model_index, BoostaR_idx){
+mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(kpi_spec(), {
       updateSelectInput(inputId = 'kpi_chooser', choices = setNames(1:nrow(kpi_spec()), kpi_spec()[[1]]))
     })
     observeEvent(GlimmaR_models(), {
-      updateSelectInput(inputId = 'glm_chooser', choices = setNames(1:length(GlimmaR_models()), GlimmaR_models()))
+      if(!is.null(GlimmaR_models())){
+        current_selection <- input$glm_chooser
+        model_names <- names(GlimmaR_models())
+        if(is.null(current_selection)){
+          selected <- model_names[length(model_names)]
+        }
+        else if(current_selection %in% model_names){
+          selected <- current_selection
+        } else {
+          selected <- model_names[length(model_names)]
+        }
+        updateSelectInput(inputId = 'glm_chooser', choices = names(GlimmaR_models()), selected = selected)
+      }
     })
     observeEvent(BoostaR_models(), {
       if(!is.null(BoostaR_models())){
@@ -94,6 +106,16 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
           # QUESTION - next line stops circular reactivity between BoostaR_idx and input$gbm_chooser. Why does it work?
         } else if(input$gbm_chooser != BoostaR_idx()){
           updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = BoostaR_idx())
+        }
+      }
+    })
+    observeEvent(GlimmaR_idx(), {
+      if(!is.null(GlimmaR_idx())){
+        if(is.null(input$glm_chooser)){
+          updateSelectInput(inputId = 'glm_chooser', choices = names(GlimmaR_models()), selected = GlimmaR_idx())
+          # QUESTION - next line stops circular reactivity between BoostaR_idx and input$gbm_chooser. Why does it work?
+        } else if(input$glm_chooser != GlimmaR_idx()){
+          updateSelectInput(inputId = 'glm_chooser', choices = names(GlimmaR_models()), selected = GlimmaR_idx())
         }
       }
     })

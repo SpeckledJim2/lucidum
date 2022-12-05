@@ -17,7 +17,7 @@ mod_ChartaR_ui <- function(id){
                          mod_ChartaR_line_and_bar_ui(ns('line_and_bar'))
                 ),
                 tabPanel(value = 'Histogram',
-                         title = span(tagList(tags$img(src='www/histogram.png', height="25px", width="25px"),'Histogram')),
+                         title = span(tagList(tags$img(src='www/histogram.png', height="20px", width="20px"),'Histogram')),
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
                          ),
@@ -32,11 +32,11 @@ mod_ChartaR_ui <- function(id){
 #' ChartaR Server Functions
 #'
 #' @noRd 
-mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx){
+mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     mod_histogram_server('histogram_tab', d, dt_update, response, weight, kpi_spec)
-    mod_ChartaR_line_and_bar_server('line_and_bar', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx)
+    mod_ChartaR_line_and_bar_server('line_and_bar', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
     mod_ChartaR_SHAP_server('SHAP', d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec)
   })
 }

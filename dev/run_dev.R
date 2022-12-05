@@ -1,5 +1,6 @@
 # Set options here
-options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mode
+# TRUE = production mode, FALSE = development mode
+options(golem.app.prod = FALSE) 
 
 # Comment this if you don't want the app to be served on a random port
 options(shiny.port = httpuv::randomPort())
@@ -19,10 +20,10 @@ insurance[2, birthday:= as.Date('1976-09-24')]
 insurance[3, birthday:= as.Date('1976-11-25')]
 glucidum(data = insurance,
          starting_response = 'price',
-         starting_tab = 'ChartaR',
+         starting_tab = 'GlimmaR',
          show_MappaR = F,
          show_DevelopaR = T,
-         show_GlimmaR = F,
+         show_GlimmaR = T,
          kpi_spec = 'data/insurance_kpi_spec.csv',
          feature_spec = 'data/insurance_feature_spec.csv',
          filter_spec = 'data/insurance_filter_spec.csv')
