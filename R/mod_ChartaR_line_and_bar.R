@@ -68,7 +68,7 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           column(
             width = 3,
             radioGroupButtons(
-              inputId = "ChartaR_A_vs_E_show_partial_dependencies",
+              inputId = ns('show_partial_dependencies'),
               label = "Partial dependencies",
               choices = c('-','GLM','GBM','Both'),
               individual = FALSE,
@@ -90,7 +90,7 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
             width = 3,
             align = 'right',
             radioGroupButtons(
-              inputId = "ChartaR_1W_y_transform",
+              inputId = ns('response_transform'),
               label = "Response transform",
               choices = c('-', 'Log','Exp','Logit','0','1'),
               individual = FALSE,
@@ -135,20 +135,39 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     observeEvent(banding_new(), {
       banding(banding_new())
     })
-    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), input$group_low_exposure, input$sort), {
+    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), input$group_low_exposure, input$show_partial_dependencies, input$response_transform, input$sort), {
       # QUESTION - how to stop this triggering twice on first call
-      data_summary(line_and_bar_summary(d(), response(), weight(), x_col(), add_cols(), banding(), input$group_low_exposure, input$sort, kpi_spec()))
+      gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
+      data_summary(
+        line_and_bar_summary(
+          d(),
+          response(),
+          weight(),
+          x_col(),
+          add_cols(),
+          banding(),
+          input$group_low_exposure,
+          input$sort,
+          input$show_partial_dependencies,
+          input$response_transform,
+          kpi_spec(),
+          gbm_link)
+        )
     })
     observeEvent(data_summary(), {
       output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), weight())})
-      output$chart <- renderPlotly({format_plotly(data_summary(), response(), weight(),
-                                                  input$show_labels, input$show_response)})
+      output$chart <- renderPlotly({
+        format_plotly(data_summary(),
+                      response(),
+                      weight(),
+                      input$show_labels,input$show_response
+                      )
+        })
     })
-
   })
 }
 
-line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, kpi_spec){
+line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, show_partial_dependencies, response_transform, kpi_spec, gbm_link){
   if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col)){
     if(response!='' & weight !=''){
       d_cols <- names(d)
@@ -207,13 +226,69 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           } else {
             cols_to_summarise <- c(weight, response, add_cols)
           }
-          # summarise
+          # summarise and order
           if(length(rows_idx)==nrow(d)){
             d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
           } else {
             d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
           }
-          # apply denominator
+          setorderv(d_summary, names(d_summary)[1])
+          # extract weighted mean as needed later on to calibrate SHAP values
+          if(weight %in% c('N','no weights')){
+            wtd_mean <- sum(d_summary[,3], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
+          } else {
+            wtd_mean <- sum(d_summary[,4], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
+          }
+          # SHAP summary
+          SHAP_col <- NULL
+          if (show_partial_dependencies %in% c('GBM','Both')){
+            SHAP_col <- paste0('lgbm_SHAP_', group_by_col)
+            if(!(SHAP_col %in% names(d))){
+              SHAP_col <- NULL
+            }
+          }
+          if(!is.null(SHAP_col)){
+            if(length(rows_idx)==nrow(d)){
+              SHAP_summary <- d[,c(min = lapply(.SD, min, na.rm = TRUE),
+                                   perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
+                                   mean = lapply(.SD, mean, na.rm = TRUE),
+                                   perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
+                                   max = lapply(.SD, max, na.rm = TRUE)
+              ),
+              banded_col,
+              .SDcols = SHAP_col]
+            } else {
+              SHAP_summary <- d[rows_idx,
+                                c(min = lapply(.SD, min, na.rm = TRUE),
+                                  perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
+                                  mean = lapply(.SD, mean, na.rm = TRUE),
+                                  perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
+                                  max = lapply(.SD, max, na.rm = TRUE)
+                                ),
+                                banded_col,
+                                .SDcols = SHAP_col]
+            }
+            setorderv(SHAP_summary, names(SHAP_summary)[1])
+            names(SHAP_summary)[2:6] <- c('min','perc_5','mean','perc_95','max')
+            # scale SHAP values to mean
+            # how to do this depends on the choice of objective
+            if(gbm_link=='identity'){
+              SHAP_summary[, 2:6] <- wtd_mean + SHAP_summary[, 2:6]
+            } else if (gbm_link=='log'){
+              SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) * wtd_mean
+            } else if (gbm_link=='binary'){
+              # following is rough for now - won't always tie up due to logit
+              SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6])/(1+exp(SHAP_summary[, 2:6])) * wtd_mean * 2
+            }
+            # multiply SHAP_summary by row weights
+            # needed for later weighted average removal of rows
+            if(weight=='N'){
+              SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * d_summary[[2]]
+            } else {
+              SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * d_summary[[3]]
+            }
+            d_summary <- cbind(d_summary, SHAP_summary[, 2:6])
+          }
           # divide by weight if specified
           if(weight == 'N'){
             first_col <- 3
@@ -224,9 +299,9 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             # divide all summary columns (4rd onwards) by the weight column (3rd)
             d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[3]]
           }
+          # sort table
           first_col_name <- names(d_summary)[1]
           setnames(d_summary, old = first_col_name, new = new_colname)
-          # sort table
           if(sort=='A-Z'){
             setorderv(d_summary, new_colname)
           } else if(sort=='Wt'){
@@ -425,7 +500,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response){
                    textfont = list(color = 'rgba(100, 120, 125,1.0)')
     )
     # add on the response lines
-    last_line_col <- ncol(dt) #- ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0)
+    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) #- ifelse(LP_col,1,0)
     if(show_response=='Show'){
       # add the lines
       for(i in first_line_col:last_line_col){
@@ -459,6 +534,31 @@ format_plotly <- function(dt, response, weight, show_labels, show_response){
                            font = list(size = 10)
                            )
              )
+    if(SHAP_cols){
+      # add SHAP ribbons
+      # mean
+      # remove rows from d with NAs for SHAP values
+      p <- p %>%
+        add_trace(x = dt[[1]], y = dt[['mean']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  line = list(color = 'rgba(200, 50, 50, 1.0)', dash = 'dot'),
+                  showlegend = TRUE, name = 'SHAP_mean')
+      # 5th-95th percentiles
+      p <- p %>%
+        add_trace(x = dt[[1]], y = dt[['perc_5']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  showlegend = FALSE, name = 'SHAP_5') %>%
+        add_trace(x = dt[[1]], y = dt[['perc_95']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  showlegend = TRUE, name = 'SHAP_5_95')
+      # min to max SHAP
+      p <- p %>%
+        add_trace(x = dt[[1]], y = dt[['min']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  showlegend = FALSE, name = 'SHAP_min') %>%
+        add_trace(x = dt[[1]], y = dt[['max']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  showlegend = TRUE, name = 'SHAP_min_max')
+    }
   }
   p
 }

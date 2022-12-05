@@ -341,6 +341,8 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
   })
 }
 
+#' @importFrom broom tidy
+#' @importFrom statmod tweedie
 GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_formula, glm_objective){
   l <- NULL
   if(!(response %in% names(d))){
@@ -443,7 +445,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
           # predict on dataset
           incProgress(0.1, detail = 'predicting')
           fitted_glm <- tryCatch({stats::predict(glm_model, d, type = 'response')}, error = function(e){e})
-          if(class(fitted_glm)=='simpleError'){
+          if(inherits(fitted_glm,'simpleError')){
             confirmSweetAlert(session = session,
                               type = 'error',
                               inputId = "build_error",
@@ -575,7 +577,7 @@ make_GlimmaR_helper_features <- function(d, BoostaR_model, choice, search){
   search_choices <- NULL
   if(!is.null(search) & search!=''){
     features <- tryCatch({features[grepl(search, features)]}, error = function(e){e})
-    if(class(features)=='simpleError'){
+    if(inherits(features,'simpleError')){
       features <- '-- no result --'
     } else if(length(features)==0){
       features <- '-- no result --'
