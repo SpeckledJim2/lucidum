@@ -160,7 +160,9 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
         format_plotly(data_summary(),
                       response(),
                       weight(),
-                      input$show_labels,input$show_response
+                      input$show_labels,
+                      input$show_response,
+                      kpi_spec()
                       )
         })
     })
@@ -435,8 +437,8 @@ format_table_DT <- function(dt, weight){
     formatRound(weight_cols, digits = 0)
 }
 
-#' @importFrom plotly plotly_empty 
-format_plotly <- function(dt, response, weight, show_labels, show_response){
+#' @importFrom plotly plotly_empty add_text
+format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_spec){
   if(is.null(dt)){
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
@@ -510,7 +512,6 @@ format_plotly <- function(dt, response, weight, show_labels, show_response){
     X_col <- which(dt[[1]]=='Small weights')
     colours[na_col] <- 'rgba(255,150,150,1.0)'
     colours[X_col] <- 'rgba(255,150,150,1.0)'
-
     # choose weight labels
     if(show_labels=='-' | nrow(dt)>200){
       weight_text_template <- NULL
@@ -588,6 +589,18 @@ format_plotly <- function(dt, response, weight, show_labels, show_response){
         add_trace(x = dt[[1]], y = dt[['max']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                   showlegend = TRUE, name = 'SHAP_min_max')
+    }
+    if(show_labels=='All'){
+      range <- max(dt[[first_line_col]], na.rm = TRUE) - min(dt[[first_line_col]], na.rm = TRUE)
+      p <- p %>%
+        add_text(x = dt[[1]],
+                 y = dt[[first_line_col]] + range * 0.03,
+                 text = apply_kpi_format(dt[[first_line_col]], response, weight, kpi_spec),
+                 textfont = list(size = 10, color = 'black'),
+                 textposition = "top",
+                 yaxis = 'y2',
+                 bgcolor = 'white',
+                 showlegend = FALSE)
     }
   }
   p
