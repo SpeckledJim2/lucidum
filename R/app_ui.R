@@ -23,25 +23,25 @@ app_ui <- function(request) {
         # controls placed in the header
         insertDashboardHeader(div('Navigator', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px;margin-right: 8px'), TRUE),
         # Specs
-        insertDashboardHeader(actionButton(inputId = 'GoTo_kpi_spec', label = NULL, icon = icon('gears'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_DevelopaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_feature_spec', label = NULL, icon = icon('list'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_DevelopaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_filter_spec', label = NULL, icon = icon('filter'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_DevelopaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_shinyAce', label = NULL, icon = icon('chevron-right'), style = 'padding:4px 6px 4px 6px; font-size:85%; margin-right: 8px'), get_golem_options('show_DevelopaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_kpi_spec', label = NULL, icon = icon('gears'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_DevelopaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_feature_spec', label = NULL, icon = icon('list'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_DevelopaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_filter_spec', label = NULL, icon = icon('filter'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_DevelopaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_shinyAce', label = NULL, icon = icon('chevron-right'), style = 'padding:4px 6px 4px 6px; margin-right: 8px'), get_golem_options('show_DevelopaR')),
         # DataR
         insertDashboardHeader(actionButton(inputId = 'GoTo_dataset_viewer', label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px;'), get_golem_options('show_DataR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_column_summary', label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px;; margin-right: 8px'), get_golem_options('show_DataR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_column_summary', label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; margin-right: 8px'), get_golem_options('show_DataR')),
         # ChartaR
-        insertDashboardHeader(actionButton(inputId = 'GoTo_one_way', label = tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_ChartaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_histogram', label = tagList(tags$img(src='www/histogram.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_ChartaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_SHAP', label = tagList(tags$img(src='www/SHAP.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; font-size:85%; margin-right: 8px'), TRUE),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_one_way', label = tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_ChartaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_histogram', label = tagList(tags$img(src='www/histogram.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_ChartaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_SHAP', label = tagList(tags$img(src='www/SHAP.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; margin-right: 8px'), TRUE),
         # BoostaR
-        insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR1', label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_BoostaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR', label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_BoostaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR1', label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_BoostaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR', label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_BoostaR')),
         insertDashboardHeader(actionButton(inputId = 'GoTo_BoostaR3', label = tagList(tags$img(src='www/tree.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; margin-right: 8px'), get_golem_options('show_BoostaR')),
         # GlimmaR
-        insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR1', label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_MappaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR', label = NULL, icon = icon('star'), style = 'padding:4px 6px 4px 6px; font-size:85%'), get_golem_options('show_MappaR')),
-        insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR3', label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; font-size:85%; margin-right: 8px'), get_golem_options('show_MappaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR1', label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR', label = NULL, icon = icon('star'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
+        insertDashboardHeader(actionButton(inputId = 'GoTo_GlimmaR3', label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; margin-right: 8px'), get_golem_options('show_MappaR')),
         # dataset
         #insertDashboardHeader(div('Dataset', style = 'color: white; font-size: 14px; margin-top: 16px; margin-bottom:-20px;margin-left: 20px')),
         insertDashboardHeader(

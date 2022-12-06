@@ -13,11 +13,13 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
     fluidRow(
       column(
         width = 3,
+        h3('Tabulated models'),
         selectInput(inputId = ns('GlimmaR_model_chooser'), label = 'Select tabulated model', choices = NULL, size = 10, selectize = FALSE),
         selectInput(inputId = ns('GlimmaR_table_chooser'), label = 'Select table', choices = NULL, size = 30, selectize = FALSE),
       ),
       column(
         width = 9,
+        h3('Tables'),
         fluidRow(
           column(
             width = 6,
