@@ -146,6 +146,7 @@ load_specification <- function(d, specification, specification_type){
   } else if (inherits(specification, 'character')){
     # check it is a .csv file
     x <- fread(specification)
+    x[is.na(x)] <- ''
   } else if (inherits(specification, 'data.table')){
     x <- setDT(specification)
   }
