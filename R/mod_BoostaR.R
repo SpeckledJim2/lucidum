@@ -17,7 +17,7 @@ mod_BoostaR_ui <- function(id){
                 tabPanel(value = 'Model navigator', span(tagList(icon('table-columns'), 'Model navigator')),
                          mod_BoostaR_navigate_ui(ns('navigateBoostaR'))
                          ),
-                tabPanel(value = 'Tree viewer', title = span(tagList(tags$img(src='www/tree.png', height="25px", width="25px"), 'Tree viewer')),
+                tabPanel(value = 'Tree viewer', title = span(tagList(tags$img(src='www/tree.png', height="20px", width="20px"), 'Tree viewer')),
                          mod_BoostaR_tree_viewer_ui(ns('treeViewer'))
                 )
     ),

@@ -183,8 +183,8 @@ selectInput_choices <- function(
         lucidum_choices <- rbindlist(
           list(
             data.table(feature = current_model_prediction, interaction_grouping = 'Current model'),
-            data.table(feature = importance_cols, interaction_grouping = 'LGBM feature importance'),
-            data.table(feature = lgbm_cols, interaction_grouping = 'LGBM predictions'),
+            data.table(feature = importance_cols, interaction_grouping = 'GBM feature importance'),
+            data.table(feature = lgbm_cols, interaction_grouping = 'GBM predictions'),
             data.table(feature = glm_cols, interaction_grouping = 'GLM predictions'),
             data.table(feature = SHAP_cols, interaction_grouping = 'SHAP values'),
             data.table(feature = LP_cols, interaction_grouping = 'GLM LP values')

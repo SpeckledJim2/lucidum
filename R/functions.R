@@ -1,11 +1,20 @@
-insertDashboardHeader <- function(x){
-  tags$li(
-    class = "dropdown",
-    div(
-      style='margin-top:10px; padding-right:0;',
-      x
+insertDashboardHeader <- function(x, show){
+  if(show){
+    tags$li(
+      class = "dropdown",
+      div(
+        style='margin-top:10px; padding-right:0;',
+        x
+      )
     )
-  )
+  } else {
+    tags$li(
+      class = "dropdown",
+      div(
+        style='margin:0px; padding:0px;'
+      )
+    )
+  }
 }
 
 #' @importFrom data.table fread

@@ -1,4 +1,4 @@
-feature,base_level,min,max,banding,monotonicity,interaction_grouping,scenario1,scenario2,scenario3
+feature,base_level,min,max,banding,monotonicity,interaction_grouping,all_ex_area,all_inc_area,blank
 NCD,9,0,20,1,decreasing,driver,feature,feature,
 PostcodeArea,PO,,,,"",postcode,"",feature,
 age,40,17,100,1,"",driver,feature,feature,

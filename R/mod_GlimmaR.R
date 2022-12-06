@@ -31,6 +31,7 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, GlimmaR_model
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
+    mod_GlimmaR_navigate_server('navigateGlimmaR', GlimmaR_models, GlimmaR_idx)
     observeEvent(GlimmaR_idx(), {
       if(!is.null(GlimmaR_idx())){
         # copy model predictions to d
@@ -44,9 +45,5 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, GlimmaR_model
     
   })
 }
-    
-## To be copied in the UI
-# mod_GlimmaR_ui("GlimmaR_1")
-    
-## To be copied in the server
-# mod_GlimmaR_server("GlimmaR_1")
+
+

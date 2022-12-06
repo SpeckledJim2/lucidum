@@ -21,7 +21,7 @@ mod_ChartaR_ui <- function(id){
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
                          ),
-                tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="15px", width="15px"), 'SHAP')),
+                tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/SHAP.png', height="20px", width="20px"), 'SHAP')),
                          br(),
                          mod_ChartaR_SHAP_ui(ns('SHAP'))
                          )

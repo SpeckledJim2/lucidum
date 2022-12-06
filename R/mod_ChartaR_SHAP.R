@@ -131,8 +131,20 @@ mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, Bo
     observeEvent(c(BoostaR_models(), BoostaR_idx()), {
       if(!is.null(BoostaR_models()) & !is.null(BoostaR_idx())){
         features <- BoostaR_models()[[BoostaR_idx()]]$importances$Feature
-        updateSelectInput(inputId = 'feature_1', choices = features)
-        updateSelectInput(inputId = 'feature_2', choices = c('none', features))
+        sel1 <- input$feature_1
+        sel2 <- input$feature_2
+        if(is.null(sel1)){
+          sel1 <- character(0)
+        } else if(sel1 %not_in% features){
+          sel1 <- character(0)
+        }
+        if(is.null(sel2)){
+          sel2 <- 'none'
+        } else if(sel2 %not_in% features){
+          sel2 <- 'none'
+        }
+        updateSelectInput(inputId = 'feature_1', choices = features, selected = sel1)
+        updateSelectInput(inputId = 'feature_2', choices = c('none', features), selected = sel2)
       }
     })
     observeEvent(
@@ -183,7 +195,9 @@ viz_SHAP_chart <- function(d, weight, feature_1, feature_2, banding_1, banding_2
       config(displayModeBar = FALSE) %>%
       layout(title = list(text = 'No plot to show',yref = "paper", y = 0.5)
       )
-    if(feature_1=='none') feature_1 <- NULL
+    if(!is.null(feature_1)){
+      if(feature_1=='none') feature_1 <- NULL
+    }
     if(!is.null(d) & !is.null(weight) & !is.null(feature_1)){
       c1 <- class(d[[feature_1]])
       if(factor_1){
