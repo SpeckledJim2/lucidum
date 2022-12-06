@@ -233,6 +233,36 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
           }
           setorderv(d_summary, names(d_summary)[1])
+          # group low exposure rows and remove from summary
+          # will add on the low exposure row summary later
+          if(!is.numeric(g)){
+            min_exposure <- 0
+            if(group_low_exposure!='0' & weight != 'no weights'){
+              if(group_low_exposure=='1%'){
+                if(weight=='N'){
+                  min_exposure <- 0.01 * sum(d_summary[,2])
+                } else {
+                  min_exposure <- 0.01 * sum(d_summary[,3])
+                }
+              } else {
+                min_exposure <- as.numeric(group_low_exposure)
+              }
+              if(weight=='N'){
+                low_exposure_rows <- which(d_summary[[2]]<min_exposure)
+              } else {
+                low_exposure_rows <- which(d_summary[[3]]<min_exposure)
+              }
+              low_exposure_summary <- d_summary[low_exposure_rows,
+                                                lapply(.SD, sum, na.rm = TRUE),
+                                                .SDcols = 2:ncol(d_summary)]
+              if(nrow(low_exposure_summary)>0){
+                col <- names(d_summary)[1]
+                low_exposure_summary[, (col) := 'Small weights']
+                d_summary <- d_summary[-low_exposure_rows,]
+                d_summary <- rbind(d_summary, low_exposure_summary)
+              }
+            }
+          }
           # extract weighted mean as needed later on to calibrate SHAP values
           if(weight %in% c('N','no weights')){
             wtd_mean <- sum(d_summary[,3], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
@@ -477,7 +507,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response){
     # add the bars, with distinct colours for NA and X
     colours <- rep('rgba(200, 240, 250,1.0)', nrow(dt))
     na_col <- which(dt[[1]]=='NA')
-    X_col <- which(dt[[1]]=='X')
+    X_col <- which(dt[[1]]=='Small weights')
     colours[na_col] <- 'rgba(255,150,150,1.0)'
     colours[X_col] <- 'rgba(255,150,150,1.0)'
 
