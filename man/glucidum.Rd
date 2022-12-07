@@ -11,12 +11,13 @@ glucidum(
   kpi_spec = NULL,
   filter_spec = NULL,
   feature_spec = NULL,
-  show_DataR = TRUE,
-  show_ChartaR = TRUE,
-  show_MappaR = TRUE,
-  show_BoostaR = TRUE,
-  show_GlimmaR = TRUE,
-  show_DevelopaR = TRUE,
+  show_dataset_chooser = F,
+  show_DataR = T,
+  show_ChartaR = T,
+  show_MappaR = T,
+  show_BoostaR = T,
+  show_GlimmaR = T,
+  show_DevelopaR = T,
   starting_tab = "DataR",
   starting_response = NULL
 )
@@ -33,6 +34,8 @@ glucidum(
 \item{filter_spec}{character, path to filter specification.}
 
 \item{feature_spec}{character, path to feature specification.}
+
+\item{show_dataset_chooser}{logical, TRUE (not default) will show the dataset chooser.}
 
 \item{show_DataR}{logical, TRUE (not default) will show the DataR menu item.}
 

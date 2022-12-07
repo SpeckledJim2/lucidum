@@ -50,6 +50,7 @@ app_server <- function(input, output,session) {
   updateTabItems(session, 'tabs', golem::get_golem_options('starting_tab'))
   
   # header servers
+  mod_dashboardHeader_server('header_nav_buttons', session)
   observeEvent(input$dataset, ignoreInit = TRUE, {
     if(input$dataset %not_in% c('loaded from .csv file', 'choose dataset','user supplied dataset')){
       d(setDT(get(input$dataset)))
@@ -64,30 +65,7 @@ app_server <- function(input, output,session) {
     BoostaR_idx(nav_options()$gbm)
     GlimmaR_idx(nav_options()$glm)
   })
-  observeEvent(input$GoTo_BoostaR, {
-    updateTabItems(session, inputId = 'tabs', selected = 'BoostaR')
-    updateNavbarPage(session = session, inputId = "BoostaR-tabsetPanel", selected = 'Model navigator')
-  })
-  observeEvent(input$GoTo_GlimmaR, {
-    updateTabItems(session, inputId = 'tabs', selected = 'GlimmaR')
-    updateNavbarPage(session = session, inputId = "GlimmaR-tabsetPanel", selected = 'Model navigator')
-  })
-  observeEvent(input$GoTo_kpi_spec, {
-    updateTabItems(session, inputId = 'tabs', selected = 'Specs')
-    updateNavbarPage(session = session, inputId = "DevelopaR-tabsetPanel", selected = 'KPI specification')
-  })
-  observeEvent(input$GoTo_feature_spec, {
-    updateTabItems(session, inputId = 'tabs', selected = 'Specs')
-    updateNavbarPage(session = session, inputId = "DevelopaR-tabsetPanel", selected = 'Feature specification')
-  })
-  observeEvent(input$GoTo_filter_spec, {
-    updateTabItems(session, inputId = 'tabs', selected = 'Specs')
-    updateNavbarPage(session = session, inputId = "DevelopaR-tabsetPanel", selected = 'Filter specification')
-  })
-  observeEvent(input$GoTo_shinyAce, {
-    updateTabItems(session, inputId = 'tabs', selected = 'Specs')
-    updateNavbarPage(session = session, inputId = "DevelopaR-tabsetPanel", selected = 'shinyAce')
-  })
+
   
   # sidebar servers
   weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)

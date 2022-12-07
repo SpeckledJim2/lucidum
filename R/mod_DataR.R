@@ -10,9 +10,9 @@
 mod_DataR_ui <- function(id){
   ns <- NS(id)
   tagList(
-    tabsetPanel(id = 'DataR_tabsetPanel',
-                tabPanel(span(tagList(icon('bars'), 'Dataset viewer')), mod_datasetViewer_ui(ns('datasetViewer'))),
-                tabPanel(span(tagList(icon('table-columns'), 'Column summary')), mod_columnSummary_ui(ns('columnSummary')))
+    tabsetPanel(id = ns('tabsetPanel'),
+                tabPanel(value = 'Dataset viewer', span(tagList(icon('bars'), 'Dataset viewer')), mod_datasetViewer_ui(ns('datasetViewer'))),
+                tabPanel(value = 'Column summary', span(tagList(icon('table-columns'), 'Column summary')), mod_columnSummary_ui(ns('columnSummary')))
     ),
   )
 }

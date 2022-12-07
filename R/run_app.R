@@ -3,9 +3,10 @@
 #' @param data data.frame or data.table to analyse in lucidum.
 #' @param BoostaR_models character, path to .rds file containing BoostaR_models.
 #' @param GlimmaR_models character, path to .rds file containing GlimmaR_models.
-#' @param feature_spec character, path to feature specification.
-#' @param filter_spec character, path to filter specification.
 #' @param kpi_spec character, path to kpi specification.
+#' @param filter_spec character, path to filter specification.
+#' @param feature_spec character, path to feature specification.
+#' @param show_dataset_chooser logical, TRUE (not default) will show the dataset chooser.
 #' @param show_DataR logical, TRUE (not default) will show the DataR menu item.
 #' @param show_ChartaR logical, TRUE (default) will show the ChartaR menu item.
 #' @param show_MappaR logical, TRUE (default) will show the MappaR menu item.
@@ -24,12 +25,13 @@ glucidum <- function(data=NULL,
                      kpi_spec = NULL,
                      filter_spec = NULL,
                      feature_spec = NULL,
-                     show_DataR = TRUE,
-                     show_ChartaR = TRUE,
-                     show_MappaR = TRUE,
-                     show_BoostaR = TRUE,
-                     show_GlimmaR = TRUE,
-                     show_DevelopaR = TRUE,
+                     show_dataset_chooser = F,
+                     show_DataR = T,
+                     show_ChartaR = T,
+                     show_MappaR = T,
+                     show_BoostaR = T,
+                     show_GlimmaR = T,
+                     show_DevelopaR = T,
                      starting_tab = 'DataR',
                      starting_response = NULL
                      ) {
@@ -39,6 +41,7 @@ glucidum <- function(data=NULL,
                       kpi_spec = kpi_spec,
                       filter_spec = filter_spec,
                       feature_spec = feature_spec,
+                      show_dataset_chooser = show_dataset_chooser,
                       show_DataR = show_DataR,                      
                       show_ChartaR = show_ChartaR,
                       show_MappaR = show_MappaR,
