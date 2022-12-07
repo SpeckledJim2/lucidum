@@ -19,7 +19,8 @@ glucidum(
   show_GlimmaR = T,
   show_DevelopaR = T,
   starting_tab = "DataR",
-  starting_response = NULL
+  starting_response = NULL,
+  num_threads = -1
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ glucidum(
 \item{starting_tab}{character, name of tab to show on startup.}
 
 \item{starting_response}{character, name of response column to show on startup.}
+
+\item{num_threads}{integer, number of threads for data.table and lightgbm (default -1 means max threads)}
 }
 \description{
 Launch glucidum

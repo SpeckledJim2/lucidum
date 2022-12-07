@@ -484,7 +484,13 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         lgb_dat <- make_lgb_train_test(d(), response(), weight(), input$BoostaR_initial_score, features, input$BoostaR_objective)
         # loop over the combinations of parameters and build models
         for(i in 1:nrow(main_params_combos)){
-          withProgress(message = '', detail = 'training', {
+          threads <- golem::get_golem_options('num_threads')
+          if(threads==1){
+            detail_message <- paste0('training (', threads, ' thread)')
+          } else {
+            detail_message <- paste0('training (', threads, ' threads)')
+          }
+          withProgress(message = '', detail = detail_message, {
             model_name <- make_unique_name(response(), names(BoostaR_models()), 'lgbm')
             if(nrow(main_params_combos)==1){
               message <- 'BoostaR'
@@ -847,6 +853,7 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
 build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
   # build the model
   start_time <- Sys.time()
+  params$num_threads <- golem::get_golem_options('num_threads')
   lgbm <- tryCatch({
     lgb.train(
       params = params,

@@ -5,6 +5,9 @@
 #' @importFrom DT datatable renderDT
 app_server <- function(input, output,session) {
 
+  # set threads for data.table
+  setDTthreads(max(0,golem::get_golem_options('num_threads')))
+  
   # reactiveVals
   d <- reactiveVal(NULL)
   GlimmaR_models <- reactiveVal(NULL)

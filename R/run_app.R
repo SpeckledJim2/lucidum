@@ -15,6 +15,7 @@
 #' @param show_DevelopaR logical, TRUE (not default) will show the ShinyAce console.
 #' @param starting_tab character, name of tab to show on startup.
 #' @param starting_response character, name of response column to show on startup.
+#' @param num_threads integer, number of threads for data.table and lightgbm (default -1 means max threads)
 #'
 #' @export
 #' @importFrom shiny shinyApp
@@ -33,7 +34,8 @@ glucidum <- function(data=NULL,
                      show_GlimmaR = T,
                      show_DevelopaR = T,
                      starting_tab = 'DataR',
-                     starting_response = NULL
+                     starting_response = NULL,
+                     num_threads = -1
                      ) {
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
@@ -49,7 +51,8 @@ glucidum <- function(data=NULL,
                       show_GlimmaR = show_GlimmaR,
                       show_DevelopaR = show_DevelopaR,
                       starting_tab = starting_tab,
-                      starting_response = starting_response
+                      starting_response = starting_response,
+                      num_threads = num_threads
                       )
   )
 }
