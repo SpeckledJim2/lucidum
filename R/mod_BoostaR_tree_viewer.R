@@ -36,7 +36,24 @@ mod_BoostaR_tree_viewer_ui <- function(id){
         ),
         column(
           width = 4,
-          h3('Select tree'),
+          fluidRow(
+            column(
+              width = 6,
+              h3('Select tree')
+              ),
+            column(
+              width = 6,
+              div(
+                style = 'margin-top:15px',
+                textInput(
+                  ns('search_tree'),
+                  label = NULL,
+                  width = '100%',
+                  placeholder = 'feature...'
+                )
+              )
+            )
+          ),
           sliderInput(ns("BoostaR_tree_selector"),
                       width = '100%',
                       label = NULL,
@@ -81,7 +98,7 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
         }
       }
     })
-    # QUESTION - same again, better to put below in observeEvent?
+    # QUESTION - same again, better to put above in observeEvent?
     observeEvent(c(BoostaR_models(), BoostaR_idx(), input$BoostaR_tree_selector), {
       output$BoostaR_tree_summary <- DT::renderDT({
         # model summary table
@@ -102,6 +119,19 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
           }
         }
       })
+    })
+    observeEvent(input$search_tree, {
+      if(input$search_tree!=''){
+        # select first tree containing feature
+        tree_table <- BoostaR_models()[[BoostaR_idx()]]$tree_table
+        match_rows <- grepl(input$search_tree,tree_table$split_feature)
+        if(all(!match_rows)){
+          first_tree <- 0
+        } else {
+          first_tree <- tree_table[which.max(match_rows)][['tree_index']]
+        }
+        updateSliderInput(session, 'BoostaR_tree_selector', value = first_tree)
+      }
     })
   })
 }
