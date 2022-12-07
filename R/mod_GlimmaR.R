@@ -40,6 +40,16 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, GlimmaR_model
         d()[rows_idx, glm_prediction := preds]
         dt_update(dt_update()+1)
         # copy LP cols
+        existing_LP_cols <- names(d())[grep('_LP_', names(d()))] # get rid of any existing SHAP columns
+        if(length(existing_LP_cols)>0){
+          d()[, (existing_LP_cols) := NULL]
+        }
+        new_LP_idx <- GlimmaR_models()[[GlimmaR_idx()]]$pred_rows
+        new_LP_cols <- GlimmaR_models()[[GlimmaR_idx()]]$LP_contributions
+        if(!is.null(new_LP_cols)){
+          LP_names <- names(new_LP_cols)
+          d()[new_LP_idx, (LP_names) := new_LP_cols]
+        }
       }
     })
     

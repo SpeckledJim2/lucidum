@@ -13,10 +13,51 @@ mod_GlimmaR_navigate_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 6,
+        width = 4,
         h3('GlimmaR model summary')
       ),
-      column(width = 6,
+      column(width = 3,
+             fluidRow(
+               column(
+                 width = 6,
+                 style = 'margin-right:0px; padding-right:0px',
+                 div(
+                   style = 'margin-bottom:-15px; margin-top:10px',
+                   radioGroupButtons(
+                     inputId = ns('tabulate_format'),
+                     label = NULL,
+                     choices = c('solo','long'),
+                     selected = 'solo',
+                     size = 'xs',
+                     justified = TRUE,
+                     )
+                   ),
+                 div(
+                   style = 'margin-bottom:0px; margin-top:0px',
+                   radioGroupButtons(
+                     inputId = ns('tabulate_scale'),
+                     label = NULL,
+                     choices = c('link','response'),
+                     selected = 'response',
+                     size = 'xs',
+                     justified = TRUE
+                     )
+                   )
+                 ),
+               column(
+                 width = 6,
+                 div(
+                   style = 'margin-top:15px',
+                   actionButton(
+                     inputId = ns('tabulate'),
+                     label = 'Tabulate',
+                     icon = icon("table")
+                     )
+                   )
+                 )
+               )
+             ),
+      column(width = 5,
              align = 'right',
              style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
              actionButton(

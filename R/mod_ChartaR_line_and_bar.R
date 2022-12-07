@@ -135,9 +135,10 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     observeEvent(banding_new(), {
       banding(banding_new())
     })
-    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), input$group_low_exposure, input$show_partial_dependencies, input$response_transform, input$sort), {
+    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$response_transform, input$sort), {
       # QUESTION - how to stop this triggering twice on first call
       gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
+      glm_link <- GlimmaR_models()[[GlimmaR_idx()]]$link
       data_summary(
         line_and_bar_summary(
           d(),
@@ -151,7 +152,9 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
           input$show_partial_dependencies,
           input$response_transform,
           kpi_spec(),
-          gbm_link)
+          feature_spec(),
+          gbm_link,
+          glm_link)
         )
     })
     observeEvent(data_summary(), {
@@ -169,7 +172,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
   })
 }
 
-line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, show_partial_dependencies, response_transform, kpi_spec, gbm_link){
+line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, show_partial_dependencies, response_transform, kpi_spec, feature_spec, gbm_link, glm_link){
   if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col)){
     if(response!='' & weight !=''){
       d_cols <- names(d)
@@ -235,36 +238,6 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
           }
           setorderv(d_summary, names(d_summary)[1])
-          # group low exposure rows and remove from summary
-          # will add on the low exposure row summary later
-          if(!is.numeric(g)){
-            min_exposure <- 0
-            if(group_low_exposure!='0' & weight != 'no weights'){
-              if(group_low_exposure=='1%'){
-                if(weight=='N'){
-                  min_exposure <- 0.01 * sum(d_summary[,2])
-                } else {
-                  min_exposure <- 0.01 * sum(d_summary[,3])
-                }
-              } else {
-                min_exposure <- as.numeric(group_low_exposure)
-              }
-              if(weight=='N'){
-                low_exposure_rows <- which(d_summary[[2]]<min_exposure)
-              } else {
-                low_exposure_rows <- which(d_summary[[3]]<min_exposure)
-              }
-              low_exposure_summary <- d_summary[low_exposure_rows,
-                                                lapply(.SD, sum, na.rm = TRUE),
-                                                .SDcols = 2:ncol(d_summary)]
-              if(nrow(low_exposure_summary)>0){
-                col <- names(d_summary)[1]
-                low_exposure_summary[, (col) := 'Small weights']
-                d_summary <- d_summary[-low_exposure_rows,]
-                d_summary <- rbind(d_summary, low_exposure_summary)
-              }
-            }
-          }
           # extract weighted mean as needed later on to calibrate SHAP values
           if(weight %in% c('N','no weights')){
             wtd_mean <- sum(d_summary[,3], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
@@ -321,6 +294,70 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
             d_summary <- cbind(d_summary, SHAP_summary[, 2:6])
           }
+          # LP summary
+          LP_col <- NULL
+          if (show_partial_dependencies %in% c('GLM','Both')){
+            LP_col <- paste0('glm_LP_', group_by_col)
+            if(!(LP_col %in% names(d))){
+              LP_col <- NULL
+            }
+          }
+          if(!is.null(LP_col)){
+            if(length(rows_idx)==nrow(d)){
+              LP_summary <- d[, lapply(.SD, mean, na.rm = TRUE), banded_col, .SDcols = LP_col]
+            } else {
+              LP_summary <- d[rows_idx, lapply(.SD, mean, na.rm = TRUE), banded_col, .SDcols = LP_col]
+            }
+            setorderv(LP_summary, names(LP_summary)[1])
+            names(LP_summary)[2] <- c('LP_mean')
+            # scale SHAP values to mean
+            # how to do this depends on the choice of objective
+            if(glm_link=='identity'){
+              LP_summary[, 2] <- wtd_mean + LP_summary[, 2]
+            } else if (glm_link=='log'){
+              LP_summary[, 2] <- exp(LP_summary[, 2]) * wtd_mean
+            } else if (glm_link=='logit'){
+              # following is rough for now - won't always tie up due to logit
+              LP_summary[, 2] <- exp(LP_summary[, 2])/(1+exp(LP_summary[, 2])) * wtd_mean * 2
+            }
+            # multiply LP_summary by row weights
+            # needed for later weighted average removal of rows
+            if(weight=='N'){
+              LP_summary[, 2] <- LP_summary[, 2] * d_summary[[2]]
+            } else {
+              LP_summary[, 2] <- LP_summary[, 2] * d_summary[[3]]
+            }
+            d_summary <- cbind(d_summary, LP_summary[, 2])
+          }
+          # group low exposure rows and remove from summary
+          if(!is.numeric(g)){
+            min_exposure <- 0
+            if(group_low_exposure!='0' & weight != 'no weights'){
+              if(group_low_exposure=='1%'){
+                if(weight=='N'){
+                  min_exposure <- 0.01 * sum(d_summary[,2])
+                } else {
+                  min_exposure <- 0.01 * sum(d_summary[,3])
+                }
+              } else {
+                min_exposure <- as.numeric(group_low_exposure)
+              }
+              if(weight=='N'){
+                low_exposure_rows <- which(d_summary[[2]]<min_exposure)
+              } else {
+                low_exposure_rows <- which(d_summary[[3]]<min_exposure)
+              }
+              low_exposure_summary <- d_summary[low_exposure_rows,
+                                                lapply(.SD, sum, na.rm = TRUE),
+                                                .SDcols = 2:ncol(d_summary)]
+              if(nrow(low_exposure_summary)>0){
+                col <- names(d_summary)[1]
+                low_exposure_summary[, (col) := 'Small weights']
+                d_summary <- d_summary[-low_exposure_rows,]
+                d_summary <- rbind(d_summary, low_exposure_summary)
+              }
+            }
+          }
           # divide by weight if specified
           if(weight == 'N'){
             first_col <- 3
@@ -330,6 +367,52 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             first_col <- 4
             # divide all summary columns (4rd onwards) by the weight column (3rd)
             d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[3]]
+          }
+          # apply response transformation
+          if(response_transform=='Log'){
+            d_summary[, first_col:ncol(d_summary)] <- log(d_summary[, first_col:ncol(d_summary)])
+          } else if (response_transform=='Exp'){
+            d_summary[, first_col:ncol(d_summary)] <- exp(d_summary[, first_col:ncol(d_summary)])
+          } else if (response_transform=='Logit'){
+            d_summary[, first_col:ncol(d_summary)] <- log(d_summary[, first_col:ncol(d_summary)]/(1-d_summary[, first_col:ncol(d_summary)]))
+          } else if (response_transform=='0'){
+            base_level <- feature_spec$base_level[feature_spec$feature==group_by_col]
+            if(!shiny::isTruthy(base_level)) base_level <- character(0)
+            if(length(base_level)>0){
+              if(is.numeric(d[[group_by_col]])){
+                base_level <- as.numeric(base_level)
+                base_level_banded <- floor(base_level/banding) * banding
+              }
+              idx <- which(d_summary[[1]]==base_level)
+              if(length(idx)==1){
+                cols <- names(d_summary)[first_col:ncol(d_summary)]
+                denominator <- d_summary[idx, .SD, .SDcols = cols]
+                if(!is.null(SHAP_col)){
+                  denominator[, (c('min','perc_5','perc_95','max')) := mean] # what to adjust to the mean, not the percentiles
+                }
+                rebased_values <- as.data.table(mapply('-',d_summary[, .SD, .SDcols=cols], denominator))
+                d_summary[, (cols) := rebased_values]
+              }
+            }
+          } else if (response_transform=='1'){
+            base_level <- feature_spec$base_level[feature_spec$feature==group_by_col]
+            if(!shiny::isTruthy(base_level)) base_level <- character(0)
+            if(length(base_level)>0){
+              if(is.numeric(d[[group_by_col]])){
+                base_level <- as.numeric(base_level)
+                base_level_banded <- floor(base_level/banding) * banding
+              }
+              idx <- which(d_summary[[1]]==base_level)
+              if(length(idx)==1){
+                cols <- names(d_summary)[first_col:ncol(d_summary)]
+                denominator <- d_summary[idx, .SD, .SDcols = cols]
+                if(!is.null(SHAP_col)){
+                  denominator[, (c('min','perc_5','perc_95','max')) := mean] # want to adjust to the mean, not the percentiles
+                }
+                rebased_values <- as.data.table(mapply('/',d_summary[, .SD, .SDcols=cols], denominator))
+                d_summary[, (cols) := rebased_values]
+              }
+            }
           }
           # sort table
           first_col_name <- names(d_summary)[1]
@@ -531,7 +614,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_
                    textfont = list(color = 'rgba(100, 120, 125,1.0)')
     )
     # add on the response lines
-    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) #- ifelse(LP_col,1,0)
+    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0)
     if(show_response=='Show'){
       # add the lines
       for(i in first_line_col:last_line_col){
@@ -589,6 +672,12 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_
         add_trace(x = dt[[1]], y = dt[['max']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                   showlegend = TRUE, name = 'SHAP_min_max')
+    }
+    if(LP_col){
+      p <- p %>%
+        add_trace(x = dt[[1]], y = dt[['LP_mean']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  line = list(color = 'rgba(50, 50, 200, 1.0)', dash = 'dot'),
+                  showlegend = TRUE, name = 'LP')
     }
     if(show_labels=='All'){
       range <- max(dt[[first_line_col]], na.rm = TRUE) - min(dt[[first_line_col]], na.rm = TRUE)

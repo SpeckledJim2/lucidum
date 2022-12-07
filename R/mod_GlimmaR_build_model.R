@@ -7,6 +7,7 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
+#' @importFrom readr read_file 
 mod_GlimmaR_build_model_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -123,16 +124,29 @@ mod_GlimmaR_build_model_ui <- function(id){
             h3("Formula")
           ),
           column(
-            width = 8,
+            width = 4,
+            div(
+              style = 'margin-top: 22px',
+              selectInput(
+                inputId = ns('objective'),
+                width = '100%',
+                label = NULL,
+                choices = list('identity link' = list('gaussian'),
+                               'log link' = list('poisson',
+                                                 'quasipoisson',
+                                                 'gamma',
+                                                 'tweedie'),
+                               'logit link' = list('binomial')
+                )
+              )
+            )
+          ),
+          column(
+            width = 4,
             align = 'right',
             br(),
-            actionButton(
-              inputId = ns('tabulate'),
-              label = 'Tabulate',
-              icon = icon("table"),
-            ),
             shinyFilesButton(
-              id = ns('GlimmaR_formula_load'),
+              id = ns('formula_load'),
               label = '',
               filetype=list(txt="txt"),
               icon = icon('download'),
@@ -152,44 +166,6 @@ mod_GlimmaR_build_model_ui <- function(id){
             )
           )
         ),
-        br(),
-        fluidRow(
-          column(
-            width = 3,
-            selectInput(
-              inputId = ns('objective'),
-              width = '100%',
-              label = 'Family',
-              choices = list('identity link' = list('gaussian'),
-                             'log link' = list('poisson',
-                                               'quasipoisson',
-                                               'gamma',
-                                               'tweedie'),
-                             'logit link' = list('binomial')
-              )
-            )
-          ),
-          column(
-            width = 4,
-            align = 'right',
-            radioGroupButtons(
-              inputId = ns('tabulate_format'),
-              label = 'Tabulate format',
-              choices = c('solo','long'),
-              selected = 'solo'
-            )
-          ),
-          column(
-            width = 5,
-            align = 'right',
-            radioGroupButtons(
-              inputId = ns('tabulate_scale'),
-              label = 'Tabulate function',
-              choices = c('link','response'),
-              selected = 'response'
-            )
-          )
-        ),
         # QUESTION - need to move
         tags$style(".form-group.shiny-input-container { width: 100%; }"),
         # QUESTION - better way re namespace?
@@ -202,7 +178,7 @@ mod_GlimmaR_build_model_ui <- function(id){
           inputId = ns('glm_formula'),
           value = 'Edit the GLM formula...',
           label = NULL,
-          height = '480px',
+          height = 'calc(75vh - 50px)',
           resize = 'none'
         ),
         fluidRow(
@@ -337,7 +313,73 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         }
       })
     })
-    
+    observeEvent(input$formula_save, {
+      volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
+      shinyFileSave(input, "formula_save", roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$formula_save)
+      if (nrow(fileinfo) > 0) {
+        fileConn<-file(fileinfo$datapath)
+        writeLines(isolate(input$glm_formula), fileConn)
+        close(fileConn)
+      }
+    })
+    observeEvent(input$formula_load, {
+      volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
+      shinyFileChoose(input, "formula_load", roots=volumes, session=session)
+      fileinfo <- parseFilePaths(volumes, input$formula_load)
+      if (nrow(fileinfo) > 0) {
+        glm_formula <- readr::read_file(file = fileinfo$datapath)
+        updateTextAreaInput(session = session, inputId = 'glm_formula', label = NULL, value = glm_formula)
+      }
+    })
+    observe({
+      volumes <- c('Home' = path_home(), getVolumes()())
+      shinyFileSave(input, 'save_model', roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$save_model)
+      isolate({
+        if (nrow(fileinfo) > 0) {
+          # leave only part of glm_model object needed for prediction
+          # otherwise file will be huge (it retains data used to fit model)
+          stripped_model <- strip_glm(GlimmaR_models[[GlimmaR_idx()]]$glm)
+          saveRDS(stripped_model, file = fileinfo$datapath, compress = TRUE)
+          confirmSweetAlert(session = session,
+                            type = 'success',
+                            inputId = "temp",
+                            title = 'GLM saved',
+                            btn_labels = c('OK')
+          )
+        }
+      })
+    })
+    observe({
+      if(!is.null(BoostaR_idx())){
+        b <- BoostaR_models()[[BoostaR_idx()]]
+        updateSelectInput(
+          session,
+          inputId = 'helper_feature',
+          choices = make_GlimmaR_helper_features(d(), b, input$helper_feature_choice, input$helper_search)
+          )
+        
+      }
+    })
+    observe({
+      updateSelectInput(session,
+                        inputId = 'helper_levels',
+                        choices = make_GlimmaR_helper_levels(d(), input$helper_feature)
+                        )
+    })
+    observe({
+      updateTextAreaInput(session,
+                          inputId = 'formula_suggestion',
+                          value = make_GlimmaR_formula_suggestion(
+                            d = d(),
+                            feature = input$helper_feature,
+                            options = input$helper_levels,
+                            level_grouping = input$helper_levels_choice,
+                            inputs = input$helper_level_text
+                            )
+                          )
+    })
   })
 }
 
@@ -393,17 +435,23 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
       # set the GLM family
       if (glm_objective=='gaussian'){
         family <- stats::gaussian(link='identity')
+        link <- 'identity'
       } else if (glm_objective=='binomial'){
         family <- stats::binomial(link = 'logit')
+        link <-  'logit'
       } else if (glm_objective=='poisson'){
         family <- stats::poisson(link = 'log')
+        link <-  'log'
       } else if (glm_objective=='gamma'){
         family <- stats::Gamma(link = 'log')
+        link <-  'log'
       } else if (glm_objective=='tweedie'){
         # link.power = 0 means log link which is usually what you want
         family <- statmod::tweedie(var.power = 1.1, link.power = 0)
+        link <-  'log'
       } else if (glm_objective=='quasipoisson'){
         family <- stats::quasipoisson(link = 'log')
+        link <-  'log'
       }
       # use whole dataset or just training
       if(data_to_use=='All rows'){
@@ -469,6 +517,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                       coefficients = c,
                       num_terms = nrow(c),
                       objective = glm_objective,
+                      link = link,
                       response = response,
                       weight = weight,
                       rows_used = include,
