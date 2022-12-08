@@ -166,6 +166,20 @@ mod_GlimmaR_navigate_server <- function(id, GlimmaR_models, GlimmaR_idx){
           DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
       })
     })
+    observeEvent(input$delete_model, {
+      rows_selected <- input$model_summary_rows_selected
+      new_list <- GlimmaR_models()[-rows_selected]
+      GlimmaR_models(new_list)
+    })
+    observeEvent(input$make_active, {
+      rows_selected <- input$model_summary_rows_selected
+      if(!is.null(rows_selected)){
+        if(length(rows_selected)>1){
+          rows_selected <- rows_selected[1]
+        }
+      }
+      GlimmaR_idx(names(GlimmaR_models())[rows_selected])
+    })
   })
 }
 

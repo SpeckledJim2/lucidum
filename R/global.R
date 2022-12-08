@@ -25,6 +25,8 @@ globalVariables(
     'idx',
     'interaction_grouping',
     'lgbm_prediction',
-    'glm_prediction'
+    'glm_prediction',
+    '..non_lucidum_cols',
+    '..lucidum_cols'
     )
   )

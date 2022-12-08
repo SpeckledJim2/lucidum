@@ -5,22 +5,22 @@
 #'
 #' @format A data frame with 25000 rows and 17 variables:
 #' \describe{
-#'   \item{price}{price paid for the policy}
 #'   \item{age}{the customer's age}
 #'   \item{experience}{the number of years the customer has held their driving licence}
 #'   \item{licence}{the type of driving licence}
 #'   \item{NCD}{the number of years' no claims discount}
 #'   \item{PostcodeArea}{the UK postcode area of the customer's address}
-#'   \item{postcode_cat}{numerical postcode risk category}
 #'   \item{make}{vehicle make}
+#'   \item{EngineCC}{vehicle engine capacity in cubic centimeters}
+#'   \item{fuel}{vehicle fuel type, P=Petrol, D=Diesel, E=Electric}
 #'   \item{value}{the value of the vehicle}
 #'   \item{vehicle_age}{the age of the vehicle}
 #'   \item{ownership}{how many years the customer has owned the vehicle}
-#'   \item{vehicle_cat}{numerical vehicle risk category}
 #'   \item{vehicle_kept}{where the vehicle is kept overnight}
 #'   \item{mileage}{the number of miles driven per year}
 #'   \item{use}{what the vehicle is used for}
 #'   \item{claims}{the number of prior claims the customer has made}
+#'   \item{price}{price paid for the policy}
 #'   \item{train_test}{training rows are 0, test rows are 1}
 #' }
 "insurance"
