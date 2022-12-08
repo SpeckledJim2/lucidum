@@ -1130,11 +1130,10 @@ evaluation_plot <- function(evaluation_log){
 
 update_GBM_parameters <- function(session, output, BoostaR_model){
   ns <- session$ns
-  updateTextInput(session, inputId = ns('BoostaR_num_rounds'), value = BoostaR_model$params$num_iterations)
-  updateTextInput(session, inputId = ns('BoostaR_early_stopping'), value = BoostaR_model$params$early_stopping_round)
-  updateSelectInput(session, inputId = ns('BoostaR_objective'), selected = BoostaR_model$params$objective)
-  updateSelectInput(session, inputId = ns('BoostaR_initial_score'), selected = BoostaR_model$init_score)
-  updateRadioGroupButtons(session, inputId = ns('BoostaR_grid_search'), selected = 'Off')
+  updateTextInput(session, inputId = 'BoostaR_num_rounds', value = BoostaR_model$params$num_iterations)
+  updateTextInput(session, inputId = 'BoostaR_early_stopping', value = BoostaR_model$params$early_stopping_round)
+  updateSelectInput(session, inputId = 'BoostaR_objective', selected = BoostaR_model$params$objective)
+  updateSelectInput(session, inputId = 'BoostaR_initial_score', selected = BoostaR_model$init_score)
   output$BoostaR_learning_rate_UI <- renderUI({
     sliderInput(
       inputId = ns('BoostaR_learning_rate'),
