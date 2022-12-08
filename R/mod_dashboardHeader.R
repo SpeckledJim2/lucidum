@@ -32,7 +32,7 @@ mod_dashboardHeader_ui <- function(id){
       insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_navigate'), label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_BoostaR')),
       insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_tree'), label = tagList(tags$img(src='www/tree.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_BoostaR')),
       # GlimmaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_build'), label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_build'), label = tagList(tags$img(src='www/beta.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
       insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_navigate'), label = NULL, icon = icon('star'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
       insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_tabulate'), label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_MappaR')),
       # dataset
