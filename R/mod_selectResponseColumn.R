@@ -50,8 +50,8 @@ mod_selectResponseColumn_server <- function(
     observeEvent(c(d(), dt_update()), {
       if(!is.null(d())){
         if(nrow(d())>0){
-          choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
-          if(input$col %not_in% choices){
+          choices <- getColumnChoices(d(), numerical_cols)
+          if(input$col %not_in% unlist(choices)){
             selected <- choices[[1]]
           } else {
             selected <- input$col
@@ -147,7 +147,7 @@ response_text <- function(d, response, weight, kpi_spec){
     paste0('= ', response_label)
   }
 }
-getColumnChoices <- function(d, numerical_cols = FALSE, subset = NULL, special_options = NULL){
+getColumnChoices <- function(d, numerical_cols = FALSE, subset = NULL, special_options = NULL, special_options_group_name = NULL){
   cols <- NULL
   if(!is.null(d)){
     if(ncol(d)>0){
@@ -156,15 +156,28 @@ getColumnChoices <- function(d, numerical_cols = FALSE, subset = NULL, special_o
       } else {
         cols <- names(d)
       }
-      cols <- sort(cols)
       if(!is.null(subset)){
         cols <- setdiff(subset, cols)
       }
+      non_lucidum_cols <- remove_lucidum_cols(cols)
+      lucidum_cols <- setdiff(cols, non_lucidum_cols)
+      non_lucidum_cols <- sort(non_lucidum_cols)
+      lucidum_cols <- sort(lucidum_cols)
+      # fix if length 1 to ensure selectInput displays correctly
+      special_options <- list_if_length_one(special_options)
+      lucidum_cols <- list_if_length_one(lucidum_cols)
+      non_lucidum_cols <- list_if_length_one(non_lucidum_cols)
+      column_choices <- list()
+      group_name <- paste0('Dataset columns (', length(non_lucidum_cols),')')
       if(!is.null(special_options)){
-        cols <- c(special_options, cols)
-      }
+        column_choices[[special_options_group_name]] <- special_options
+        }
+      column_choices[[group_name]] <- non_lucidum_cols
+      if(!is.null(lucidum_cols)){
+        lucidum_group_name <- paste0('Lucidum columns (', length(lucidum_cols),')')
+        column_choices[[lucidum_group_name]] <- lucidum_cols
+        }
     }
-    
   }
-  return(cols)
+  return(column_choices)
 }

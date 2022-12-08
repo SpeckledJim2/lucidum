@@ -40,7 +40,7 @@ mod_selectWeightColumn_server <- function(id, d, dt_update, numerical_cols, subs
       if(!is.null(d())){
         if(nrow(d())>0){
           current_selection <- input$col
-          choices <- getColumnChoices(d(), numerical_cols, subset, special_options)
+          choices <- getColumnChoices(d(), numerical_cols, subset, special_options, 'Weights')
           selected <- input$col
           if(selected %not_in% choices){
             selected <- choices[[1]]
