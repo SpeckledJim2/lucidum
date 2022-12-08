@@ -13,14 +13,9 @@ rm(list=ls(all.names = TRUE))
 golem::document_and_reload()
 
 # Run the application
-#glucidum(insurance)
-insurance[, birthday:= as.Date('1976-11-24')]
-insurance[1, birthday:= as.Date('1976-10-24')]
-insurance[2, birthday:= as.Date('1976-09-24')]
-insurance[3, birthday:= as.Date('1976-11-25')]
 glucidum(data = insurance,
          starting_response = 'price',
-         starting_tab = 'GlimmaR',
+         starting_tab = 'ChartaR',
          show_DevelopaR = T,
          show_DataR = T,
          show_ChartaR = T,
@@ -28,7 +23,7 @@ glucidum(data = insurance,
          show_BoostaR = T,
          show_GlimmaR = T,
          show_dataset_chooser = T,
-         num_threads = 1,
+         num_threads = 16,
          kpi_spec = 'data/insurance_kpi_spec.csv',
          feature_spec = 'data/insurance_feature_spec.csv',
          filter_spec = 'data/insurance_filter_spec.csv')
