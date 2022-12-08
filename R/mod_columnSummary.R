@@ -13,10 +13,27 @@ mod_columnSummary_ui <- function(id){
     fluidRow(
       column(
         width = 8,
-        p('Dataset column summary', style = 'font-size: 20px; margin-top: 18px; margin-bottom: 0px'),
+        fluidRow(
+          column(
+            width = 6,
+            p('Dataset column summary', style = 'font-size: 20px; margin-top: 18px; margin-bottom: 0px'),
+          ),
+          column(
+            width = 6,
+            align = 'right',
+            div(
+              style = 'margin-top:15px',
+              radioGroupButtons(
+                inputId = ns('columns_to_display'),
+                label = NULL,
+                choices = c('Dataset','Lucidum','All'),
+                selected = 'Dataset'
+              )
+            )
+          )
+        ),
         br(),
         DTOutput(ns('column_summary'))
-        
       ),
       column(
         width = 4,
@@ -37,7 +54,7 @@ mod_columnSummary_server <- function(id, d, dt_update){
     output$column_summary <- renderDT({
       dt_update()
       format_column_summary_DT(
-        get_column_summary(d(), FALSE),
+        get_column_summary(d(), sample = FALSE, columns_to_display = input$columns_to_display),
         isolate(selected_row())
       )
     })
@@ -62,7 +79,7 @@ mod_columnSummary_server <- function(id, d, dt_update){
   })
 }
 
-get_column_summary <- function(d, sample){
+get_column_summary <- function(d, sample, columns_to_display){
   if(is.null(d)){
     result <- data.table(class = 'select dataset from top right',
                          type = '',
@@ -76,6 +93,17 @@ get_column_summary <- function(d, sample){
       d_filter <- d[which(total_filter==1)]
     } else {
       d_filter <- d 
+    }
+    # only include selected cols
+    all_cols <- names(d_filter)
+    non_lucidum_cols <- remove_lucidum_cols(all_cols)
+    lucidum_cols <- setdiff(all_cols, non_lucidum_cols)
+    if(columns_to_display=='Dataset'){
+      d_filter <- d_filter[, ..non_lucidum_cols]
+    } else if(columns_to_display=='Lucidum'){
+      d_filter <- d_filter[, ..lucidum_cols]
+    } else if(columns_to_display=='All'){
+      
     }
     result <- d_filter[, sapply(.SD,
                          function(x) c(class = class(x)[1],
@@ -172,7 +200,7 @@ get_feature_summary <- function(d, col){
     } else {
       frequencies <- sort(table(x, useNA = 'ifany'),decreasing=TRUE)
       summary <- as.data.table(frequencies)
-      names(summary) <- c('value','count')
+      names(summary) <- c('Level','count')
       num_levels <- nrow(summary)
       if(num_levels>10000){
         other_total <- summary[10001:.N, sum(count)]
@@ -190,7 +218,7 @@ get_feature_summary <- function(d, col){
   }
 }
 
-#' @importFrom DT datatable formatStyle
+#' @importFrom DT datatable formatStyle formatSignif
 format_column_summary_DT <- function(d, selected_row){
   pg_length <- min(100, nrow(d))
   dt <- datatable(d,
@@ -212,7 +240,7 @@ format_column_summary_DT <- function(d, selected_row){
 
 #' @importFrom DT datatable formatStyle
 format_feature_summary_DT <- function(d){
-  d |>
+  DT <- d |>
     datatable(
     rownames= FALSE,
     extensions = 'Buttons',
@@ -226,4 +254,9 @@ format_feature_summary_DT <- function(d){
       )
     ) |>
     formatStyle(1:ncol(d), lineHeight='0%', fontSize = '12px')
+    if('value' %in% names(d)){
+      DT |> formatRound(columns=c('value'), digits=4, interval = 3)
+    } else {
+      DT
+    }
 }
