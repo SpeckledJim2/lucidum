@@ -67,5 +67,6 @@ format_dataset_for_DT <- function(d, transpose){
                                      searchHighlight=TRUE
                       )
   ) |>
-    DT::formatStyle(1:ncol(d_filter), lineHeight='0%', fontSize = '12px')
+    DT::formatStyle(1:ncol(d_filter), lineHeight='0%', fontSize = '12px') |>
+    formatStyle(1:ncol(d_filter),"white-space"="nowrap")
 }
