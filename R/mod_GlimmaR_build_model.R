@@ -314,13 +314,17 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
     })
     observeEvent(GlimmaR_idx(), {
       # update the coefficient table
-      output$glm_coefficients <- DT::renderDataTable({
-        if(GlimmaR_idx()>0){
-          g <- GlimmaR_models()[[GlimmaR_idx()]]
-          c <- g$coefficients
-          GlimmaR_coefficient_DT(c)
-        }
-      })
+      if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
+        g <- GlimmaR_models()[[GlimmaR_idx()]]
+        # update coefficient table
+        output$glm_coefficients <- DT::renderDataTable({
+          GlimmaR_coefficient_DT(g$coefficients)
+          })
+        # update the formula
+        updateTextAreaInput(session, inputId = 'glm_formula', value = g$formula)
+        # update the objective
+        updateSelectInput(session, inputId = 'objective', selected = g$objective)
+      }
     })
     observeEvent(input$formula_save, {
       volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
