@@ -78,6 +78,7 @@ golem_add_external_resources <- function(){
     # If you have a custom.css in the inst/app/www
     # Or for example, you can add shinyalert::useShinyalert() here
     tags$link(rel="stylesheet", type="text/css", href="www/custom.css"),
-    tags$script(src="www/sidebar_resize.js")
+    tags$script(src="www/sidebar_resize.js"),
+    tags$script(src="www/window_dimensions.js")
   )
 }

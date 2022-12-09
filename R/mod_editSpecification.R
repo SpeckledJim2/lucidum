@@ -47,7 +47,7 @@ mod_editSpecification_ui <- function(id) {
   )
 
 }
-mod_editSpecification_server <- function(id, input_spec, type) {
+mod_editSpecification_server <- function(id, input_spec, type, dimensions) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     output_spec <- reactiveVal()
@@ -60,7 +60,7 @@ mod_editSpecification_server <- function(id, input_spec, type) {
           output$specification <- renderRHandsontable({
             rhandsontable(
               input_spec(),
-              selectCallback = TRUE, rowHeaders = FALSE, columnSorting = TRUE, stretchH = "all", height = 500
+              selectCallback = TRUE, rowHeaders = FALSE, columnSorting = TRUE, stretchH = "all", height = dimensions()[2] - 400
             )
           })
         }

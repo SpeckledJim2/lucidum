@@ -3,10 +3,10 @@
 #' @import pkgload
 #' @importFrom golem get_golem_options
 #' @importFrom DT datatable renderDT
-app_server <- function(input, output,session) {
+app_server <- function(input, output, session) {
 
   # set threads for data.table
-  setDTthreads(max(0,golem::get_golem_options('num_threads')))
+  setDTthreads(max(0, golem::get_golem_options('num_threads')))
   
   # reactiveVals
   d <- reactiveVal(NULL)
@@ -15,7 +15,15 @@ app_server <- function(input, output,session) {
   kpi <- reactiveVal(NULL)
   GlimmaR_idx <- reactiveVal(0)
   BoostaR_idx <- reactiveVal(0)
+  dimensions <- reactiveVal()
   
+  # window dimensions to resize tables and ui elements
+  observeEvent(input$dimensions, {
+    # input$dimensions is defined in the .js file window_dimensions.js
+    dimensions(input$dimensions)
+  })
+  
+  # lucidum startup
   init_lucidum(session, golem::get_golem_options('data'))  
   # d is the dataset being analysed by lucidum
   # the golem option 'data' specifies the dataset
@@ -69,7 +77,6 @@ app_server <- function(input, output,session) {
     GlimmaR_idx(nav_options()$glm)
   })
 
-  
   # sidebar servers
   weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)
   response <- mod_selectResponseColumn_server(
@@ -97,13 +104,13 @@ app_server <- function(input, output,session) {
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
   # tab servers
-  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models)
+  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, dimensions)
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
   mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
-
+  
   # run on close browser - stops server
   session$onSessionEnded(function() {stopApp()})
   

@@ -170,7 +170,7 @@ mod_DevelopaR_ui <- function(id){
 #' @importFrom shinyWidgets confirmSweetAlert
 #' @importFrom shinyAce updateAceEditor
 #' 
-mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models){
+mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, dimensions){
   moduleServer( id, function(input, output, session){
     updated_kpi_spec <- reactiveVal()
     updated_filter_spec <- reactiveVal()
@@ -200,9 +200,9 @@ mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, featur
       shinyAce_text_size(min(30,shinyAce_text_size()+1))
       updateAceEditor(session, editorId = 'shinyAce_code', fontSize = shinyAce_text_size())
     })
-    updated_kpi_spec <- mod_editSpecification_server('kpi', kpi_spec, type = 'kpi')
-    updated_filter_spec <- mod_editSpecification_server('filter', filter_spec, type = 'filter')
-    updated_feature_spec <- mod_editSpecification_server('feature', feature_spec, type = 'feature')
+    updated_kpi_spec <- mod_editSpecification_server('kpi', kpi_spec, type = 'kpi', dimensions)
+    updated_filter_spec <- mod_editSpecification_server('filter', filter_spec, type = 'filter', dimensions)
+    updated_feature_spec <- mod_editSpecification_server('feature', feature_spec, type = 'feature', dimensions)
     observeEvent(updated_kpi_spec(), {
       if(!identical(kpi_spec(), updated_kpi_spec())){
         kpi_spec(updated_kpi_spec())
