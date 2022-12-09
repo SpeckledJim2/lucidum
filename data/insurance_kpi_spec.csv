@@ -1,4 +1,5 @@
 kpi_name,kpi_numerator,kpi_denominator,kpi_dp,kpi_signif,kpi_divisor,kpi_prefix,kpi_suffix
-Insurance premium,price,N,0,0,1,,""
-Vehicle value,value,N,1,0,1000,,k
-Vehicle age,vehicle_age,N,1,0,1,,
+Insurance premium,price,N,0,0,1,"",""
+Customer age,age,N,0,0,1,,
+Vehicle age,vehicle_age,N,1,0,1,"",""
+Mileage,mileage,N,1,0,1000,"",k

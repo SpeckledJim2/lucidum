@@ -13,18 +13,19 @@ rm(list=ls(all.names = TRUE))
 golem::document_and_reload()
 
 # Run the application
-glucidum(data = insurance,
-         starting_response = 'price',
-         starting_tab = 'GlimmaR',
-         show_DevelopaR = T,
-         show_DataR = T,
-         show_ChartaR = T,
-         show_MappaR = T,
-         show_BoostaR = T,
-         show_GlimmaR = T,
-         show_dataset_chooser = F,
-         num_threads = 16,
-         kpi_spec = 'data/insurance_kpi_spec.csv',
-         feature_spec = 'data/insurance_feature_spec.csv',
-         filter_spec = 'data/insurance_filter_spec.csv'
-         )
+glucidum(
+  data = insurance,
+  starting_response = 'price',
+  starting_tab = 'ChartaR',
+  show_DevelopaR = T,
+  show_DataR = T,
+  show_ChartaR = T,
+  show_MappaR = T,
+  show_BoostaR = T,
+  show_GlimmaR = T,
+  show_dataset_chooser = F,
+  num_threads = 16,
+  kpi_spec = 'data/insurance_kpi_spec.csv',
+  feature_spec = 'data/insurance_feature_spec.csv',
+  filter_spec = 'data/insurance_filter_spec.csv'
+  )

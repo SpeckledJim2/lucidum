@@ -51,15 +51,8 @@ mod_defineFilter_ui <- function(id){
     ),
     div(
       style = 'margin-top:0px; margin-bottom:-30px; position:relative',
-      selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 6, selectize = FALSE, multiple = TRUE,
-                  choices = c('no filter',
-                              "make=='PORSCHE'",
-                              "make=='BMW'",
-                              "make=='FORD'",
-                              'age<25',
-                              'mpg>20',
-                              'value>30000'
-                              )
+      selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 8, selectize = FALSE, multiple = TRUE,
+                  choices = NULL
                   )
     ),
     div(

@@ -31,7 +31,7 @@ mod_navigator_ui <- function(id){
                        selectInput(inputId=ns('kpi_chooser'),
                                    label = NULL,
                                    selectize = FALSE,
-                                   size = 8,
+                                   size = 5,
                                    width = '100%',
                                    choices = NULL
                        )

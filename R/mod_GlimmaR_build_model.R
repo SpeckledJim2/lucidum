@@ -267,6 +267,8 @@ mod_GlimmaR_build_model_ui <- function(id){
     
 #' buildGlimmaR Server Functions
 #'
+#' @import splines
+#'
 #' @noRd 
 mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
