@@ -24,7 +24,7 @@ glucidum(
   show_BoostaR = T,
   show_GlimmaR = T,
   show_dataset_chooser = F,
-  num_threads = 16,
+  num_threads = 30,
   kpi_spec = 'data/insurance_kpi_spec.csv',
   feature_spec = 'data/insurance_feature_spec.csv',
   filter_spec = 'data/insurance_filter_spec.csv'

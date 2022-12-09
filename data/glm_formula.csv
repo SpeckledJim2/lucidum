@@ -1,0 +1,56 @@
+#### example GLM formula
+#### use hashes to make comments in the formula file
+#### use "quasipoisson objective" (set above)
+
+# NCD
+ifelse(NCD==0,1,0) +
+pmax(1, pmin(4, NCD)) +
+pmax(4, pmin(8, NCD)) +
+ifelse(NCD>=9,1,0) +
+
+# experience
+poly(pmin(20, experience), 2) +
+
+# customer age
+ifelse(licence=='Provisional',pmin(30, age),0) +
+poly(pmin(30, age), 2) +
+poly(pmax(30, pmin(90, age)), 4) +
+
+# how long has the customer owned their car
+ifelse(ownership==0,1,0) +
+pmin(10, ownership) +
+
+# vehicle engine capacity in cubic centimeters
+ns(EngineCC, 3) +
+
+# customer licence
+ifelse(licence=='Provisional',1,0) +
+
+# vehicle value
+pmin(1000, value) + 
+pmax(1000, value) +
+
+# vehicle age
+# use a cublic spline with three knots
+ns(vehicle_age, knots = 3) +
+
+# mileage
+pmin(4000, mileage) + 
+pmax(4000, mileage) +
+
+# number of motor claims made in the last three years
+claims +
+
+# type of use of vehicle
+ifelse(use=='SDP',1,0) +
+ifelse(use=='Business',1,0) +
+
+# vehicle_kept
+vehicle_kept +
+
+# fuel
+ifelse(fuel=='D',1,0) +
+
+# PostcodeArea
+PostcodeArea
+

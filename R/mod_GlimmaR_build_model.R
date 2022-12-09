@@ -273,6 +273,13 @@ mod_GlimmaR_build_model_ui <- function(id){
 mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    demo <- reactiveVal(TRUE)
+    observeEvent(demo(), once = TRUE, {
+      if(demo()){
+        txt <- readr::read_file(file = 'data/glm_formula.csv')
+      }
+      updateTextAreaInput(session = session, inputId = 'glm_formula', label = NULL, value = txt)
+    })
     text_size <- reactiveVal(14)
     observeEvent(input$build_GLM, {
       GlimmaR_model <- GlimmaR_build_GLM(
@@ -388,16 +395,17 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
 #' @importFrom broom tidy
 #' @importFrom statmod tweedie
 GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_formula, glm_objective){
-  l <- NULL
+  l <- list()
   if(!(response %in% names(d))){
   } else if (!(weight %in% c('N',names(d)))){
   } else if (is.null(d)){
   } else if (data_to_use=='Training only' & !('train_test' %in% names(d))){
     # training data selected but no train test column
+    l$message <- 'no train_test column'
     confirmSweetAlert(session = session,
                       type = 'error',
                       inputId = "build_error",
-                      title = 'No train_test column',
+                      title = l$message,
                       text = 'Training only selected but there is no train_test column in the dataset',
                       btn_labels = c('OK')
     )
@@ -407,29 +415,32 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
     glm_formula <- paste(response, ' ~ ', glm_formula)
     glm_formula <- tryCatch({stats::as.formula(glm_formula)},error = function(e){NULL})
     if(is.null(glm_formula)){
+      l$message <- 'check model formula'
       confirmSweetAlert(session = session,
                         type = 'error',
                         inputId = "build_error",
-                        title = 'Check model formula',
+                        title = l$message,
                         text = '',
                         btn_labels = c('OK')
       )
     } else if (all.vars(glm_formula)[1] %in% labels(stats::terms(glm_formula))){
       # response (left hand side) is also in formula (right hand side)
+      l$message <- 'response in formula'
       confirmSweetAlert(session = session,
                         type = 'error',
                         inputId = "build_error",
-                        title = 'Response contained in formula',
+                        title = l$message,
                         text = '',
                         btn_labels = c('OK')
       )
     } else if (any(all.vars(glm_formula) %in% names(d)[sapply(d, is.character)])){
       # formula contains character columns
       # R glm uses factor columns, not character
+      l$message <- 'Character columns in formula'
       confirmSweetAlert(session = session,
                         type = 'error',
                         inputId = "build_error",
-                        title = 'Character columns in formula',
+                        title = l$message,
                         text = 'GLM requires factors: convert character columns to factors',
                         btn_labels = c('OK')
       )
