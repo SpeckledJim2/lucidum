@@ -282,7 +282,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         input$glm_formula,
         input$objective
         )
-      if(!is.null(GlimmaR_model$glm)=='ok'){
+      if(GlimmaR_model$message=='ok'){
         # QUESTION - feels inefficient (copying large object), is there a better way?}
         model_name <- make_unique_name(response(), names(GlimmaR_models()), 'glm')
         GlimmaR_model$name <- model_name
@@ -292,7 +292,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         # select model
         GlimmaR_idx(names(GlimmaR_models())[length(names(GlimmaR_models()))])
       } else {
-        confirmSweetAlert(session = session, type = 'error', inputId = ns('GlimmaR_error'), title = "Error", text = GlimmaR_models$message, btn_labels = c('OK'))
+        confirmSweetAlert(session = session, type = 'error', inputId = ns('GlimmaR_error'), title = "Error", text = GlimmaR_model$message, btn_labels = c('OK'))
       }
     })
     observeEvent(input$textsize_minus, {
@@ -469,6 +469,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
       # build model
       withProgress(message = 'GlimmaR', detail = 'building model', value = 0.5,{
         start_time <- Sys.time()
+        message <- 'ok'
         glm_model <- tryCatch({stats::glm(formula = glm_formula,
                                           model = FALSE,
                                           data = d[include],
@@ -478,6 +479,8 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
         # check if something went wrong
         if(!(class(glm_model)[[1]]=='glm')){
           # something went wrong
+          l <- list()
+          l$message <- glm_model$message
           confirmSweetAlert(session = session,
                             type = 'error',
                             inputId = "build_error",
@@ -526,7 +529,8 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                       AIC = glm_model$aic,
                       dispersion = dispersion_estimate(glm_model),
                       count_NAs = count_NAs,
-                      LP_contributions = LP_contributions
+                      LP_contributions = LP_contributions,
+                      message = message
             )
           }
         }
@@ -789,7 +793,8 @@ GlimmaR_coefficient_DT <- function(coefficients_dt){
                                                             ,grDevices::rgb(255/255,220/255,220/255)
                                                           )
                       )
-      )
+      ) |>
+      formatStyle(1:ncol(coefficients_dt),"white-space"="nowrap")
     
   }
 }

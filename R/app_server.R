@@ -102,7 +102,7 @@ app_server <- function(input, output,session) {
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
-  mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
+  mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
 
   # run on close browser - stops server
   session$onSessionEnded(function() {stopApp()})

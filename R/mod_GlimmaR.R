@@ -18,7 +18,7 @@ mod_GlimmaR_ui <- function(id){
                          mod_GlimmaR_navigate_ui(ns('navigateGlimmaR'))
                 ),
                 tabPanel(value = 'Tabulated models', span(tagList(icon('bars'), 'Tabulated models')),
-                         mod_GlimmaR_tabulated_models_ui(ns('tabulatedGlimmaR'))
+                         mod_GlimmaR_tabulated_models_ui(ns('tabulateGlimmaR'))
                          )
     ),
   )
@@ -27,11 +27,13 @@ mod_GlimmaR_ui <- function(id){
 #' GlimmaR Server Functions
 #'
 #' @noRd 
-mod_GlimmaR_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
+mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    tabulated_models <- reactiveVal(list())
     mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
-    mod_GlimmaR_navigate_server('navigateGlimmaR', GlimmaR_models, GlimmaR_idx)
+    mod_GlimmaR_navigate_server('navigateGlimmaR', d, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, tabulated_models)
+    mod_GlimmaR_tabulated_models_server('tabulateGlimmaR', tabulated_models)
     observeEvent(GlimmaR_idx(), {
       if(!is.null(GlimmaR_idx())){
         # copy model predictions to d
