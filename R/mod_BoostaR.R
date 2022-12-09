@@ -27,10 +27,10 @@ mod_BoostaR_ui <- function(id){
 #' BoostaR Server Functions
 #'
 #' @noRd 
-mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx){
+mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
+    mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions)
     mod_BoostaR_navigate_server('navigateBoostaR', BoostaR_models, BoostaR_idx)
     mod_BoostaR_tree_viewer_server('treeViewer', BoostaR_models, BoostaR_idx)
     observeEvent(BoostaR_idx(), {

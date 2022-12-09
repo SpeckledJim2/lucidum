@@ -69,9 +69,6 @@ app_server <- function(input, output, session) {
     }
   })
   observeEvent(nav_options(), {
-    output$selection_text <- renderText({
-      paste0('dt_update: ', dt_update())
-    })
     kpi(nav_options()$kpi)
     BoostaR_idx(nav_options()$gbm)
     GlimmaR_idx(nav_options()$glm)
@@ -108,7 +105,7 @@ app_server <- function(input, output, session) {
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))
-  mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx)
+  mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions)
   mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
   
   # run on close browser - stops server

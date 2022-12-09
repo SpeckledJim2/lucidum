@@ -36,10 +36,7 @@ app_ui <- function(request) {
           mod_selectWeightColumn_ui('weight', label = 'Weight', width = '100%'),
           mod_navigator_ui("navigator"),
           mod_defineFilter_ui("filter"),
-          
-          # developer text
-          div(textOutput('selection_text'), style = 'margin-top:0px; margin-bottom:0px; margin-left:20px; font-size: 10px'),
-          
+
           # QUESTION where should I put this so it only applies to THIS control and no others?
           # this is still applying to EVERY sliderInput
           # tags$style(".irs-from, .irs-to, .irs-min, .irs-max, .irs-single{display:none}"),

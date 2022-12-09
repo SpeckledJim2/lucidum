@@ -361,7 +361,7 @@ mod_BoostaR_build_model_ui <- function(id){
 #' @importFrom rhandsontable renderRHandsontable hot_to_r
 #' @importFrom shiny withProgress
 #' 
-mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx){
+mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     BoostaR_feature_table <- reactiveVal()
@@ -376,14 +376,14 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
     })
     observeEvent(d(), {
       output$BoostaR_features <- renderRHandsontable({
-        rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec()), 500)
+        rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec()), dimensions()[2] - 500)
         })
     })
     observeEvent(BoostaR_idx(), {
       if(!is.null(BoostaR_idx())){
         B <- BoostaR_models()[[BoostaR_idx()]]
         update_GBM_parameters(session, output, B)
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, dimensions()[2] - 500)})
       }
 
     })
@@ -396,7 +396,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         features <- NULL
       }
       dt <- populate_BoostaR_feature_grid(names(d()), features, fs, BoostaR_feature_table())
-      output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, 500)})
+      output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
     })
     observeEvent(input$BoostaR_features, {
       
@@ -422,7 +422,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       if(!is.null(BoostaR_feature_table())){
         dt <- BoostaR_feature_table()
         dt[, include := FALSE]
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
         updateSelectInput(session, inputId = 'BoostaR_feature_specification', selected = character(0))
       }
     })
@@ -431,7 +431,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         dt <- BoostaR_feature_table()
         dt[, include := TRUE]
         dt[feature==response(), include := FALSE]
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
         updateSelectInput(session, inputId = 'BoostaR_feature_specification', selected = character(0))
       }
     })
@@ -443,7 +443,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           interaction_grouping <- NULL
           dt[interaction_grouping %in% groups, include := FALSE]
         }
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
       }
     })
     observeEvent(input$BoostaR_build_model, {
@@ -561,7 +561,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           inputId = ns('BoostaR_max_depth'),
           label = 'Max depth',
           min = 2,
-          max = 10,
+          max = 32,
           value = max_depth,
           step = 1,
           ticks = FALSE,
@@ -1151,7 +1151,7 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
       inputId = ns('BoostaR_num_leaves'),
       label = 'Number of leaves',
       min = 2,
-      max = 30,
+      max = 32,
       value = BoostaR_model$params$num_leaves,
       step = 1,
       ticks = FALSE,
@@ -1163,7 +1163,7 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
       inputId = ns('BoostaR_max_depth'),
       label = 'Max depth',
       min = 2,
-      max = 10,
+      max = 32,
       value = BoostaR_model$params$max_depth,
       step = 1,
       ticks = FALSE,

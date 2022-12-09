@@ -7,16 +7,14 @@ options(shiny.port = httpuv::randomPort())
 
 # Detach all loaded packages and clean your environment
 golem::detach_all_attached()
-#rm(list=ls(all.names = TRUE))
+rm(list=ls(all.names = TRUE))
 
 # Document and reload your package
 golem::document_and_reload()
 
 # Run the application
-#vans <- data.table::fread('~/Dropbox/Datasets/Vans/vans.csv', stringsAsFactors = TRUE)
-library(splines)
-glucidum(data = vans,
-         starting_response = 'avgprice1_5',
+glucidum(data = insurance,
+         starting_response = 'price',
          starting_tab = 'GlimmaR',
          show_DevelopaR = T,
          show_DataR = T,
@@ -24,14 +22,9 @@ glucidum(data = vans,
          show_MappaR = T,
          show_BoostaR = T,
          show_GlimmaR = T,
-         show_dataset_chooser = T,
+         show_dataset_chooser = F,
          num_threads = 16,
-         kpi_spec = '~/Dropbox/Datasets/Vans/kpi_specifications/vans.csv',
-         feature_spec = '~/Dropbox/Datasets/Vans/feature_specifications/vans.csv',
-         filter_spec = '~/Dropbox/Datasets/Vans/filter_specifications/vans.csv'
-         
-         
-         # kpi_spec = 'data/insurance_kpi_spec.csv',
-         # feature_spec = 'data/insurance_feature_spec.csv',
-         # filter_spec = 'data/insurance_filter_spec.csv'
+         kpi_spec = 'data/insurance_kpi_spec.csv',
+         feature_spec = 'data/insurance_feature_spec.csv',
+         filter_spec = 'data/insurance_filter_spec.csv'
          )
