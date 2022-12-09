@@ -379,6 +379,28 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec()), dimensions()[2] - 500)
         })
     })
+    observeEvent(c(d(), dt_update()), {
+      # get the numerical columns in d
+      if(!is.null(d())){
+        num_cols <- numerical_cols(d())
+        choices <- remove_lucidum_cols(num_cols)
+        # put just lgbm_prediction and glm_prediction back in if present and at the top
+        fav <- 'glm_prediction'
+        if(fav %in% num_cols){
+          choices <- c(fav, choices)
+        }
+        fav <- 'lgbm_prediction'
+        if(fav %in% num_cols){
+          choices <- c(fav, choices)
+        }
+        if(is.null(choices)){
+          choices <- 'no offset'
+        } else {
+          choices <- c('no offset', choices)
+        }
+        updateSelectInput(session, inputId = 'BoostaR_initial_score', choices = choices)
+      }
+    })
     observeEvent(BoostaR_idx(), {
       if(!is.null(BoostaR_idx())){
         B <- BoostaR_models()[[BoostaR_idx()]]
