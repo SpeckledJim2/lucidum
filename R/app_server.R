@@ -16,6 +16,7 @@ app_server <- function(input, output, session) {
   GlimmaR_idx <- reactiveVal(0)
   BoostaR_idx <- reactiveVal(0)
   dimensions <- reactiveVal()
+  crosstab_selector <- reactiveVal()
   
   # window dimensions to resize tables and ui elements
   observeEvent(input$dimensions, {
@@ -48,6 +49,20 @@ app_server <- function(input, output, session) {
       kpi_spec(load_specification(d(), golem::get_golem_options('kpi_spec'), 'kpi'))
       filter_spec(load_specification(d(), golem::get_golem_options('filter_spec'), 'filter'))
       feature_spec(load_specification(d(), golem::get_golem_options('feature_spec'), 'feature'))
+    }
+  })
+  
+  observeEvent(crosstab_selector(), {
+    if(!is.null(crosstab_selector)){
+      c <- crosstab_selector()
+      if(c$originator=='BoostaR feature table'){
+        if(c$last_clicked %in% names(d()) & 'lgbm_prediction' %in% names(d())){
+          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
+          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
+          updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
+          updateNavbarPage(session = session, inputId = "ChartaR_tabsetPanel", selected = "1-way line and bar")
+        }
+      }
     }
   })
 
@@ -105,7 +120,7 @@ app_server <- function(input, output, session) {
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))
-  mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions)
+  mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
   mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
   
   # run on close browser - stops server

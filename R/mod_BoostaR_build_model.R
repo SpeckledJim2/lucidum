@@ -99,8 +99,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             actionButton(
               inputId = ns("BoostaR_goto_ChartaR"),
-              icon = icon('chart-line'),
-              label = NULL
+              label = tagList(tags$img(src='www/one_way_line_bar.png', height="16px", width="16px")),
             )
           )
         ),
@@ -361,7 +360,7 @@ mod_BoostaR_build_model_ui <- function(id){
 #' @importFrom rhandsontable renderRHandsontable hot_to_r
 #' @importFrom shiny withProgress
 #' 
-mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions){
+mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     BoostaR_feature_table <- reactiveVal()
@@ -614,6 +613,17 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           width = '100%'
         )
       })
+    })
+    observeEvent(input$BoostaR_goto_ChartaR, {
+      r <- input$BoostaR_features_select$select$r
+      if(!is.null(r)){
+        last_clicked <- input$BoostaR_features$data[[r]][[1]]
+      }
+      info_list <- list(
+        originator = 'BoostaR feature table',
+        last_clicked = last_clicked
+      )
+      crosstab_selector(info_list)
     })
     output$BoostaR_evaluation_plot <- plotly::renderPlotly({
       # QUESTION - better to use ObserveEvent on BoostaR_models and BoostaR_idx?
