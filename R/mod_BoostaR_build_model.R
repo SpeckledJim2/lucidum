@@ -890,6 +890,12 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
       predictions <- 1/(1+exp(-predictions))
     }
     # get SHAP values and append to d
+    if(params$num_threads==1){
+      txt <- 'thread'
+    } else {
+      txt <- 'threads'
+    }
+    setProgress(detail = paste0('SHAP values (', params$num_threads, ' ', txt, ')'))
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]
