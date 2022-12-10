@@ -219,13 +219,11 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
       BoostaR_idx(names(BoostaR_models())[rows_selected])
     })
     observeEvent(input$BoostaR_gain_table_goto_ChartaR, {
-      # THIS WILL GO WRONG IF TABLE SORTED
       if(length(BoostaR_models())>0 & !is.null(BoostaR_idx())){
         b <- BoostaR_models()[[BoostaR_idx()]]
-        rows_selected <- input$BoostaR_gain_summary_rows_selected
+        rows_selected <- input$BoostaR_gain_summary_cell_clicked$value
         if(length(rows_selected)==1){
-          last_clicked <- b$gain_summary[[1]][rows_selected]
-          int_order <- str_count(last_clicked, ' x ') + 1
+          int_order <- str_count(rows_selected, ' x ') + 1
         }
         if(is.null(rows_selected)){
           confirmSweetAlert(session = session,
@@ -243,13 +241,13 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
                             btn_labels = c('OK'))
         } else {
           if(int_order==1){
-            f1 <- last_clicked
+            f1 <- rows_selected
             f2 <- NULL
           } else if(int_order==2){
             # extract features from table
-            char_pos <- as.numeric(gregexpr(' x ', last_clicked))
-            f1 <- substr(last_clicked, char_pos+3, nchar(last_clicked))
-            f2 <- substr(last_clicked, 1,char_pos-1)
+            char_pos <- as.numeric(gregexpr(' x ', rows_selected))
+            f1 <- substr(rows_selected, char_pos+3, nchar(rows_selected))
+            f2 <- substr(rows_selected, 1,char_pos-1)
           }
         }
         info_list <- list(
