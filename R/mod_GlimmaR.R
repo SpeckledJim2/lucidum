@@ -27,11 +27,11 @@ mod_GlimmaR_ui <- function(id){
 #' GlimmaR Server Functions
 #'
 #' @noRd 
-mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
+mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     tabulated_models <- reactiveVal(list())
-    mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
+    mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
     mod_GlimmaR_navigate_server('navigateGlimmaR', d, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, tabulated_models)
     mod_GlimmaR_tabulated_models_server('tabulateGlimmaR', tabulated_models)
     observeEvent(GlimmaR_idx(), {

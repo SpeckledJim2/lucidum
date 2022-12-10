@@ -243,8 +243,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             br(),
             actionButton(
               inputId = ns('goto_ChartaR'),
-              label = "",
-              icon = icon("chart-line")
+              label = tagList(tags$img(src='www/one_way_line_bar.png', height="16px", width="16px")),
             ),
             shinyFiles::shinySaveButton(
               id = ns('save_model'),
@@ -270,7 +269,7 @@ mod_GlimmaR_build_model_ui <- function(id){
 #' @import splines
 #'
 #' @noRd 
-mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx){
+mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     demo <- reactiveVal(TRUE)
@@ -343,6 +342,27 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       if (nrow(fileinfo) > 0) {
         glm_formula <- readr::read_file(file = fileinfo$datapath)
         updateTextAreaInput(session = session, inputId = 'glm_formula', label = NULL, value = glm_formula)
+      }
+    })
+    observeEvent(input$goto_ChartaR, {
+      last_clicked <- input$glm_coefficients_cell_clicked$value
+      # extracts first feature in the supplied GLM term
+      if(!is.null(last_clicked)){
+        n <- length(GlimmaR_models())
+        all_model_variables <- all.vars(GlimmaR_models()[[GlimmaR_idx()]]$glm$terms)
+        feature <- NULL
+        for (i in 1:length(all_model_variables)){
+          present <- grep(all_model_variables[i], last_clicked, fixed = TRUE)
+          if(length(present)>0){
+            feature <- all_model_variables[i]
+            break
+          }
+        }
+        info_list <- list(
+          originator = 'GlimmaR coefficient table',
+          last_clicked = feature
+        )
+        crosstab_selector(info_list)
       }
     })
     observe({

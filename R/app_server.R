@@ -53,12 +53,27 @@ app_server <- function(input, output, session) {
   })
   
   observeEvent(crosstab_selector(), {
+    # QUESTION - what I do below isn't modular, but it feels OK and all in one place
+    # any comments whether a better or preferred way to this?
+    # purpose of this section is to enable quick access to ChartaR from BoostaR/GlimmaR with a pre-selected feature
     if(!is.null(crosstab_selector)){
       c <- crosstab_selector()
       if(c$originator=='BoostaR feature table'){
+        # navigate to ChartaR one way line and bar with pre-selected inputs
         if(c$last_clicked %in% names(d()) & 'lgbm_prediction' %in% names(d())){
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
+          updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
+          updateNavbarPage(session = session, inputId = "ChartaR_tabsetPanel", selected = "1-way line and bar")
+        }
+      } else if(c$originator=='BoostaR gain table'){
+        # navigate to ChartaR SHAP plot with pre-selected inputs
+        
+      } else if(c$originator=='GlimmaR coefficient table'){
+        # navigate to ChartaR one way line and bar with pre-selected inputs
+        if(c$last_clicked %in% names(d()) & 'glm_prediction' %in% names(d())){
+          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
+          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'glm_prediction')
           updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
           updateNavbarPage(session = session, inputId = "ChartaR_tabsetPanel", selected = "1-way line and bar")
         }
@@ -121,7 +136,7 @@ app_server <- function(input, output, session) {
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
-  mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx)
+  mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
   
   # run on close browser - stops server
   session$onSessionEnded(function() {stopApp()})
