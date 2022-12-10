@@ -31,7 +31,7 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
-    mod_BoostaR_navigate_server('navigateBoostaR', BoostaR_models, BoostaR_idx)
+    mod_BoostaR_navigate_server('navigateBoostaR', BoostaR_models, BoostaR_idx, crosstab_selector)
     mod_BoostaR_tree_viewer_server('treeViewer', BoostaR_models, BoostaR_idx)
     observeEvent(BoostaR_idx(), {
       if(!is.null(BoostaR_idx())){

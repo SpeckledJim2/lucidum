@@ -64,18 +64,28 @@ app_server <- function(input, output, session) {
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
           updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
-          updateNavbarPage(session = session, inputId = "ChartaR_tabsetPanel", selected = "1-way line and bar")
+          updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
         }
-      } else if(c$originator=='BoostaR gain table'){
+      } else if(c$originator=='BoostaR gain summary'){
         # navigate to ChartaR SHAP plot with pre-selected inputs
-        
+        if(c$int_order==1){
+          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-_x_axis_feature-selectInput', selected = c$f1)
+          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
+          updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
+          updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
+        } else if(c$int_order==2){
+          updateSelectInput(session, inputId = 'ChartaR-SHAP-feature_1', selected = c$f1)
+          updateSelectInput(session, inputId = 'ChartaR-SHAP-feature_2', selected = c$f2)
+          updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
+          updateNavbarPage(session, inputId = "ChartaR-tabsetPanel", selected = "SHAP")
+        }
       } else if(c$originator=='GlimmaR coefficient table'){
         # navigate to ChartaR one way line and bar with pre-selected inputs
         if(c$last_clicked %in% names(d()) & 'glm_prediction' %in% names(d())){
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'glm_prediction')
           updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
-          updateNavbarPage(session = session, inputId = "ChartaR_tabsetPanel", selected = "1-way line and bar")
+          updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
         }
       }
     }

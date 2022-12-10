@@ -70,11 +70,11 @@ mod_BoostaR_navigate_ui <- function(id){
         width = 8,
         fluidRow(
           column(
-            width = 8,
+            width = 5,
             h3('Gain summary')
           ),
           column(
-            width = 4,
+            width = 5,
             align = 'right',
             div(
               style = 'margin-top:16px; margin-bottom:-16px',
@@ -83,6 +83,17 @@ mod_BoostaR_navigate_ui <- function(id){
                 label = NULL,
                 width = '100%',
                 placeholder = 'highlight feature'
+              )
+            )
+          ),
+          column(
+            width = 2,
+            align = 'right',
+            div(
+              style = 'margin-top:16px; margin-bottom:-16px',
+              actionButton(
+                inputId = ns('BoostaR_gain_table_goto_ChartaR'),
+                label = tags$img(src='www/SHAP.png', height='16px', width='16px')
               )
             )
           )
@@ -101,9 +112,10 @@ mod_BoostaR_navigate_ui <- function(id){
 #' @importFrom shiny updateSliderInput
 #' @importFrom DiagrammeR renderGrViz render_graph
 #' @importFrom DT formatRound formatPercentage formatStyle
+#' @importFrom stringr str_count
 #' 
 #' 
-mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
+mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crosstab_selector){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(BoostaR_models(), {
@@ -205,6 +217,49 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx){
         }
       }
       BoostaR_idx(names(BoostaR_models())[rows_selected])
+    })
+    observeEvent(input$BoostaR_gain_table_goto_ChartaR, {
+      # THIS WILL GO WRONG IF TABLE SORTED
+      if(length(BoostaR_models())>0 & !is.null(BoostaR_idx())){
+        b <- BoostaR_models()[[BoostaR_idx()]]
+        rows_selected <- input$BoostaR_gain_summary_rows_selected
+        if(length(rows_selected)==1){
+          last_clicked <- b$gain_summary[[1]][rows_selected]
+          int_order <- str_count(last_clicked, ' x ') + 1
+        }
+        if(is.null(rows_selected)){
+          confirmSweetAlert(session = session,
+                            type = 'error',
+                            inputId = "build_error",
+                            title = 'Error',
+                            text = 'Please select a 1D or 2D interaction row from the gain summary table',
+                            btn_labels = c('OK'))
+        } else if (int_order>2) {
+          confirmSweetAlert(session = session,
+                            type = 'error',
+                            inputId = "build_error",
+                            title = 'Error',
+                            text = 'Please select a 1D or 2D interaction row from the gain summary table',
+                            btn_labels = c('OK'))
+        } else {
+          if(int_order==1){
+            f1 <- last_clicked
+            f2 <- NULL
+          } else if(int_order==2){
+            # extract features from table
+            char_pos <- as.numeric(gregexpr(' x ', last_clicked))
+            f1 <- substr(last_clicked, char_pos+3, nchar(last_clicked))
+            f2 <- substr(last_clicked, 1,char_pos-1)
+          }
+        }
+        info_list <- list(
+          originator = 'BoostaR gain summary',
+          int_order=int_order,
+          f1=f1,
+          f2=f2
+        )
+        crosstab_selector(info_list)
+      }
     })
   })
 }
