@@ -267,6 +267,7 @@ mod_GlimmaR_build_model_ui <- function(id){
 #' buildGlimmaR Server Functions
 #'
 #' @import splines
+#' @importFrom readr read_file
 #'
 #' @noRd 
 mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector){
@@ -275,7 +276,8 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
     demo <- reactiveVal(TRUE)
     observeEvent(demo(), once = TRUE, {
       if(demo()){
-        txt <- readr::read_file(file = 'data/glm_formula.csv')
+        fpath <- system.file("glm_formula.csv", package="glucidum")
+        txt <- read_file(file = fpath)
       }
       updateTextAreaInput(session = session, inputId = 'glm_formula', label = NULL, value = txt)
     })
