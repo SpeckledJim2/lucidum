@@ -78,10 +78,10 @@ mod_GlimmaR_navigate_ui <- function(id){
              ),
              shinySaveButton(
                id = ns('save_model'),
-               label = 'Save model',
-               title = 'Save model',
+               label = 'Save GLM',
+               title = 'Save GLM model as .RDS',
                filename = "",
-               filetype = list(txt="txt"),
+               filetype = list(txt="RDS"),
                icon = icon('upload'),
                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
                viewtype = "detail"
@@ -218,6 +218,25 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
           }
         }
       }
+    })
+    observe({
+      volumes <- c('Home' = path_home(), getVolumes()())
+      shinyFileSave(input, 'save_model', roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$save_model)
+      isolate({
+        if (nrow(fileinfo) > 0) {
+          # leave only part of glm_model object needed for prediction
+          # otherwise file will be huge (it retains data used to fit model)
+          stripped_model <- strip_glm(GlimmaR_models[[GlimmaR_idx()]]$glm)
+          saveRDS(stripped_model, file = fileinfo$datapath, compress = TRUE)
+          confirmSweetAlert(session = session,
+                            type = 'success',
+                            inputId = "temp",
+                            title = 'GLM saved',
+                            btn_labels = c('OK')
+          )
+        }
+      })
     })
   })
 }

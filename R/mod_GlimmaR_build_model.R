@@ -223,11 +223,11 @@ mod_GlimmaR_build_model_ui <- function(id){
         width = 7,
         fluidRow(
           column(
-            width = 2,
+            width = 3,
             h3("Coefficients")
           ),
           column(
-            width = 3,
+            width = 4,
             div(
               style = 'margin-left: 30px',
               htmlOutput(ns('model_dispersion'))
@@ -238,22 +238,12 @@ mod_GlimmaR_build_model_ui <- function(id){
             htmlOutput(ns('model_NAs'))
           ),
           column(
-            width = 4,
+            width = 2,
             align = 'right',
             br(),
             actionButton(
               inputId = ns('goto_ChartaR'),
               label = tagList(tags$img(src='www/one_way_line_bar.png', height="16px", width="16px")),
-            ),
-            shinyFiles::shinySaveButton(
-              id = ns('save_model'),
-              label = 'Save GLM',
-              title = 'Save GLM model as .RDS',
-              filename = "",
-              filetype = list(txt="RDS"),
-              icon = icon('upload'),
-              style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-              viewtype = "detail"
             )
           )
         ),
@@ -392,25 +382,6 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       }
     })
 
-    observe({
-      volumes <- c('Home' = path_home(), getVolumes()())
-      shinyFileSave(input, 'save_model', roots=volumes, session=session)
-      fileinfo <- parseSavePath(volumes, input$save_model)
-      isolate({
-        if (nrow(fileinfo) > 0) {
-          # leave only part of glm_model object needed for prediction
-          # otherwise file will be huge (it retains data used to fit model)
-          stripped_model <- strip_glm(GlimmaR_models[[GlimmaR_idx()]]$glm)
-          saveRDS(stripped_model, file = fileinfo$datapath, compress = TRUE)
-          confirmSweetAlert(session = session,
-                            type = 'success',
-                            inputId = "temp",
-                            title = 'GLM saved',
-                            btn_labels = c('OK')
-          )
-        }
-      })
-    })
     observe({
       if(!is.null(BoostaR_idx())){
         b <- BoostaR_models()[[BoostaR_idx()]]
