@@ -154,7 +154,7 @@ mod_DevelopaR_ui <- function(id){
                            column(
                              width = 12,
                              # needs namespace
-                             tags$head(tags$style(paste0('#',ns('shinyAce_output'),'{font-size:10px; overflow-y:scroll; max-height: 360px; background: ghostwhite;}'))),
+                             tags$head(tags$style(paste0('#',ns('shinyAce_output'),'{font-size:10px; overflow-y:scroll; max-height: 360px; background: ghostwhite; white-space: pre-wrap}'))),
                              verbatimTextOutput(ns('shinyAce_output'))
                              )
                            )
@@ -188,7 +188,7 @@ mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, featur
                           text = result$message,
                           btn_labels = c('OK'))
       } else {
-        output$shinyAce_output <- renderPrint({result})
+        output$shinyAce_output <- renderPrint(result, width = 1000)
         dt_update(dt_update()+1)
       }
     })
