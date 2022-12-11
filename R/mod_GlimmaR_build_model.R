@@ -325,6 +325,30 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         updateTextAreaInput(session, inputId = 'glm_formula', value = g$formula)
         # update the objective
         updateSelectInput(session, inputId = 'objective', selected = g$objective)
+        # update the model dispersion
+        output$model_dispersion <- renderUI({
+          if(GlimmaR_idx() %in% names(GlimmaR_models())){
+            g <- GlimmaR_models()[[GlimmaR_idx()]]
+            if(is.null(g)){
+              text <- ''
+            } else {
+              text <- paste0('<b>Dispersion: </b>', signif(g$dispersion,4))
+            }
+            p(HTML(text), style = 'font-size: 12px; margin-top: 26px')
+          }
+        })
+        # update the NA count
+        output$model_NAs <- renderUI({
+          if(GlimmaR_idx() %in% names(GlimmaR_models())){
+            g <- GlimmaR_models()[[GlimmaR_idx()]]
+            if(g$count_NAs>0){
+              text <- paste0('<b><span style=\"color:red\"><b>NAs in fitted: ', g$count_NAs, '</span>')
+            } else {
+              text <- paste0('<b>NAs in fitted</b>: 0')
+            }
+            p(HTML(text), style = 'font-size: 12px; margin-top: 26px')
+          }
+        })
       }
     })
     observeEvent(input$formula_save, {
@@ -367,6 +391,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         crosstab_selector(info_list)
       }
     })
+
     observe({
       volumes <- c('Home' = path_home(), getVolumes()())
       shinyFileSave(input, 'save_model', roots=volumes, session=session)
