@@ -27,7 +27,7 @@ glucidum(
   show_MappaR = F,
   show_BoostaR = T,
   show_GlimmaR = T,
-  show_dataset_chooser = F,
+  show_dataset_chooser = T,
   num_threads = 30,
   kpi_spec = kpi_spec,
   feature_spec = feature_spec,

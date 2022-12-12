@@ -125,4 +125,29 @@ mod_dashboardHeader_server <- function(id, parent){
   })
 }
     
-
+#' Wrap ui elements in dropdown tag
+#' so they can be placed in the shiny dashboard header
+#'
+#' @param x ui element to put into dropdown
+#' @param show boolean TRUE shows item, FALSE hides item
+#'
+#' @return HTML tag
+#'
+insertDashboardHeader <- function(x, show){
+  if(show){
+    tags$li(
+      class = "dropdown",
+      div(
+        style='margin-top:10px; padding-right:0;',
+        x
+      )
+    )
+  } else {
+    tags$li(
+      class = "dropdown",
+      div(
+        style='margin:0px; padding:0px;'
+      )
+    )
+  }
+}
