@@ -162,26 +162,35 @@ histogram_table <- function(d, response, weight, kpi_spec){
   }
 }
 histogram_DT <- function(d){
-  d |>
-    datatable(extensions = 'Buttons',
-                  editable = TRUE,
-                  rownames= FALSE,
-                  options = list(pageLength = nrow(d),
-                                 dom = 'Brt',
-                                 scrollX = T,
-                                 searchHighlight=TRUE,
-                                 columnDefs=list(list(width="100px",targets="_all"),
-                                                 list(className = 'dt-right', targets = 1)),
-                                 buttons =
-                                   list('copy', list(
-                                     extend = 'collection',
-                                     buttons = list(list(extend='csv',filename = ''),
-                                                    list(extend='excel',filename = ''),
-                                                    list(extend='pdf',filename= '')),
-                                     text = 'Download')
-                                   )
-                  )) |>
-    formatStyle(1:2, fontSize = '85%', lineHeight='20%')
+  if(!is.null(d)){
+    d |>
+      datatable(
+        extensions = 'Buttons',
+        editable = TRUE,
+        rownames= FALSE,
+        options = list(
+          pageLength = nrow(d),
+          dom = 'Brt',
+          scrollX = T,
+          searchHighlight=TRUE,
+          columnDefs=list(
+            list(width="100px",targets="_all"),
+            list(className = 'dt-right', targets = 1)
+          ),
+          buttons =
+            list('copy', list(
+              extend = 'collection',
+              buttons = list(
+                list(extend='csv',filename = ''),
+                list(extend='excel',filename = ''),
+                list(extend='pdf',filename= '')
+              ),
+              text = 'Download')
+            )
+        )
+      ) |>
+      formatStyle(1:2, fontSize = '85%', lineHeight='20%')
+  }
 }
 
 #' @importFrom plotly plot_ly layout
