@@ -24,7 +24,7 @@ glucidum(
   show_DevelopaR = T,
   show_DataR = T,
   show_ChartaR = T,
-  show_MappaR = T,
+  show_MappaR = F,
   show_BoostaR = T,
   show_GlimmaR = T,
   show_dataset_chooser = F,

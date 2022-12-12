@@ -7,7 +7,7 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList htmlOutput
-mod_columnSummary_ui <- function(id){
+mod_DataR_columnSummary_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -47,7 +47,7 @@ mod_columnSummary_ui <- function(id){
 #' columnSummary Server Functions
 #'
 #' @noRd 
-mod_columnSummary_server <- function(id, d, dt_update){
+mod_DataR_columnSummary_server <- function(id, d, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     selected_row <- reactiveVal(NULL)

@@ -11,8 +11,8 @@ mod_DataR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'Dataset viewer', span(tagList(icon('bars'), 'Dataset viewer')), mod_datasetViewer_ui(ns('datasetViewer'))),
-                tabPanel(value = 'Column summary', span(tagList(icon('table-columns'), 'Column summary')), mod_columnSummary_ui(ns('columnSummary')))
+                tabPanel(value = 'Dataset viewer', span(tagList(icon('bars'), 'Dataset viewer')), mod_DataR_datasetViewer_ui(ns('datasetViewer'))),
+                tabPanel(value = 'Column summary', span(tagList(icon('table-columns'), 'Column summary')), mod_DataR_columnSummary_ui(ns('columnSummary')))
     ),
   )
 }
@@ -23,7 +23,7 @@ mod_DataR_ui <- function(id){
 mod_DataR_server <- function(id, d, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    mod_datasetViewer_server('datasetViewer', d, dt_update)
-    mod_columnSummary_server('columnSummary', d, dt_update)
+    mod_DataR_datasetViewer_server('datasetViewer', d, dt_update)
+    mod_DataR_columnSummary_server('columnSummary', d, dt_update)
   })
 }

@@ -7,7 +7,7 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_datasetViewer_ui <- function(id){
+mod_DataR_datasetViewer_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
@@ -19,7 +19,11 @@ mod_datasetViewer_ui <- function(id){
         align = 'right',
         div(
           style = 'margin-top:20px',
-          checkboxInput(inputId=ns('transpose'), label='Transpose', value = FALSE)
+          checkboxInput(
+            inputId = ns('transpose'),
+            label='Transpose',
+            value = FALSE
+            )
         )
       ),
       column(
@@ -46,19 +50,36 @@ mod_datasetViewer_ui <- function(id){
 }
     
 #' datasetViewer Server Functions
-#'
+#' 
+#' @param id Internal parameter for {shiny}.
+#' @param d reactiveVal containing the data.frame or data.table to be displayed
+#' @param dt_update reactiveVal to trigger an update (as data.table is not reactive)
+#' 
 #' @noRd 
-mod_datasetViewer_server <- function(id, d, dt_update){
+#' 
+#' @importFrom DT renderDT
+mod_DataR_datasetViewer_server <- function(id, d, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    output$data <- DT::renderDT({
-      dt_update()
-      format_dataset_for_DT(d(), input$transpose, input$columns_to_display)
+    observeEvent(c(dt_update(), input$transpose, input$columns_to_display), {
+      output$data <- renderDT({
+        create_DT_from_dataframe(d(), input$transpose, input$columns_to_display)
+        })
     })
   })
 }
 
-format_dataset_for_DT <- function(d, transpose, columns_to_display){
+#' Create dataset viewer using DataTable
+#'
+#' @param d data.frame to be displayed
+#' @param transpose boolean, TRUE to transpose the table view
+#' @param columns_to_display character column names to display
+#'
+#' @return DataTable HTML
+#' 
+#' @importFrom utils head
+#' @importFrom DT datatable formatStyle
+create_DT_from_dataframe <- function(d, transpose, columns_to_display){
   max_rows_to_display <- 100
   max_cols <- 100
   # apply filter
@@ -84,7 +105,7 @@ format_dataset_for_DT <- function(d, transpose, columns_to_display){
   } else {
     if(nrow(d_filter)>max_cols){
       idx <- 1:max_cols
-      d_filter <- utils::head(d_filter, max_cols)
+      d_filter <- head(d_filter, max_cols)
     } else {
       idx <- 1:nrow(d_filter)
     }
@@ -92,19 +113,24 @@ format_dataset_for_DT <- function(d, transpose, columns_to_display){
     names(d_filter) <- c('dataset_column', as.character(idx))
     pg_length <- min(1000, nrow(d_filter))
   }
-  # render DT
-  dt <- DT::datatable(d_filter,
-                      rownames= FALSE,
-                      extensions = 'Buttons',
-                      #class = 'white-space: nowrap',
-                      options = list(pageLength = pg_length,
-                                     #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
-                                     dom = 'Brtip',
-                                     scrollX = T,
-                                     scrollY = 'calc(90vh - 220px)',
-                                     searchHighlight=TRUE
-                      )
-  ) |>
-    DT::formatStyle(1:ncol(d_filter), lineHeight='0%', fontSize = '12px') |>
-    formatStyle(1:ncol(d_filter),"white-space"="nowrap")
+  # create the datatable
+  datatable(d_filter,
+            rownames= FALSE,
+            extensions = 'Buttons',
+            options = list(
+              # change font size of header row
+              headerCallback = JS(
+                "function(thead) {",
+                "  $(thead).css('font-size', '12px');",
+                "}"
+              ),
+              pageLength = pg_length,
+              dom = 'Brtip',
+              scrollX = T,
+              scrollY = 'calc(90vh - 220px)',
+              searchHighlight=TRUE
+              )
+            ) |>
+    formatStyle(1:ncol(d_filter), lineHeight = '0%', fontSize = '12px') |>
+    formatStyle(1:ncol(d_filter), 'white-space' = 'nowrap')
 }
