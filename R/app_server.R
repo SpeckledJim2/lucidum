@@ -10,6 +10,7 @@ app_server <- function(input, output, session) {
   
   # reactiveVals
   d <- reactiveVal(NULL)
+  dataset_name <- reactiveVal(NULL)
   GlimmaR_models <- reactiveVal(NULL)
   BoostaR_models <- reactiveVal(NULL)
   kpi <- reactiveVal(NULL)
@@ -32,6 +33,7 @@ app_server <- function(input, output, session) {
   # required because d is a data.table and can be changed by reference
   dt_update <- reactiveVal(0)
   d(load_dataset(golem::get_golem_options('data')))
+  dataset_name(golem::get_golem_options('dataset_name'))
 
   # specification files
   kpi_spec <- reactiveVal()
@@ -46,9 +48,9 @@ app_server <- function(input, output, session) {
       d()[, user_filter := 1]
       d()[, total_filter := 1]
       # load specification files
-      kpi_spec_path <- get_spec_filepath('kpi')
-      filter_spec_path <- get_spec_filepath('filter')
-      feature_spec_path <- get_spec_filepath('feature')
+      kpi_spec_path <- get_spec_filepath('kpi', dataset_name())
+      filter_spec_path <- get_spec_filepath('filter', dataset_name())
+      feature_spec_path <- get_spec_filepath('feature', dataset_name())
       kpi_spec(load_specification(d(), kpi_spec_path, 'kpi'))
       filter_spec(load_specification(d(), filter_spec_path, 'filter'))
       feature_spec(load_specification(d(), feature_spec_path, 'feature'))
@@ -108,6 +110,7 @@ app_server <- function(input, output, session) {
   observeEvent(input$dataset, ignoreInit = TRUE, {
     if(input$dataset %not_in% c('loaded from .csv file', 'choose dataset','user supplied dataset')){
       d(setDT(get(input$dataset)))
+      dataset_name(input$dataset)
       dt_update(dt_update()+1)
     }
   })
@@ -156,7 +159,7 @@ app_server <- function(input, output, session) {
   
 }
 
-get_spec_filepath <- function(type){
+get_spec_filepath <- function(type, dataset_name){
   # if no specification path provided use working directory
   if(is.null(golem::get_golem_options('specification_path'))){
     spec_folder <- getwd()
@@ -170,8 +173,8 @@ get_spec_filepath <- function(type){
     explicit_spec_file
   } else {
     # search for the spec file in the specification folder supplied as a golem option
-    if(golem::get_golem_options('dataset_name')!='NULL'){
-      search_name <- paste0(spec_folder, '/', golem::get_golem_options('dataset_name'), '_', type, '_spec.csv')
+    if(dataset_name!='NULL'){
+      search_name <- paste0(spec_folder, '/', dataset_name, '_', type, '_spec.csv')
       if(file.exists(search_name)){
         search_name
       } else {

@@ -34,7 +34,4 @@ glucidum(
   show_GlimmaR = T,
   num_threads = 30,
   specification_path = '~/Dropbox/Shiny/glucidum/inst'
-  #kpi_spec = kpi_spec,
-  #feature_spec = feature_spec,
-  #filter_spec = filter_spec
   )
