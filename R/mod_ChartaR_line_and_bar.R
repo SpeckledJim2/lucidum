@@ -173,7 +173,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
 }
 
 line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, show_partial_dependencies, response_transform, kpi_spec, feature_spec, gbm_link, glm_link){
-  if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col)){
+  if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col) & !is.null(banding)){
     if(response!='' & weight !=''){
       d_cols <- names(d)
       if(response %in% d_cols &
@@ -198,7 +198,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
             banded_col <- banded[rows_idx]
             new_colname <- paste0(group_by_col, '_banded')
-          } else if (inherits(g,'Date')){
+          } else if (inherits(g,'Date') & banding!='0'){
             if(banding=='Day'){
               # day
               banded <- g

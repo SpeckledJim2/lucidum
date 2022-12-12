@@ -145,14 +145,34 @@ load_specification <- function(d, specification, specification_type){
     x <- specification_template(d, specification_type)
   } else if (inherits(specification, 'character')){
     # check it is a .csv file
-    x <- fread(specification)
+    if(specification_type=='filter'){
+      x <- fread(specification, sep = NULL)
+    } else {
+      x <- fread(specification)
+    }
     x[is.na(x)] <- ''
   } else if (inherits(specification, 'data.table')){
     x <- setDT(specification)
   }
   if(!is.null(x)){
     # check specification is in correct format
-    #x <- check_specification_format(x, type)
+    valid_spec <- check_specification(x, specification_type)
+  }
+  if(valid_spec){
+    # valid specification
+    # make logical columns character - otherwise rhandontable will render as logical
+    logical_cols <- names(x)[which(as.vector(x[,lapply(.SD, class)]) == "logical")]
+    if(length(logical_cols)>0){
+      x[, (logical_cols):= lapply(.SD, as.character), .SDcols = logical_cols]
+    }
+    # if(specification_type=='filter'){
+    #   if(specification_type[[1]][1]!='no filter'){
+    #     x <- rbind(data.table(filter='no filter'), x)
+    #   }
+    # }
+  } else {
+    # invalid specification - use default
+    x <- specification_template(d, specification_type)
   }
   x
 }

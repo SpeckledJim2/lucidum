@@ -7,7 +7,7 @@ options(shiny.port = httpuv::randomPort())
 
 # Detach all loaded packages and clean your environment
 golem::detach_all_attached()
-rm(list=ls(all.names = TRUE))
+#rm(list=ls(all.names = TRUE))
 
 # Document and reload your package
 golem::document_and_reload()
@@ -33,5 +33,5 @@ glucidum(
   show_BoostaR = T,
   show_GlimmaR = T,
   num_threads = 30,
-  specification_path = '~/Dropbox/Shiny/glucidum/inst'
+  specification_path = 'inst'
   )

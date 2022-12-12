@@ -458,9 +458,9 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
   if(is.numeric(x) & !is.null(response) & !is.null(weight)){
     format_row <- kpi_spec[kpi_numerator==response & kpi_denominator==weight,]
     if(nrow(format_row)>0){
-      significant_digits <- format_row$kpi_signif
-      divisor <- format_row$kpi_divisor
-      decimal_places <- format_row$kpi_dp
+      significant_digits <- as.numeric(format_row$kpi_signif)
+      divisor <- as.numeric(format_row$kpi_divisor)
+      decimal_places <- as.numeric(format_row$kpi_dp)
       prefix <- format_row$kpi_prefix
       suffix <- format_row$kpi_suffix
       if(is.na(significant_digits)) significant_digits <- 6
