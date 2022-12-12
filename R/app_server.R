@@ -25,7 +25,7 @@ app_server <- function(input, output, session) {
   })
   
   # lucidum startup
-  init_lucidum(session, golem::get_golem_options('data'))  
+  init_lucidum(session, golem::get_golem_options('data'), golem::get_golem_options('dataset_name'))  
   # d is the dataset being analysed by lucidum
   # the golem option 'data' specifies the dataset
   # dt_update is used to trigger reactivity when d is changed
@@ -46,12 +46,15 @@ app_server <- function(input, output, session) {
       d()[, user_filter := 1]
       d()[, total_filter := 1]
       # load specification files
-      kpi_spec(load_specification(d(), golem::get_golem_options('kpi_spec'), 'kpi'))
-      filter_spec(load_specification(d(), golem::get_golem_options('filter_spec'), 'filter'))
-      feature_spec(load_specification(d(), golem::get_golem_options('feature_spec'), 'feature'))
+      kpi_spec_path <- get_spec_filepath('kpi')
+      filter_spec_path <- get_spec_filepath('filter')
+      feature_spec_path <- get_spec_filepath('feature')
+      kpi_spec(load_specification(d(), kpi_spec_path, 'kpi'))
+      filter_spec(load_specification(d(), filter_spec_path, 'filter'))
+      feature_spec(load_specification(d(), feature_spec_path, 'feature'))
     }
   })
-  
+
   observeEvent(crosstab_selector(), {
     # QUESTION - what I do below isn't modular, but it feels OK and all in one place
     # any comments whether a better or preferred way to this?
@@ -153,3 +156,28 @@ app_server <- function(input, output, session) {
   
 }
 
+get_spec_filepath <- function(type){
+  # if no specification path provided use working directory
+  if(is.null(golem::get_golem_options('specification_path'))){
+    spec_folder <- getwd()
+  } else {
+    spec_folder <- golem::get_golem_options('specification_path')
+  }
+  # get the golem option for the specification file
+  explicit_spec_file <- golem::get_golem_options(paste0(type, '_spec'))
+  if(!is.null(explicit_spec_file)){
+    # use the explicit spec file
+    explicit_spec_file
+  } else {
+    # search for the spec file in the specification folder supplied as a golem option
+    if(golem::get_golem_options('dataset_name')!='NULL'){
+      search_name <- paste0(spec_folder, '/', golem::get_golem_options('dataset_name'), '_', type, '_spec.csv')
+      if(file.exists(search_name)){
+        search_name
+      } else {
+        # nothing found - return NULL
+        NULL
+      }
+    }
+  }
+}

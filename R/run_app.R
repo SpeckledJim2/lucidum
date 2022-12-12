@@ -3,10 +3,10 @@
 #' @param data data.frame or data.table to analyse in lucidum.
 #' @param BoostaR_models character, path to .rds file containing BoostaR_models.
 #' @param GlimmaR_models character, path to .rds file containing GlimmaR_models.
-#' @param kpi_spec character, path to kpi specification.
-#' @param filter_spec character, path to filter specification.
-#' @param feature_spec character, path to feature specification.
-#' @param show_dataset_chooser logical, TRUE (not default) will show the dataset chooser.
+#' @param kpi_spec character, path to kpi specification file.
+#' @param filter_spec character, path to filter specification file.
+#' @param feature_spec character, path to feature specification file.
+#' @param specification_path character, path to feature specification folder
 #' @param show_DataR logical, TRUE (not default) will show the DataR menu item.
 #' @param show_ChartaR logical, TRUE (default) will show the ChartaR menu item.
 #' @param show_MappaR logical, TRUE (default) will show the MappaR menu item.
@@ -26,7 +26,7 @@ glucidum <- function(data=NULL,
                      kpi_spec = NULL,
                      filter_spec = NULL,
                      feature_spec = NULL,
-                     show_dataset_chooser = F,
+                     specification_path = NULL,
                      show_DataR = T,
                      show_ChartaR = T,
                      show_MappaR = T,
@@ -37,13 +37,17 @@ glucidum <- function(data=NULL,
                      starting_response = NULL,
                      num_threads = -1
                      ) {
+  # QUESTION - I need the dataset name to load up other files automatically
+  # any issues modifying run_app in this way?
+  dataset_name <- deparse(substitute(data))
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
     golem_opts = list(data = data,
+                      dataset_name = dataset_name,
                       kpi_spec = kpi_spec,
                       filter_spec = filter_spec,
                       feature_spec = feature_spec,
-                      show_dataset_chooser = show_dataset_chooser,
+                      specification_path = specification_path,
                       show_DataR = show_DataR,                      
                       show_ChartaR = show_ChartaR,
                       show_MappaR = show_MappaR,

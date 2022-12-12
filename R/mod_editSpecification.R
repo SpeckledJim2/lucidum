@@ -51,7 +51,7 @@ mod_editSpecification_server <- function(id, input_spec, type, dimensions) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     output_spec <- reactiveVal()
-    observeEvent(input_spec, {
+    observeEvent(input_spec(), {
       # if the input and output specs are identical then no need to update
       # and trigger reactivity
       if(!identical(input_spec(), output_spec())){

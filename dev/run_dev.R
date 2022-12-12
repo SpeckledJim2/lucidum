@@ -16,6 +16,11 @@ kpi_spec <- system.file('insurance_kpi_spec.csv', package="glucidum")
 feature_spec <- system.file('insurance_feature_spec.csv', package="glucidum")
 filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 
+# load some datasets
+#GoCompare <- data.table::setDT(feather::read_feather('~/Dropbox/Work/Stella/Postcodes 2022_10/01 formatted data/GoCompare.feather'))
+#iris <- data.table::copy(iris)
+#football <- data.table::fread('~/Dropbox/lucidum support/lucidum training/football.csv')
+
 # Run the application
 glucidum(
   data = insurance,
@@ -27,9 +32,9 @@ glucidum(
   show_MappaR = F,
   show_BoostaR = T,
   show_GlimmaR = T,
-  show_dataset_chooser = T,
   num_threads = 30,
-  kpi_spec = kpi_spec,
-  feature_spec = feature_spec,
-  filter_spec = filter_spec
+  specification_path = '~/Dropbox/Shiny/glucidum/inst'
+  #kpi_spec = kpi_spec,
+  #feature_spec = feature_spec,
+  #filter_spec = filter_spec
   )

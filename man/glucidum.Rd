@@ -11,7 +11,7 @@ glucidum(
   kpi_spec = NULL,
   filter_spec = NULL,
   feature_spec = NULL,
-  show_dataset_chooser = F,
+  specification_path = NULL,
   show_DataR = T,
   show_ChartaR = T,
   show_MappaR = T,
@@ -30,13 +30,13 @@ glucidum(
 
 \item{GlimmaR_models}{character, path to .rds file containing GlimmaR_models.}
 
-\item{kpi_spec}{character, path to kpi specification.}
+\item{kpi_spec}{character, path to kpi specification file.}
 
-\item{filter_spec}{character, path to filter specification.}
+\item{filter_spec}{character, path to filter specification file.}
 
-\item{feature_spec}{character, path to feature specification.}
+\item{feature_spec}{character, path to feature specification file.}
 
-\item{show_dataset_chooser}{logical, TRUE (not default) will show the dataset chooser.}
+\item{specification_path}{character, path to feature specification folder}
 
 \item{show_DataR}{logical, TRUE (not default) will show the DataR menu item.}
 

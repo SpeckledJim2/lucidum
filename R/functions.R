@@ -20,34 +20,27 @@ load_dataset <- function(data){
   }
 }
 
-init_lucidum <- function(session, data){
-
-  # if a data.frame is supplied as data then get name
-  if(inherits(data, 'data.frame')){
-    dataset_name <- deparse(substitute(data))
-  } else {
-    dataset_name <- NULL
-  }
+init_lucidum <- function(session, data, dataset_name){
   
   # get the names of the tables in the global environment
   table_lists <- return_global_env_tables()
 
   # get the dataset name
   if(is.null(data)){
-    dataset_name <- 'choose dataset'
+    sel <- 'choose dataset'
     table_lists[[2]] <- c(table_lists[[2]], 'choose dataset')
   } else if(inherits(data, 'character')){
     # the user specified a .csv file
     # so the object has no file name
-    dataset_name <- 'loaded from .csv file'
+    sel <- 'loaded from .csv file'
     table_lists[[2]] <- c(table_lists[[2]], 'loaded from .csv file')
   } else if(inherits(data, 'data.frame')){
-    dataset_name <- 'user supplied dataset'
+    sel <- dataset_name
     table_lists[[2]] <- c(table_lists[[2]], 'user supplied dataset')
   }
   
   # update the selectInput
-  updateSelectInput(session, inputId = 'dataset', choices = table_lists, selected = dataset_name)
+  updateSelectInput(session, inputId = 'dataset', choices = table_lists, selected = sel)
 }
 
 contains_postcode_cols <- function(d){
