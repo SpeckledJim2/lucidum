@@ -42,7 +42,8 @@ mod_dashboardHeader_ui <- function(id){
           div(
             selectInput(inputId = "dataset", width = 360, label = NULL, choices = NULL), style = 'font-weight: 600')
         ),
-        get_golem_options('show_dataset_chooser')
+        # if no data supplied then always show dataset chooser
+        ifelse(is.null(get_golem_options('data')), TRUE, get_golem_options('show_dataset_chooser'))
       )
     )
 }
