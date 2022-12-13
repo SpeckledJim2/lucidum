@@ -39,7 +39,9 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
         # copy model predictions to d
         rows_idx <- GlimmaR_models()[[GlimmaR_idx()]]$pred_rows
         preds <- GlimmaR_models()[[GlimmaR_idx()]]$predictions
-        d()[, glm_prediction:= NULL]
+        if('glm_prediction' %in% names(d())){
+          d()[, glm_prediction:= NULL]
+        }
         d()[rows_idx, glm_prediction := preds]
         dt_update(dt_update()+1)
         # copy LP cols
