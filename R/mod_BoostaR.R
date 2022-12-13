@@ -38,6 +38,7 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
         # copy model predictions to d
         rows_idx <- BoostaR_models()[[BoostaR_idx()]]$pred_rows
         preds <- BoostaR_models()[[BoostaR_idx()]]$predictions
+        d()[, lgbm_prediction:= NULL]
         d()[rows_idx, lgbm_prediction := preds]
         dt_update(dt_update()+1)
         # copy SHAP cols
