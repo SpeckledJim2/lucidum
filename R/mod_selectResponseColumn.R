@@ -59,7 +59,7 @@ mod_selectResponseColumn_server <- function(
             # use the new_selection
             selected <- new_selection()
           } else if(input$col %not_in% unlist(choices)){
-            selected <- choices[[1]]
+            selected <- unlist(choices)[[1]]
           } else {
             selected <- input$col
           }

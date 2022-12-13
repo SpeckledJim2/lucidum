@@ -14,7 +14,7 @@ glucidum(
   specification_path = NULL,
   show_DataR = T,
   show_ChartaR = T,
-  show_MappaR = T,
+  show_MappaR = F,
   show_BoostaR = T,
   show_GlimmaR = T,
   show_DevelopaR = T,
