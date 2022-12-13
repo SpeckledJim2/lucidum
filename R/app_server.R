@@ -18,6 +18,8 @@ app_server <- function(input, output, session) {
   BoostaR_idx <- reactiveVal(0)
   dimensions <- reactiveVal()
   crosstab_selector <- reactiveVal()
+  new_response <- reactiveVal(NULL)
+  new_weight <- reactiveVal(NULL)
   
   # window dimensions to resize tables and ui elements
   observeEvent(input$dimensions, {
@@ -105,7 +107,7 @@ app_server <- function(input, output, session) {
   showModule(output, 'GlimmaR', 'star', golem::get_golem_options('show_GlimmaR'))
   updateTabItems(session, 'tabs', golem::get_golem_options('starting_tab'))
   
-  # header servers
+  # header server
   mod_dashboardHeader_server('header_nav_buttons', session)
   observeEvent(input$dataset, ignoreInit = TRUE, {
     if(input$dataset %not_in% c('loaded from .csv file', 'choose dataset','user supplied dataset')){
@@ -121,27 +123,10 @@ app_server <- function(input, output, session) {
   })
 
   # sidebar servers
-  weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec)
-  response <- mod_selectResponseColumn_server(
-    'response',
-    d,
-    dt_update,
-    TRUE,
-    NULL,
-    NULL,
-    kpi,
-    kpi_spec,
-    weight,
-    reactive({golem::get_golem_options('starting_response')})
-    )
-  nav_options <- mod_navigator_server(
-    'navigator',
-    kpi_spec,
-    GlimmaR_models,
-    BoostaR_models,
-    GlimmaR_idx,
-    BoostaR_idx
-  )
+  weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec, new_weight)
+  response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec,
+    weight, reactive({golem::get_golem_options('starting_response')}), new_response)
+  nav_options <- mod_navigator_server('navigator', kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
   
   # filter server
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
@@ -154,11 +139,37 @@ app_server <- function(input, output, session) {
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
   mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
   
+  # update response and weight when BoostaR model is changed
+  observeEvent(BoostaR_idx(), {
+    if(!is.null(BoostaR_models()) & !is.null(BoostaR_idx())){
+      b <- BoostaR_models()[[BoostaR_idx()]]
+      new_response(b$response)
+      new_weight(b$weight)
+    }
+  })
+  
+  # update response and weight when GlimmaR model is changed
+  observeEvent(GlimmaR_idx(), {
+    if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
+      g <- GlimmaR_models()[[GlimmaR_idx()]]
+      new_response(g$response)
+      new_weight(g$weight)
+    }
+  })
+  
   # run on close browser - stops server
   session$onSessionEnded(function() {stopApp()})
   
 }
 
+select_if_present <- function(new_val, current_val, choices){
+  # returned new_val is it is present in choices, else the current_val
+  if(new_val %in% unlist(choices)){
+    new_val
+  } else {
+    current_val
+  }
+}
 get_spec_filepath <- function(type, dataset_name){
   # if no specification path provided use working directory
   if(is.null(golem::get_golem_options('specification_path'))){

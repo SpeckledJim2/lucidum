@@ -43,15 +43,22 @@ mod_selectResponseColumn_server <- function(
     kpi,
     kpi_spec,
     weight,
-    startup
+    startup,
+    new_selection
     ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    observeEvent(c(d(), dt_update()), {
+    observeEvent(input$col, {
+      new_selection(input$col)
+    })
+    observeEvent(c(d(), dt_update(), new_selection()), {
       if(!is.null(d())){
         if(nrow(d())>0){
           choices <- getColumnChoices(d(), numerical_cols)
-          if(input$col %not_in% unlist(choices)){
+          if(new_selection() %in% unlist(choices)){
+            # use the new_selection
+            selected <- new_selection()
+          } else if(input$col %not_in% unlist(choices)){
             selected <- choices[[1]]
           } else {
             selected <- input$col

@@ -33,17 +33,33 @@ mod_selectWeightColumn_ui <- function(id, label = 'label', ...){
 #' selectColumn Server Functions
 #'
 #' @noRd 
-mod_selectWeightColumn_server <- function(id, d, dt_update, numerical_cols, subset, special_options, kpi, kpi_spec){
+mod_selectWeightColumn_server <- function(
+    id,
+    d,
+    dt_update,
+    numerical_cols,
+    subset,
+    special_options,
+    kpi,
+    kpi_spec,
+    new_selection
+    ){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    observeEvent(input$col, {
+      new_selection(input$col)
+    })
     observeEvent(c(d(), dt_update()), {
       if(!is.null(d())){
         if(nrow(d())>0){
-          current_selection <- input$col
           choices <- getColumnChoices(d(), numerical_cols, subset, special_options, 'Weights')
-          selected <- input$col
-          if(selected %not_in% choices){
+          if(new_selection() %in% unlist(choices)){
+            # use the new selection
+            selected <- new_selection()
+          } else if(input$col %not_in% unlist(choices)){
             selected <- choices[[1]]
+          } else {
+            selected <- input$col
           }
           updateSelectInput(
             inputId = 'col',
