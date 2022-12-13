@@ -123,7 +123,8 @@ histogram_table <- function(d, response, weight, kpi_spec){
           num <- d[, ..response][[1]]
           den <- d[, ..weight][[1]]
         }
-        weighted_mean <- num/den
+        weighted_mean <- sum(num, na.rm = TRUE)/sum(den, na.rm = TRUE)
+        value <- num/den
       }
       # empty data frame to hold the data summary
       row_names <- c('Numeric count', 'NA count', 'Zero count', 'Mean',
