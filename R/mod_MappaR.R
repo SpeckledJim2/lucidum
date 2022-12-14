@@ -456,8 +456,13 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
   kpi_denominator <- NULL
   # function to format the number x according to whatever format has been defined in the kpi_spec
   if(is.numeric(x) & !is.null(response) & !is.null(weight)){
-    n_row <- nrow(x)
-    n_col <- ncol(x)
+    if(inherits(x, 'data.frame')){
+      n_row <- nrow(x)
+      n_col <- ncol(x)
+    } else {
+      n_row <- length(x)
+      n_col <- 1
+    }
     format_row <- kpi_spec[kpi_numerator==response & kpi_denominator==weight,]
     if(nrow(format_row)>0){
       significant_digits <- as.numeric(format_row$kpi_signif)
