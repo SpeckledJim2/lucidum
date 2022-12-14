@@ -137,7 +137,8 @@ mod_GlimmaR_build_model_ui <- function(id){
                                                  'gamma',
                                                  'tweedie'),
                                'logit link' = list('binomial')
-                )
+                ),
+                selected = 'gamma'
               )
             )
           ),

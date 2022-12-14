@@ -258,6 +258,7 @@ mod_BoostaR_build_model_ui <- function(id){
                   inputId = ns('BoostaR_objective'),
                   width = '100%',
                   label = 'Objective function',
+                  selected = 'gamma',
                   choices = list('identity link' = list('mean_squared_error',
                                                         'mean_absolute_error',
                                                         'mean_absolute_percentage_error',
@@ -888,7 +889,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     } else {
       txt <- 'threads'
     }
-    setProgress(detail = paste0('SHAP values (', params$num_threads, ' ', txt, ')'))
+    setProgress(detail = paste0('SHAP (', params$num_threads, ' ', txt, ')'))
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]
