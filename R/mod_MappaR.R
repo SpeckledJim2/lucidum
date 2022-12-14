@@ -456,7 +456,7 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
   kpi_denominator <- NULL
   # function to format the number x according to whatever format has been defined in the kpi_spec
   if(is.numeric(x) & !is.null(response) & !is.null(weight)){
-    if(inherits(x, 'data.frame')){
+    if(inherits(x, c('data.frame','matrix'))){
       n_row <- nrow(x)
       n_col <- ncol(x)
     } else {
