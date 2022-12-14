@@ -29,7 +29,7 @@ glucidum(
   show_DevelopaR = T,
   show_DataR = T,
   show_ChartaR = T,
-  show_MappaR = F,
+  show_MappaR = T,
   show_BoostaR = T,
   show_GlimmaR = T,
   num_threads = 30,

@@ -456,6 +456,8 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
   kpi_denominator <- NULL
   # function to format the number x according to whatever format has been defined in the kpi_spec
   if(is.numeric(x) & !is.null(response) & !is.null(weight)){
+    n_row <- nrow(x)
+    n_col <- ncol(x)
     format_row <- kpi_spec[kpi_numerator==response & kpi_denominator==weight,]
     if(nrow(format_row)>0){
       significant_digits <- as.numeric(format_row$kpi_signif)
@@ -470,12 +472,17 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
       if(is.na(suffix)) suffix <- ''
       # format number
       x_MappaR <- x / divisor
+      if(is.null(n_row)){n_row <- 1}
+      if(is.null(n_col)){n_col <- 1}
       if(!is.na(decimal_places) & is.numeric(decimal_places)){
         x_MappaR <- format(round(x_MappaR,decimal_places), nsmall = decimal_places, big.mark = ',')
       } else {
         x_MappaR <- format(x_MappaR, digits = significant_digits, big.mark = ',')
       }
+      # make matrix and remove any white space introduced by format
+      x_MappaR <- trimws(x_MappaR)
       x_MappaR <- paste(sep = '', prefix, x_MappaR, suffix)
+      x_MappaR <- matrix(x_MappaR, nrow = n_row, ncol = n_col)
     } else {
       # simple format depending on magnitude of number
       m <- mean(x, na.rm = TRUE)
@@ -487,6 +494,7 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
         } else {
           x_MappaR <- format(round(x,3), nsmall = 0, big.mark = ',')
         }
+        x_MappaR <- matrix(x_MappaR, nrow = n_row, ncol = n_col)
       } else {
         x_MappaR <- NA
       }
@@ -494,5 +502,6 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
   } else {
     x_MappaR <- NA
   }
+  x_MappaR
 }
 

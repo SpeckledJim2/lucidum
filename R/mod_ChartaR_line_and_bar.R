@@ -158,7 +158,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
         )
     })
     observeEvent(data_summary(), {
-      output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), weight())})
+      output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), response(), weight(), kpi_spec(), input$response_transform)})
       output$chart <- renderPlotly({
         format_plotly(data_summary(),
                       response(),
@@ -475,11 +475,7 @@ add_total_row <- function(dt, weight){
     weight_extra <- 1
   }
   wt <- dt[[weight]]
-  if(SHAP_cols){
-    response_cols <- names(dt)[(3+weight_extra):(ncol(dt)-5)]
-  } else {
-    response_cols <- names(dt)[(3+weight_extra):ncol(dt)]
-  }
+  response_cols <- names(dt)[(3+weight_extra):ncol(dt)]
   first_col_name <- names(dt)[1]
   total_cell <- dt[1,1]
   total_cell[,1] <- as.character(total_cell[,1])
@@ -488,34 +484,45 @@ add_total_row <- function(dt, weight){
   sumprod <- function(x,wt){sum(x*wt, na.rm=TRUE)}
   response_totals <- dt[,lapply(.SD,sumprod,wt=wt),.SDcols=response_cols]
   response_totals <- response_totals / weight_totals[[ncol(weight_totals)]]
-  if(SHAP_cols){
-    # fill in when done
-  } else {
-    total_row <- cbind(total_cell, weight_totals, response_totals)
-  }
+  total_row <- cbind(total_cell, weight_totals, response_totals)
   dt[, (first_col_name) := lapply(.SD, as.character), .SDcols=first_col_name]
   rbind(dt, total_row)
 }
 
-format_table_DT <- function(dt, weight){
+format_table_DT <- function(dt, response, weight, kpi_spec, response_transform){
   # add a total row at the bottom
   dt <- add_total_row(dt, weight)
   dt[,3:ncol(dt)] <- round(dt[,3:ncol(dt)],2)
   if(weight=='N'){
     weight_cols <- 'N'
+    first_response_col <- 3
   } else {
     weight_cols <- c('N', weight)
+    first_response_col <- 4
   }
+  # apply the kpi format
+  if(response_transform == '-'){
+    formatted_kpis <- apply_kpi_format(as.matrix(dt[,first_response_col:ncol(dt)]), response, weight, kpi_spec)
+  } else {
+    formatted_kpis <- apply_kpi_format(as.matrix(dt[,first_response_col:ncol(dt)]), 'dummy', 'dummy', kpi_spec)
+  }
+  formatted_kpis <- as.data.table(formatted_kpis)
+  cols <- names(dt)[first_response_col:ncol(dt)]
+  setnames(formatted_kpis, cols)
+  dt[, (cols):= formatted_kpis]
   datatable(
     dt,
     rownames= FALSE,
     options = list(pageLength = min(1000, nrow(dt)),
                    scrollX = T,
                    dom = 'tp',
+                   columnDefs = 
+                   list(list(className = 'dt-right', targets = "_all")),
                    scrollY = 'calc(90vh - 300px)'
     )
   ) |>
     formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '12px') |>
+    #formatStyle(first_response_col:ncol(dt), `text-align` = 'right') |>
     formatStyle(names(dt), target = "row", fontWeight = DT::styleEqual('Total', 'bold')) |>
     formatRound(weight_cols, digits = 0)
 }

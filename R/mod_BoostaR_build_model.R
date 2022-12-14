@@ -127,27 +127,21 @@ mod_BoostaR_build_model_ui <- function(id){
               textAreaInput(
                 inputId = ns('BoostaR_additional_parameters'),
                 value =
-                  '#boosting: gbdt
+'#boosting: gbdt
+#poisson_max_delta_step: 0.7
+#tweedie_variance_power: 1.5
+#boost_from_average: TRUE
+#min_data_in_leaf: 20
+#min_sum_hessian_in_leaf: 0.001
+#lambda_l1: 0
+#lambda_l2: 0
+
 #objective: gamma
 #metric: gamma
-#tree_learner: serial
-#device_type: cpu
-#data:
-#valid:
-#num_iterations: 5000
-#learning_rate: 0.5
-#num_leaves: 10
-#num_threads: 0
 #deterministic: FALSE
 #force_col_wise: FALSE
 #force_row_wise: FALSE
 #histogram_pool_size: -1
-#max_depth: 4
-#min_data_in_leaf: 20
-#min_sum_hessian_in_leaf: 0.001
-#bagging_fraction: 1
-#pos_bagging_fraction: 1
-#neg_bagging_fraction: 1
 #bagging_freq: 1
 #bagging_seed: 3
 #feature_fraction: 1
@@ -158,8 +152,6 @@ mod_BoostaR_build_model_ui <- function(id){
 #early_stopping_round: 100
 #first_metric_only: FALSE
 #max_delta_step: 0
-#lambda_l1: 0
-#lambda_l2: 0
 #linear_lambda: 0
 #min_gain_to_split: 0
 #drop_rate: 0.1
@@ -176,21 +168,14 @@ mod_BoostaR_build_model_ui <- function(id){
 #cat_smooth: 10
 #max_cat_to_onehot: 4
 #top_k: 20
-#monotone_constraints:
-#monotone_constraints_method: advanced
 #monotone_penalty: 0
-#feature_contri:
-#forcedsplits_filename:
 #refit_decay_rate: 0.9
 #cegb_tradeoff: 1
 #cegb_penalty_split: 0
 #cegb_penalty_feature_lazy:
 #cegb_penalty_feature_coupled:
 #path_smooth: 0
-#interaction_constraints:
-#verbosity: 1
 #saved_feature_importance_type: 0
-#linear_tree: FALSE
 #max_bin: 255
 #max_bin_by_feature:
 #min_data_in_bin: 3
@@ -204,39 +189,15 @@ mod_BoostaR_build_model_ui <- function(id){
 #pre_partition: FALSE
 #two_round: FALSE
 #header: FALSE
-#label_column:
-#weight_column:
-#group_column:
-#ignore_column:
-#categorical_feature:
-#forcedbins_filename:
-#precise_float_parser: FALSE
 #objective_seed: 5
 #num_class: 1
 #is_unbalance: FALSE
 #scale_pos_weight: 1
 #sigmoid: 1
-#boost_from_average: TRUE
 #reg_sqrt: FALSE
 #alpha: 0.9
-#fair_c: 1
-#poisson_max_delta_step: 0.7
-#tweedie_variance_power: 1.5
-#lambdarank_truncation_level: 30
-#lambdarank_norm: TRUE
-#label_gain:
-#eval_at:
-#multi_error_top_k: 1
-#auc_mu_weights:
-#num_machines: 1
-#local_listen_port: 12400
-#time_out: 120
-#machine_list_filename:
-#machines:
-#gpu_platform_id: -1
-#gpu_device_id: -1
-#gpu_use_dp: FALSE
-#num_gpu: 1',
+#fair_c: 1'
+                ,
                 label = 'LightGBM all parameters',
                 width = '560px',
                 height = '600px',

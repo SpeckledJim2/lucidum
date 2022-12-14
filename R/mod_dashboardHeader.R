@@ -8,33 +8,36 @@
 #'
 #' @importFrom shiny NS tagList 
 mod_dashboardHeader_ui <- function(id){
+  bs <- '30px'
+  pd <- 'padding:3px 5px 3px 5px'
+  pd_marg <- 'padding:3px 5px 3px 5px; margin-right: 12px'
   ns <- NS(id)
     dashboardHeader(
       title = span(tagList(tags$img(src='www/dashboard_title.png', height='40px', width='220px'),'')),
       titleWidth = 250,
       # controls placed in the header
       # Specs
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_kpi_spec'), label = NULL, icon = icon('gears'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_DevelopaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_feature_spec'), label = NULL, icon = icon('list'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_DevelopaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_filter_spec'), label = NULL, icon = icon('filter'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_DevelopaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_shinyAce'), label = NULL, icon = icon('chevron-right'), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_DevelopaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_kpi_spec'), label = tagList(tags$img(src='www/kpi.png', height=bs, width=bs)), style = pd), get_golem_options('show_DevelopaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_feature_spec'), label = tagList(tags$img(src='www/features.png', height=bs, width=bs)), style = pd), get_golem_options('show_DevelopaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_filter_spec'), label = tagList(tags$img(src='www/filter.png', height=bs, width=bs)), style = pd), get_golem_options('show_DevelopaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_shinyAce'), label = tagList(tags$img(src='www/shinyAce.png', height=bs, width=bs)), style = 'padding:3px 5px 3px 5px; margin-right: 12px'), get_golem_options('show_DevelopaR')),
       # DataR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_dataset_viewer'), label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px;'), get_golem_options('show_DataR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_column_summary'), label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_DataR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_dataset_viewer'), label = tagList(tags$img(src='www/dataset_viewer.png', height=bs, width=bs)), style = pd), get_golem_options('show_DataR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_column_summary'), label = tagList(tags$img(src='www/column_summary.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_DataR')),
       # ChartaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_one_way'), label = tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_ChartaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_histogram'), label = tagList(tags$img(src='www/histogram.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_ChartaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_SHAP'), label = tagList(tags$img(src='www/SHAP.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_ChartaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_one_way'), label = tagList(tags$img(src='www/one_way_line_bar.png', height=bs, width=bs)), style = pd), get_golem_options('show_ChartaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_histogram'), label = tagList(tags$img(src='www/histogram.png', height=bs, width=bs)), style = pd), get_golem_options('show_ChartaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_SHAP'), label = tagList(tags$img(src='www/SHAP.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_ChartaR')),
       # MappaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_MappaR'), label = tagList(tags$img(src='www/UK.png', height="22px", width="22px")), style = 'padding:3px 4px 4px 3px; margin-right: 12px'), get_golem_options('show_MappaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_MappaR'), label = tagList(tags$img(src='www/UK.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_MappaR')),
       # BoostaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_build'), label = NULL, icon = icon('bars'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_BoostaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_navigate'), label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_BoostaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_tree'), label = tagList(tags$img(src='www/tree.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_BoostaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_build'), label = tagList(tags$img(src='www/BoostaR_features.png', height=bs, width=bs)), style = pd), get_golem_options('show_BoostaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_navigate'), tagList(tags$img(src='www/BoostaR_navigate.png', height=bs, width=bs)), style = pd), get_golem_options('show_BoostaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_tree'), label = tagList(tags$img(src='www/tree.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_BoostaR')),
       # GlimmaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_build'), label = tagList(tags$img(src='www/beta.png', height="20px", width="20px")), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_navigate'), label = NULL, icon = icon('star'), style = 'padding:4px 6px 4px 6px'), get_golem_options('show_MappaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_tabulate'), label = NULL, icon = icon('table-columns'), style = 'padding:4px 6px 4px 6px; margin-right: 12px'), get_golem_options('show_MappaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_build'), label = tagList(tags$img(src='www/beta.png', height=bs, width=bs)), style = pd), get_golem_options('show_GlimmaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_navigate'), label = tagList(tags$img(src='www/GlimmaR_navigate.png', height=bs, width=bs)), style = pd), get_golem_options('show_GlimmaR')),
+      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_tabulate'), label = tagList(tags$img(src='www/tabulate.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_GlimmaR')),
       # dataset
       insertDashboardHeader(
         div(
@@ -139,7 +142,7 @@ insertDashboardHeader <- function(x, show){
     tags$li(
       class = "dropdown",
       div(
-        style='margin-top:10px; padding-right:0;',
+        style='margin-top:6px; padding-right:0;',
         x
       )
     )
