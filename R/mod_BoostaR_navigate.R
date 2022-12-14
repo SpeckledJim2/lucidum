@@ -279,11 +279,15 @@ BoostaR_model_summary_row <- function(BoostaR_model){
                     test = signif(BoostaR_model$evaluation_log$test_err, 6),
                     train = signif(BoostaR_model$evaluation_log$train_err, 6),
                     best_iter = BoostaR_model$evaluation_log$best_iteration,
+                    method = BoostaR_model$params$boosting,
                     lr = BoostaR_model$params$learning_rate,
                     leaves = BoostaR_model$params$num_leaves,
                     depth = BoostaR_model$params$max_depth,
                     `row%` = BoostaR_model$params$bagging_fraction,
                     `col%` = BoostaR_model$params$feature_fraction,
+                    min_wt = BoostaR_model$params$min_data_in_leaf,
+                    L1 = BoostaR_model$params$lambda_l1,
+                    L2 = BoostaR_model$params$lambda_l2,
                     n_feat = length(BoostaR_model$features),
                     time = round(as.numeric(BoostaR_model$run_time), 1)
     )
@@ -306,10 +310,12 @@ BoostaR_detailed_summary <- function(BoostaR_model){
   }
 
   x <- data.table(name = BoostaR_model$name,
-                  objective = BoostaR_model$params$objective,
-                  metric = BoostaR_model$params$metric,
                   response = BoostaR_model$response,
                   weight = BoostaR_model$weight,
+                  objective = BoostaR_model$params$objective,
+                  metric = BoostaR_model$params$metric,
+                  tweedie_variance_power = BoostaR_model$params$tweedie_variance_power,
+                  boosting_method = BoostaR_model$params$boosting,
                   offset = BoostaR_model$init_score,
                   test = signif(BoostaR_model$evaluation_log$test_err, 6),
                   train = signif(BoostaR_model$evaluation_log$train_err, 6),
@@ -326,7 +332,10 @@ BoostaR_detailed_summary <- function(BoostaR_model){
                   depth = BoostaR_model$params$max_depth,
                   bagging_fraction = BoostaR_model$params$bagging_fraction,
                   bagging_frequency = BoostaR_model$params$bagging_freq,
-                  feature_fraction = BoostaR_model$params$feature_fraction
+                  feature_fraction = BoostaR_model$params$feature_fraction,
+                  min_data_in_leaf = BoostaR_model$params$min_data_in_leaf,
+                  L1_normalisation = BoostaR_model$params$lambda_l1,
+                  L2_normalisation = BoostaR_model$params$lambda_l2
   )
   x <- data.table(parameter=names(x), value = t(x[1]))
   setnames(x, c('parameter','value'))
