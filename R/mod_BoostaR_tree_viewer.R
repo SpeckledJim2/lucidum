@@ -143,6 +143,7 @@ replace_lgbm_levels_with_names <- function(x, feature_name, rules){
   levels_to_names <- function(x){names(lvls)[as.numeric(x)]}
   result <- lapply(result, levels_to_names)
   result <- lapply(result, paste, collapse = '\n')
+  unlist(result)
 }
 
 #' @importFrom DiagrammeR create_edge_df create_graph add_global_graph_attrs
@@ -233,14 +234,20 @@ BoostaR_render_tree_graph <- function(dt, colours, rules = NULL){
     fontcolor = "black")
   
   # format the edge labels
-  numeric_idx <- !is.na(as.numeric(dt[['Split']]))
-  dt[numeric_idx, Split := round(as.numeric(Split),4)]
+  #browser()
+  #numeric_idx <- !is.na(as.numeric(dt[['Split']]))
+  #numeric_idx <- !is.na(dt[['Split']])
+  #dt[numeric_idx, Split := round(as.numeric(Split),4)]
+  
+  # get rid of 1e-35's, i.e zeroes
+  if(inherits(dt[['Split']], 'character')){
+    dt[grep('e-35', Split), Split := '0']
+  }
   
   # replace indices with feature levels if rules supplied
   if(!is.null(rules)){
     for (f in names(rules)){
-      dt[Feature==f & decision_type == '==',
-         Split := replace_lgbm_levels_with_names(Split, f, rules)]
+      dt[Feature==f & decision_type == '==', Split := replace_lgbm_levels_with_names(Split, f, rules)]
     }
   }
   
