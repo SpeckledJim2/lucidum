@@ -94,41 +94,6 @@ mod_GlimmaR_navigate_ui <- function(id){
              DTOutput(ns('model_summary')
              )
       )
-    ),
-    fluidRow(
-      column(
-        width = 4,
-        fluidRow(
-          column(
-            width = 12,
-            h3('Model details'),
-          )
-        ),
-        DTOutput(ns('detailed_model_summary'))
-      ),
-      column(
-        width = 8,
-        fluidRow(
-          column(
-            width = 8,
-            h3('Gain summary')
-          ),
-          column(
-            width = 4,
-            align = 'right',
-            div(
-              style = 'margin-top:16px; margin-bottom:-16px',
-              textInput(
-                ns('search_gain_table'),
-                label = NULL,
-                width = '100%',
-                placeholder = 'highlight feature'
-              )
-            )
-          )
-        ),
-        DTOutput(ns('gain_summary'))
-      )
     )
   )
 }
@@ -151,7 +116,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                        initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'Bfrt',
                                        scrollX = T,
-                                       scrollY = 'calc(20vh)',
+                                       scrollY = 'calc(70vh)',
                                        searchHighlight=TRUE,
                                        buttons =
                                          list('colvis', 'copy', list(
