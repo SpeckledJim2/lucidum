@@ -137,8 +137,12 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     })
     observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$response_transform, input$sort), {
       # QUESTION - how to stop this triggering twice on first call
-      gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
-      glm_link <- GlimmaR_models()[[GlimmaR_idx()]]$link
+      if(!is.null(BoostaR_idx())){
+        gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
+      }
+      if(!is.null(GlimmaR_models())){
+        glm_link <- GlimmaR_models()[[GlimmaR_idx()]]$link
+      }
       data_summary(
         line_and_bar_summary(
           d(),
