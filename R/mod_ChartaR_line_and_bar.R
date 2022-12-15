@@ -281,13 +281,15 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             names(SHAP_summary)[2:6] <- c('min','perc_5','mean','perc_95','max')
             # scale SHAP values to mean
             # how to do this depends on the choice of objective
-            if(gbm_link=='identity'){
-              SHAP_summary[, 2:6] <- wtd_mean + SHAP_summary[, 2:6]
-            } else if (gbm_link=='log'){
-              SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) * wtd_mean
-            } else if (gbm_link=='binary'){
-              # following is rough for now - won't always tie up due to logit
-              SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6])/(1+exp(SHAP_summary[, 2:6])) * wtd_mean * 2
+            if(!is.null(gbm_link)){
+              if(gbm_link=='identity'){
+                SHAP_summary[, 2:6] <- wtd_mean + SHAP_summary[, 2:6]
+              } else if (gbm_link=='log'){
+                SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) * wtd_mean
+              } else if (gbm_link=='binary'){
+                # following is rough for now - won't always tie up due to logit
+                SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6])/(1+exp(SHAP_summary[, 2:6])) * wtd_mean * 2
+              }
             }
             # multiply SHAP_summary by row weights
             # needed for later weighted average removal of rows
@@ -316,13 +318,15 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             names(LP_summary)[2] <- c('LP_mean')
             # scale SHAP values to mean
             # how to do this depends on the choice of objective
-            if(glm_link=='identity'){
-              LP_summary[, 2] <- wtd_mean + LP_summary[, 2]
-            } else if (glm_link=='log'){
-              LP_summary[, 2] <- exp(LP_summary[, 2]) * wtd_mean
-            } else if (glm_link=='logit'){
-              # following is rough for now - won't always tie up due to logit
-              LP_summary[, 2] <- exp(LP_summary[, 2])/(1+exp(LP_summary[, 2])) * wtd_mean * 2
+            if(!is.null(glm_link)){
+              if(glm_link=='identity'){
+                LP_summary[, 2] <- wtd_mean + LP_summary[, 2]
+              } else if (glm_link=='log'){
+                LP_summary[, 2] <- exp(LP_summary[, 2]) * wtd_mean
+              } else if (glm_link=='logit'){
+                # following is rough for now - won't always tie up due to logit
+                LP_summary[, 2] <- exp(LP_summary[, 2])/(1+exp(LP_summary[, 2])) * wtd_mean * 2
+              }
             }
             # multiply LP_summary by row weights
             # needed for later weighted average removal of rows
@@ -426,16 +430,33 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           } else if(sort=='Wt'){
             setorderv(d_summary, weight, -1)
           } else if(sort=='Act'){
-            setorderv(d_summary, response, -1)
+            setorderv(d_summary, response, +1)
           } else if (sort=='Add'){
             if(length(add_cols)>0){
               first_add_col <- add_cols[1]
-              setorderv(d_summary, first_add_col, -1)
+              setorderv(d_summary, first_add_col, +1)
             } else {
-              setorderv(d_summary, response, -1)
+              setorderv(d_summary, response, +1)
             }
           } else if (sort=='PD'){
-            setorderv(d_summary, new_colname)
+            if(show_partial_dependencies %in% c('Both','GBM')){
+              # can't sort by both so sort by SHAP
+              if('mean' %in% names(d_summary)){
+                setorderv(d_summary, 'mean')
+              } else if ('LP_mean' %in% names(d_summary)) {
+                setorderv(d_summary, 'LP_mean')
+              } else {
+                setorderv(d_summary, new_colname)
+              }
+            } else if (show_partial_dependencies=='GLM'){
+              if('LP_mean' %in% names(d_summary)){
+                setorderv(d_summary, 'LP_mean')
+              } else {
+                setorderv(d_summary, new_colname)
+              }
+            } else {
+              setorderv(d_summary, new_colname, +1)
+            }
           }
         }
       }
