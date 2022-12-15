@@ -493,7 +493,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         lgb_dat <- make_lgb_train_test(d(), response(), weight(), input$BoostaR_initial_score, features, input$BoostaR_objective)
         # loop over the combinations of parameters and build models
         for(i in 1:nrow(main_params_combos)){
-          threads <- golem::get_golem_options('num_threads')
+          threads <- getDTthreads()
           if(threads==1){
             detail_message <- paste0('training (', threads, ' thread)')
           } else {
@@ -978,7 +978,7 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
 build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
   # build the model
   start_time <- Sys.time()
-  params$num_threads <- golem::get_golem_options('num_threads')
+  params$num_threads <- getDTthreads()
   lgbm <- tryCatch({
     lgb.train(
       params = params,
@@ -1014,13 +1014,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     } else if (lgb_dat$link=='logit'){
       predictions <- 1/(1+exp(-predictions))
     }
-    # get SHAP values and append to d
-    if(params$num_threads==1){
-      txt <- 'thread'
-    } else {
-      txt <- 'threads'
-    }
-    setProgress(detail = paste0('SHAP (', params$num_threads, ' ', txt, ')'))
+    setProgress(detail = 'SHAP values')
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]

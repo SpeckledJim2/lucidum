@@ -5,8 +5,8 @@
 #' @importFrom DT datatable renderDT
 app_server <- function(input, output, session) {
 
-  # set threads for data.table
-  setDTthreads(max(0, golem::get_golem_options('num_threads')))
+  # set threads for data.table and lightgbm
+  set_threads()
   
   # reactiveVals
   d <- reactiveVal(NULL)
@@ -194,4 +194,10 @@ get_spec_filepath <- function(type, dataset_name){
       }
     }
   }
+}
+set_threads <- function(){
+  n_threads <- golem::get_golem_options('num_threads')
+  if(n_threads>0){
+    setDTthreads(n_threads)
+  } 
 }
