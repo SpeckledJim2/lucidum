@@ -201,6 +201,7 @@ mod_MappaR_ui <- function(id){
 mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show_MappaR){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    plot_postcode_area <- reactiveVal()
     # setup map
     # QUESTION how can I make the map only update when it is visible or first selected?
     # suspendWhenHidden doesn't seem to work, i.e. map is updated when it's not visible
@@ -280,6 +281,25 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show
     })
     observeEvent(c(input$colour1, input$colour2, input$colour3), ignoreInit = TRUE, {
       updateRadioGroupButtons(session, inputId = 'palettes', selected = character(0))
+    })
+    observeEvent(input$postcode, ignoreInit = TRUE,{
+      if(input$postcode!=''){
+        # find and zoom
+        coords_and_zoom <- coords(input$postcode)
+        postcode_centroid <- coords_and_zoom[[1]]
+        zoom_level <- coords_and_zoom[[2]]
+        if(!is.null(postcode_centroid)){
+          leafletProxy("map", session) %>% setView(lng=postcode_centroid[[1]],lat=postcode_centroid[[2]],zoom=zoom_level)
+          if(nchar(input$postcode)>2){
+            postcode_area <- substr(input$postcode,1,regexpr('[0-9]', input$postcode)-1)
+            plot_postcode_area(postcode_area)
+          } else {
+            plot_postcode_area(input$postcode)
+          }
+        } else {
+          showNotification('Postcode not found', type = 'error')
+        }
+      }
     })
   })
 }
@@ -510,3 +530,27 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
   x_MappaR
 }
 
+coords <- function(postcode){
+  centroid <- NULL
+  zoom <- NULL
+  if(nchar(postcode)<3){
+    # postcode area
+    if(postcode %in% uk_areas$PostcodeArea){
+      centroid <- list(uk_areas$X[uk_areas$PostcodeArea==postcode], uk_areas$Y[uk_areas$PostcodeArea==postcode])
+      zoom <- 10
+    }
+  } else if (nchar(postcode)<=6){
+    # most likely a postcode sector
+    # if(postcode %in% uk_sectors$PostcodeSector){
+    #   centroid <- list(uk_sectors$X[uk_sectors$PostcodeSector==postcode], uk_sectors$Y[uk_sectors$PostcodeSector==postcode])
+    #   zoom <- 13
+    # }
+  } else {
+    # postcode unit
+    # if(postcode %in% uk_units[['PostcodeUnit']]){
+    #   centroid <- list(uk_units$X[uk_units$PostcodeUnit==postcode], uk_units$Y[uk_units$PostcodeUnit==postcode])
+    #   zoom <- 15
+    # }
+  }
+  return(list(centroid,zoom))
+}
