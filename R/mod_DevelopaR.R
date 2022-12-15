@@ -102,7 +102,7 @@ mod_DevelopaR_ui <- function(id){
                 tabPanel(value = 'shinyAce', title = span(tagList(tags$img(src='www/shinyAce.png', height="20px", width="20px"), 'shinyAce')),
                          fluidRow(
                            column(
-                             width = 9,
+                             width = 12,
                              fluidRow(
                                column(
                                  width = 6,
@@ -135,26 +135,26 @@ mod_DevelopaR_ui <- function(id){
                                wordWrap = FALSE,
                                height = 'calc(40vh)',
                                autoScrollEditorIntoView = TRUE,
-                               placeholder = ''
+                               value =
+"# create new columns using standard R syntax
+# the lucidum dataset is contained in d()
+
+pred_cols <- c('glm_prediction','lgbm_prediction')
+dataset_cols <- names(d())
+if(all(pred_cols %in% dataset_cols)){
+  d()[, model_ratio := lgbm_prediction/glm_prediction]
+  round(quantile(d()$model_ratio, probs = 0:10/10),3)
+} else {
+  print('Ensure both GLM and GBM are present')
+}"
                              )
-                           ),
-                           column(width = 3,
-                                  h3('Scripts'),
-                                  selectInput(inputId = ns('shinyAce_scripts'),
-                                              label = NULL,
-                                              width = '100%',
-                                              selectize = FALSE,
-                                              size = 21,
-                                              choices = c('script1.R','script2.R'),
-                                              selected = ''
-                                              )
-                                  )
+                           )
                          ),
                          fluidRow(
                            column(
                              width = 12,
                              # needs namespace
-                             tags$head(tags$style(paste0('#',ns('shinyAce_output'),'{font-size:10px; overflow-y:scroll; max-height: 360px; background: ghostwhite; white-space: pre-wrap}'))),
+                             tags$head(tags$style(paste0('#',ns('shinyAce_output'),'{font-size:14px; overflow-y:scroll; max-height: 360px; background: ghostwhite; white-space: pre-wrap}'))),
                              verbatimTextOutput(ns('shinyAce_output'))
                              )
                            )

@@ -1,6 +1,5 @@
 #### example GLM formula
 #### use hashes to make comments in the formula file
-#### use "quasipoisson objective" (set above)
 
 # NCD
 ifelse(NCD==0,1,0) +
