@@ -132,7 +132,7 @@ app_server <- function(input, output, session) {
   mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
   # tab servers
-  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, dimensions)
+  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions)
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))

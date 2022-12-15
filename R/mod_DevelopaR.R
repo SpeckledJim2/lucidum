@@ -170,7 +170,7 @@ if(all(pred_cols %in% dataset_cols)){
 #' @importFrom shinyWidgets confirmSweetAlert
 #' @importFrom shinyAce updateAceEditor
 #' 
-mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, dimensions){
+mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions){
   moduleServer( id, function(input, output, session){
     updated_kpi_spec <- reactiveVal()
     updated_filter_spec <- reactiveVal()
