@@ -35,26 +35,43 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     mod_BoostaR_tree_viewer_server('treeViewer', BoostaR_models, BoostaR_idx)
     observeEvent(BoostaR_idx(), {
       if(!is.null(BoostaR_idx())){
-        # copy model predictions to d
-        rows_idx <- BoostaR_models()[[BoostaR_idx()]]$pred_rows
-        preds <- BoostaR_models()[[BoostaR_idx()]]$predictions
-        if('lgbm_prediction' %in% names(d())){
-          d()[, lgbm_prediction:= NULL]
-        }
-        d()[rows_idx, lgbm_prediction := preds]
-        dt_update(dt_update()+1)
-        # copy SHAP cols
-        if(!is.null(BoostaR_models()[[BoostaR_idx()]]$SHAP_cols)){
-          # copy SHAP values to d
+        if(BoostaR_idx()=='No GBMs'){
+          # e.g. if user deletes all the GBMs we will arrive here
+          # delete the remaining GBM cols
+          if('lgbm_prediction' %in% names(d())){
+            d()[, lgbm_prediction:= NULL]
+            dt_update(dt_update()+1)
+          }
           existing_SHAP_cols <- names(d())[grep('_SHAP_', names(d()))] # get rid of any existing SHAP columns
           if(length(existing_SHAP_cols)>0){
             d()[, (existing_SHAP_cols) := NULL]
+            dt_update(dt_update()+1)
           }
-          new_SHAP_idx <- BoostaR_models()[[BoostaR_idx()]]$SHAP_rows
-          new_SHAP_cols <- BoostaR_models()[[BoostaR_idx()]]$SHAP_cols
-          if(!is.null(new_SHAP_cols)){
-            SHAP_names <- names(new_SHAP_cols[,2:ncol(new_SHAP_cols)])
-            d()[new_SHAP_idx, (SHAP_names) := new_SHAP_cols[,2:ncol(new_SHAP_cols)]]
+        } else {
+          # copy model predictions to d
+          rows_idx <- BoostaR_models()[[BoostaR_idx()]]$pred_rows
+          preds <- BoostaR_models()[[BoostaR_idx()]]$predictions
+          if('lgbm_prediction' %in% names(d())){
+            d()[, lgbm_prediction:= NULL]
+            dt_update(dt_update()+1)
+          }
+          d()[rows_idx, lgbm_prediction := preds]
+          dt_update(dt_update()+1)
+          # copy SHAP cols
+          if(!is.null(BoostaR_models()[[BoostaR_idx()]]$SHAP_cols)){
+            # copy SHAP values to d
+            existing_SHAP_cols <- names(d())[grep('_SHAP_', names(d()))] # get rid of any existing SHAP columns
+            if(length(existing_SHAP_cols)>0){
+              d()[, (existing_SHAP_cols) := NULL]
+              dt_update(dt_update()+1)
+            }
+            new_SHAP_idx <- BoostaR_models()[[BoostaR_idx()]]$SHAP_rows
+            new_SHAP_cols <- BoostaR_models()[[BoostaR_idx()]]$SHAP_cols
+            if(!is.null(new_SHAP_cols)){
+              SHAP_names <- names(new_SHAP_cols[,2:ncol(new_SHAP_cols)])
+              d()[new_SHAP_idx, (SHAP_names) := new_SHAP_cols[,2:ncol(new_SHAP_cols)]]
+              dt_update(dt_update()+1)
+            }
           }
         }
       }
