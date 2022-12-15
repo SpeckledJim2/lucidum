@@ -55,7 +55,9 @@ mod_selectResponseColumn_server <- function(
       if(!is.null(d())){
         if(nrow(d())>0){
           choices <- getColumnChoices(d(), numerical_cols)
-          if(new_selection() %in% unlist(choices)){
+          if(is.null(new_selection())){
+            selected <- input$col
+          } else if(new_selection() %in% unlist(choices)){
             # use the new_selection
             selected <- new_selection()
           } else if(input$col %not_in% unlist(choices)){

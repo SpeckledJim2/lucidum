@@ -53,7 +53,9 @@ mod_selectWeightColumn_server <- function(
       if(!is.null(d())){
         if(nrow(d())>0){
           choices <- getColumnChoices(d(), numerical_cols, subset, special_options, 'Weights')
-          if(new_selection() %in% unlist(choices)){
+          if(is.null(new_selection())){
+            selected <- input$col
+          } else if(new_selection() %in% unlist(choices)){
             # use the new selection
             selected <- new_selection()
           } else if(input$col %not_in% unlist(choices)){
