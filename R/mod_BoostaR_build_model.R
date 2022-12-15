@@ -390,10 +390,11 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
     observeEvent(BoostaR_idx(), {
       if(!is.null(BoostaR_idx())){
         B <- BoostaR_models()[[BoostaR_idx()]]
-        update_GBM_parameters(session, output, B)
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, dimensions()[2] - 500)})
+        if(!is.null(B)){
+          update_GBM_parameters(session, output, B)
+          output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, dimensions()[2] - 500)})
+        }
       }
-
     })
     observeEvent(input$BoostaR_feature_specification, ignoreInit = TRUE, {
       fs <- feature_spec()
@@ -522,20 +523,36 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           })
         }
         # turn off grid search and select last model
-        BoostaR_idx(names(BoostaR_models())[length(names(BoostaR_models()))])
         updateRadioGroupButtons(session, inputId = 'BoostaR_grid_search', selected = 'Off')
+        BoostaR_idx(names(BoostaR_models())[length(names(BoostaR_models()))])
       }
     })
     observeEvent(input$BoostaR_grid_search, {
+      if(is.null(BoostaR_models())){
+        B <- NULL
+      } else {
+        B <- BoostaR_models()[[BoostaR_idx()]]
+      }
       if(input$BoostaR_grid_search=='Off'){
-        learning_rate <- 0.3
-        num_leaves <- 5
-        max_depth <- 4
-        col_sample_rate <- 1
-        row_sample_rate <- 1
-        min_data_in_leaf <- 0
-        lambda_l1 <- 0
-        lambda_l2 <- 0
+        if(is.null(B)){
+          learning_rate <- 0.3
+          num_leaves <- 5
+          max_depth <- 4
+          col_sample_rate <- 1
+          row_sample_rate <- 1
+          min_data_in_leaf <- 0
+          lambda_l1 <- 0
+          lambda_l2 <- 0
+        } else {
+          learning_rate <- B$params$learning_rate
+          num_leaves <- B$params$num_leaves
+          max_depth <- B$params$max_depth
+          col_sample_rate <- B$params$feature_fraction
+          row_sample_rate <- B$params$bagging_fraction
+          min_data_in_leaf <- B$params$min_data_in_leaf
+          lambda_l1 <- B$params$lambda_l1
+          lambda_l2 <- B$params$lambda_l2
+        }
       } else {
         learning_rate <- c(0.1,0.3)
         num_leaves <- c(2,10)
@@ -621,7 +638,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       output$BoostaR_lambda_l1 <- renderUI({
         sliderInput(
           inputId = ns('BoostaR_lambda_l1'),
-          label = 'L1 norm',
+          label = 'L1 normalisation',
           min = 0,
           max = 1000,
           value = lambda_l1,
@@ -633,7 +650,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       output$BoostaR_lambda_l2 <- renderUI({
         sliderInput(
           inputId = ns('BoostaR_lambda_l2'),
-          label = 'L2 norm',
+          label = 'L2 normalisation',
           min = 0,
           max = 1000,
           value = lambda_l2,
@@ -1293,109 +1310,111 @@ evaluation_plot <- function(evaluation_log){
 }
 
 update_GBM_parameters <- function(session, output, BoostaR_model){
-  ns <- session$ns
-  updateTextInput(session, inputId = 'BoostaR_num_rounds', value = BoostaR_model$params$num_iterations)
-  updateTextInput(session, inputId = 'BoostaR_early_stopping', value = BoostaR_model$params$early_stopping_round)
-  updateTextInput(session, inputId = 'BoostaR_tweedie_variance_power', value = BoostaR_model$params$tweedie_variance_power)
-  updateRadioGroupButtons(session, inputId = 'BoostaR_boosting', selected = BoostaR_model$params$boosting)
-  updateSelectInput(session, inputId = 'BoostaR_objective', selected = BoostaR_model$params$objective)
-  updateSelectInput(session, inputId = 'BoostaR_initial_score', selected = BoostaR_model$init_score)
-  output$BoostaR_learning_rate_UI <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_learning_rate'),
-      label = 'Learning rate',
-      min = 0.01,
-      max = 1,
-      value = BoostaR_model$params$learning_rate,
-      step = 0.01,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_num_leaves_UI <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_num_leaves'),
-      label = 'Number of leaves',
-      min = 2,
-      max = 32,
-      value = BoostaR_model$params$num_leaves,
-      step = 1,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_max_depth_UI <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_max_depth'),
-      label = 'Max depth',
-      min = 2,
-      max = 32,
-      value = BoostaR_model$params$max_depth,
-      step = 1,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_column_sample_rate_UI <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_column_sample_rate'),
-      label = 'Column sample rate',
-      min = 0,
-      max = 1,
-      value = BoostaR_model$params$feature_fraction,
-      step = 0.05,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_row_sample_rate_UI <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_row_sample_rate'),
-      label = 'Row sample rate',
-      min = 0,
-      max = 1,
-      value = BoostaR_model$params$bagging_fraction,
-      step = 0.05,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_min_data_in_leaf <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_min_data_in_leaf'),
-      label = 'Min data in leaf',
-      min = 0,
-      max = 1000,
-      value = BoostaR_model$params$min_data_in_leaf,
-      step = 10,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_lambda_l1 <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_lambda_l1'),
-      label = 'L1 normalisation',
-      min = 0,
-      max = 1000,
-      value = BoostaR_model$params$lambda_l1,
-      step = 10,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
-  output$BoostaR_lambda_l2 <- renderUI({
-    sliderInput(
-      inputId = ns('BoostaR_lambda_l2'),
-      label = 'L2 normalisation',
-      min = 0,
-      max = 1000,
-      value = BoostaR_model$params$lambda_l2,
-      step = 10,
-      ticks = FALSE,
-      width = '100%'
-    )
-  })
+  if(!is.null(BoostaR_model)){
+    ns <- session$ns
+    updateTextInput(session, inputId = 'BoostaR_num_rounds', value = BoostaR_model$params$num_iterations)
+    updateTextInput(session, inputId = 'BoostaR_early_stopping', value = BoostaR_model$params$early_stopping_round)
+    updateTextInput(session, inputId = 'BoostaR_tweedie_variance_power', value = BoostaR_model$params$tweedie_variance_power)
+    updateRadioGroupButtons(session, inputId = 'BoostaR_boosting', selected = BoostaR_model$params$boosting)
+    updateSelectInput(session, inputId = 'BoostaR_objective', selected = BoostaR_model$params$objective)
+    updateSelectInput(session, inputId = 'BoostaR_initial_score', selected = BoostaR_model$init_score)
+    output$BoostaR_learning_rate_UI <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_learning_rate'),
+        label = 'Learning rate',
+        min = 0.01,
+        max = 1,
+        value = BoostaR_model$params$learning_rate,
+        step = 0.01,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_num_leaves_UI <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_num_leaves'),
+        label = 'Number of leaves',
+        min = 2,
+        max = 32,
+        value = BoostaR_model$params$num_leaves,
+        step = 1,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_max_depth_UI <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_max_depth'),
+        label = 'Max depth',
+        min = 2,
+        max = 32,
+        value = BoostaR_model$params$max_depth,
+        step = 1,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_column_sample_rate_UI <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_column_sample_rate'),
+        label = 'Column sample rate',
+        min = 0,
+        max = 1,
+        value = BoostaR_model$params$feature_fraction,
+        step = 0.05,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_row_sample_rate_UI <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_row_sample_rate'),
+        label = 'Row sample rate',
+        min = 0,
+        max = 1,
+        value = BoostaR_model$params$bagging_fraction,
+        step = 0.05,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_min_data_in_leaf <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_min_data_in_leaf'),
+        label = 'Min data in leaf',
+        min = 0,
+        max = 1000,
+        value = BoostaR_model$params$min_data_in_leaf,
+        step = 10,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_lambda_l1 <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_lambda_l1'),
+        label = 'L1 normalisation',
+        min = 0,
+        max = 1000,
+        value = BoostaR_model$params$lambda_l1,
+        step = 10,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+    output$BoostaR_lambda_l2 <- renderUI({
+      sliderInput(
+        inputId = ns('BoostaR_lambda_l2'),
+        label = 'L2 normalisation',
+        min = 0,
+        max = 1000,
+        value = BoostaR_model$params$lambda_l2,
+        step = 10,
+        ticks = FALSE,
+        width = '100%'
+      )
+    })
+  }
 }
 populate_BoostaR_feature_grid <- function(all_features, selected_features, feature_spec, current_grid){
   feature <- NULL

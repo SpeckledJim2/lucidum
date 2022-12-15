@@ -89,17 +89,23 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
     })
     observeEvent(BoostaR_models(), {
       if(!is.null(BoostaR_models())){
-        current_selection <- input$gbm_chooser
-        model_names <- names(BoostaR_models())
-        if(is.null(current_selection)){
-          selected <- model_names[length(model_names)]
-        }
-        else if(current_selection %in% model_names){
-          selected <- current_selection
+        if(length(BoostaR_models())==0){
+          # no models so nothing to show
+          model_names <- 'No GBMs'
+          selected <- 'No GBMs'
         } else {
-          selected <- model_names[length(model_names)]
+          current_selection <- input$gbm_chooser
+          model_names <- names(BoostaR_models())
+          if(is.null(current_selection)){
+            selected <- model_names[length(model_names)]
+          }
+          else if(current_selection %in% model_names){
+            selected <- current_selection
+          } else {
+            selected <- model_names[length(model_names)]
+          }
         }
-        updateSelectInput(inputId = 'gbm_chooser', choices = names(BoostaR_models()), selected = selected)
+        updateSelectInput(inputId = 'gbm_chooser', choices = model_names, selected = selected)
       }
     })
     observeEvent(BoostaR_idx(), {

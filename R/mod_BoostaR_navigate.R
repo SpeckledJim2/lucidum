@@ -119,14 +119,21 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(BoostaR_models(), {
+      if(length(BoostaR_models())==0){
+        model_summary <- NULL
+      } else {
+        model_summary <- make_BoostaR_model_summary(BoostaR_models())
+      }
+      if(is.null(model_summary)){
+        model_summary <- data.table(`No GBMs`='')
+      }
       output$BoostaR_model_summary <- DT::renderDT({
         # model summary table
-        dt <- BoostaR_model_summary(BoostaR_models())
-        dt |>
+        model_summary |>
           DT::datatable(rownames= FALSE,
                         extensions = 'Buttons',
                         selection=list(mode="multiple", target="row"),
-                        options = list(pageLength = nrow(dt),
+                        options = list(pageLength = nrow(model_summary),
                                        initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'Bfrt',
                                        scrollX = T,
@@ -142,15 +149,24 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
                                          )
                         )
           ) |>
-          DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+          DT::formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '12px')
       })
+    })
+    observeEvent(BoostaR_idx(), {
+      if(BoostaR_idx()=='No GBMs'){
+        detailed_summary <- NULL
+      } else {
+        detailed_summary <- make_BoostaR_detailed_summary(BoostaR_models()[[BoostaR_idx()]])
+      }
+      if(is.null(detailed_summary)){
+        detailed_summary <- data.table(`No GBMs`='')
+      }
       output$BoostaR_detailed_model_summary <- DT::renderDT({
         # model summary table
-        dt <- BoostaR_detailed_summary(BoostaR_models()[[BoostaR_idx()]])
-        dt |>
+        detailed_summary |>
           DT::datatable(rownames= FALSE,
                         selection=list(mode="multiple", target="row"),
-                        options = list(pageLength = nrow(dt),
+                        options = list(pageLength = nrow(detailed_summary),
                                        initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'rt',
                                        scrollX = T,
@@ -158,7 +174,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
                                        searchHighlight=TRUE
                         )
           ) |>
-          DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+          DT::formatStyle(columns = colnames(detailed_summary), lineHeight='0%', fontSize = '12px')
       })
     })
     # QUESTION - this seems to work
@@ -262,12 +278,18 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
   })
 }
 
-BoostaR_model_summary <- function(Bs){
+make_BoostaR_model_summary <- function(Bs){
   # takes the key info from the BoostaR_models
   # and makes a summary data table
   if(!is.null(Bs)){
-    rows <- lapply(Bs, BoostaR_model_summary_row)
-    rbindlist(rows)
+    if(length(Bs)>0){
+      rows <- lapply(Bs, BoostaR_model_summary_row)
+      rbindlist(rows)
+    } else {
+      NULL
+    }
+  } else {
+    NULL
   }
 }
 BoostaR_model_summary_row <- function(BoostaR_model){
@@ -294,60 +316,63 @@ BoostaR_model_summary_row <- function(BoostaR_model){
   }
   return(x)
 }
-BoostaR_detailed_summary <- function(BoostaR_model){
-
-  # calculate the number of feature interaction constraints
-  if(is.null(BoostaR_model$params$interaction_constraints)){
-    num_interaction_constraints <- 0
-  } else {
-    num_interaction_constraints <- length(BoostaR_model$params$interaction_constraints)
-  }
-  # calculate the number of monotone constraints
-  if(is.null(BoostaR_model$params$monotone_constraints)){
-    num_monotone_constraints <- 0
-  } else {
-    num_monotone_constraints <- sum(abs(BoostaR_model$params$monotone_constraints)>0)
-  }
-
-  x <- data.table(name = BoostaR_model$name,
-                  response = BoostaR_model$response,
-                  weight = BoostaR_model$weight,
-                  objective = BoostaR_model$params$objective,
-                  metric = BoostaR_model$params$metric,
-                  tweedie_variance_power = BoostaR_model$params$tweedie_variance_power,
-                  boosting_method = BoostaR_model$params$boosting,
-                  offset = BoostaR_model$init_score,
-                  test = signif(BoostaR_model$evaluation_log$test_err, 6),
-                  train = signif(BoostaR_model$evaluation_log$train_err, 6),
-                  number_of_features = length(BoostaR_model$features),
-                  interaction_constraints = num_interaction_constraints,
-                  monotone_constraints = num_monotone_constraints,
-                  model_build_time = round(as.numeric(BoostaR_model$run_time), 1),
-                  SHAP_build_time = round(as.numeric(BoostaR_model$SHAP_run_time), 1),
-                  num_iterations = BoostaR_model$params$num_iterations,
-                  early_stopping_round = BoostaR_model$params$early_stopping_round,
-                  best_iter = BoostaR_model$evaluation_log$best_iteration,
-                  lr = BoostaR_model$params$learning_rate,
-                  leaves = BoostaR_model$params$num_leaves,
-                  depth = BoostaR_model$params$max_depth,
-                  bagging_fraction = BoostaR_model$params$bagging_fraction,
-                  bagging_frequency = BoostaR_model$params$bagging_freq,
-                  feature_fraction = BoostaR_model$params$feature_fraction,
-                  min_data_in_leaf = BoostaR_model$params$min_data_in_leaf,
-                  L1_normalisation = BoostaR_model$params$lambda_l1,
-                  L2_normalisation = BoostaR_model$params$lambda_l2
-  )
-  x <- data.table(parameter=names(x), value = t(x[1]))
-  setnames(x, c('parameter','value'))
-  if(!is.null(BoostaR_model$additional_params)){
-    add_params <- BoostaR_model$additional_params
-    add_params$interaction_constraints <- NULL
-    add_params$monotone_constraints <- NULL
-    if(length(add_params)>0){
-      extra_rows <- data.table(name = names(add_params), value = add_params)
-      x <- rbindlist(list(x, extra_rows))
+make_BoostaR_detailed_summary <- function(BoostaR_model){
+  if(!is.null(BoostaR_model)){
+    # calculate the number of feature interaction constraints
+    if(is.null(BoostaR_model$params$interaction_constraints)){
+      num_interaction_constraints <- 0
+    } else {
+      num_interaction_constraints <- length(BoostaR_model$params$interaction_constraints)
     }
+    # calculate the number of monotone constraints
+    if(is.null(BoostaR_model$params$monotone_constraints)){
+      num_monotone_constraints <- 0
+    } else {
+      num_monotone_constraints <- sum(abs(BoostaR_model$params$monotone_constraints)>0)
+    }
+    
+    x <- data.table(name = BoostaR_model$name,
+                    response = BoostaR_model$response,
+                    weight = BoostaR_model$weight,
+                    objective = BoostaR_model$params$objective,
+                    metric = BoostaR_model$params$metric,
+                    tweedie_variance_power = BoostaR_model$params$tweedie_variance_power,
+                    boosting_method = BoostaR_model$params$boosting,
+                    offset = BoostaR_model$init_score,
+                    test = signif(BoostaR_model$evaluation_log$test_err, 6),
+                    train = signif(BoostaR_model$evaluation_log$train_err, 6),
+                    number_of_features = length(BoostaR_model$features),
+                    interaction_constraints = num_interaction_constraints,
+                    monotone_constraints = num_monotone_constraints,
+                    model_build_time = round(as.numeric(BoostaR_model$run_time), 1),
+                    SHAP_build_time = round(as.numeric(BoostaR_model$SHAP_run_time), 1),
+                    num_iterations = BoostaR_model$params$num_iterations,
+                    early_stopping_round = BoostaR_model$params$early_stopping_round,
+                    best_iter = BoostaR_model$evaluation_log$best_iteration,
+                    lr = BoostaR_model$params$learning_rate,
+                    leaves = BoostaR_model$params$num_leaves,
+                    depth = BoostaR_model$params$max_depth,
+                    bagging_fraction = BoostaR_model$params$bagging_fraction,
+                    bagging_frequency = BoostaR_model$params$bagging_freq,
+                    feature_fraction = BoostaR_model$params$feature_fraction,
+                    min_data_in_leaf = BoostaR_model$params$min_data_in_leaf,
+                    L1_normalisation = BoostaR_model$params$lambda_l1,
+                    L2_normalisation = BoostaR_model$params$lambda_l2
+    )
+    x <- data.table(parameter=names(x), value = t(x[1]))
+    setnames(x, c('parameter','value'))
+    if(!is.null(BoostaR_model$additional_params)){
+      add_params <- BoostaR_model$additional_params
+      add_params$interaction_constraints <- NULL
+      add_params$monotone_constraints <- NULL
+      if(length(add_params)>0){
+        extra_rows <- data.table(name = names(add_params), value = add_params)
+        x <- rbindlist(list(x, extra_rows))
+      }
+    }
+    x
+  } else {
+    NULL
   }
-  x
 }
 
