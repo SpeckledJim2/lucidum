@@ -76,7 +76,7 @@ mod_defineFilter_ui <- function(id){
     fluidRow(
       column(
         width = 12,
-        style = 'margin-left:18px; margin-top: -5px; font-size: 9px',
+        style = 'margin-left:18px; margin-top: -10px; font-size: 9px',
           textOutput(ns('message'))
       )
     )
