@@ -4,19 +4,22 @@ body {overflow-y: hidden;}
 input {autocorrect: "off"; spellcheck: "false";}
 
 /* Disable bouncy transition for sidebar toggle. */
- .content-wrapper,
- .right-side,
- .main-footer {
-   -moz-transition: none;
-   -webkit-transition: none;
-   -o-transition: all 0 none;
-   transition: none;
- }
- .main-sidebar,
- .left-side {
-   -moz-transition: none;
-   -webkit-transition: none;
-   -o-transition: all 0 none;
-   transition: none;
- }
+/* QUESTION - I don't like the bouncy transition
+/* but if I turn it off, plotly and DT elements don't resize automatically
+/* when I hide the sidebar
+/* .content-wrapper,
+/* .right-side,
+/* .main-footer {
+/*   -moz-transition: none;
+/*   -webkit-transition: none;
+/*   -o-transition: all 0 none;
+/*   transition: none;
+/* }
+/* .main-sidebar,
+/* .left-side {
+/*   -moz-transition: none;
+/*   -webkit-transition: none;
+/*   -o-transition: all 0 none;
+/*   transition: none;
+/* }
  
