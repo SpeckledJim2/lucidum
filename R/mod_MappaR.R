@@ -172,7 +172,7 @@ mod_MappaR_ui <- function(id){
                           width = 8,
                           align = 'center',
                           div(
-                            checkboxInput(inputId = ns('sectors'),label = "Sectors & units", value = FALSE),
+                            #checkboxInput(inputId = ns('sectors'),label = "Sectors & units", value = FALSE),
                             style = 'margin-top: -15px; padding-top: -10px;'
                           )
                         )
