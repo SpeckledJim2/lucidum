@@ -40,7 +40,7 @@ mod_navigator_ui <- function(id){
                        selectInput(inputId=ns('glm_chooser'),
                                    label = NULL,
                                    selectize = FALSE,
-                                   size = 8,
+                                   size = 5,
                                    width = '100%',
                                    choices = NULL
                        )
@@ -49,7 +49,7 @@ mod_navigator_ui <- function(id){
                        selectInput(inputId=ns('gbm_chooser'),
                                    label = NULL,
                                    selectize = FALSE,
-                                   size = 8,
+                                   size = 5,
                                    width = '100%',
                                    choices = NULL
                        )
