@@ -57,12 +57,12 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           column(
             width = 3,
             radioGroupButtons(
-              inputId = "ChartaR_1W_error_bars",
-              label = "Error bars",
-              choices = c('-'='-', '90%'=0.9, '95%'=0.95, '99%'=0.99),
+              inputId = ns('sigma_bars'),
+              label = "Sigma bars",
+              choices = c('-'=0,'2'=2,'3'=3,'4'=4,'5'=5),
               individual = FALSE,
               size = 'xs',
-              selected = '-'
+              selected = 0
             )
           ),
           column(
@@ -135,7 +135,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     observeEvent(banding_new(), {
       banding(banding_new())
     })
-    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$response_transform, input$sort), {
+    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
       # QUESTION - how to stop this triggering twice on first call
       if(!is.null(BoostaR_idx())){
         gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
@@ -154,6 +154,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
           input$group_low_exposure,
           input$sort,
           input$show_partial_dependencies,
+          input$sigma_bars,
           input$response_transform,
           kpi_spec(),
           feature_spec(),
@@ -169,6 +170,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
                       weight(),
                       input$show_labels,
                       input$show_response,
+                      input$sigma_bars,
                       kpi_spec()
                       )
         })
@@ -176,7 +178,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
   })
 }
 
-line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, show_partial_dependencies, response_transform, kpi_spec, feature_spec, gbm_link, glm_link){
+line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, banding, group_low_exposure, sort, show_partial_dependencies, sigma_bars, response_transform, kpi_spec, feature_spec, gbm_link, glm_link){
   if(!is.null(d) & !is.null(response) & !is.null(weight) & !is.null(group_by_col) & !is.null(banding)){
     if(response!='' & weight !=''){
       d_cols <- names(d)
@@ -422,6 +424,18 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               }
             }
           }
+          # sigma bars
+          sigma_bars <- as.numeric(sigma_bars)
+          if(length(add_cols)==1 & sigma_bars!=0){
+            fitted <- add_cols[1]
+            if(inherits(banded_col, 'character')){
+              bands <- d[[banded_col]][rows_idx]
+            } else {
+              bands <- banded_col
+            }
+            sigmas_by_group <- get_sd_estimate_by_group(d, rows_idx, response, weight, fitted, add_cols, bands, 10, sigma_bars)
+            d_summary[, sigma_bar:= sigmas_by_group[,2]]
+          }
           # sort table
           first_col_name <- names(d_summary)[1]
           setnames(d_summary, old = first_col_name, new = new_colname)
@@ -553,7 +567,7 @@ format_table_DT <- function(dt, response, weight, kpi_spec, response_transform){
 }
 
 #' @importFrom plotly plotly_empty add_text
-format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_spec){
+format_plotly <- function(dt, response, weight, show_labels, show_response, sigma_bars, kpi_spec){
   if(is.null(dt)){
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
@@ -584,8 +598,10 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_
     dt <- dt[include]
     # check for LP col
     if('LP_mean' %in% names(dt)) LP_col <- TRUE else LP_col <- FALSE
+    # check for sigma_bar col
+    if('sigma_bar' %in% names(dt)) sigma_col <- TRUE else sigma_col <- FALSE
     # last non SHAP or LP line
-    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0)
+    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0) - ifelse(sigma_col,1,0)
     # setup plot
     xform <- list()
     yform <- list()
@@ -646,11 +662,21 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_
                    textfont = list(color = 'rgba(100, 120, 125,1.0)')
     )
     # add on the response lines
-    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0)
     if(show_response=='Show'){
       # add the lines
       for(i in first_line_col:last_line_col){
         pc <- plot_colour(i-first_line_col+1)
+        if(i==first_line_col+1 & sigma_col==TRUE){
+          errors_plot <- list(
+            color = '#888888',
+            thickness = 0.5,
+            type = "data",
+            symmetric = TRUE,
+            array = dt[['sigma_bar']]
+          )
+        } else {
+          errors_plot <- NULL
+        }
         p <- add_trace(p,
                        x = dt[[1]],
                        y = dt[[i]],
@@ -659,7 +685,8 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, kpi_
                        yaxis = 'y2',
                        name = names(dt)[i],
                        marker = list(color = pc, size = 5),
-                       line = list(color = pc, width = 2)
+                       line = list(color = pc, width = 2),
+                       error_y = errors_plot
         )
       }
     }
@@ -771,4 +798,45 @@ plot_colour <- function(x){
     pc <- 'rgb(100, 100, 100)'
   }
   pc
+}
+get_sd_estimate_by_group <- function(d, rows_idx, response, weight, fitted, add_cols, group_by_col, n_samples, sigma_bars){
+  n_groups <- 20
+  n_rows <- length(rows_idx)
+  # create n random columns with numbers from 1 to n_groups
+  set.seed(42)
+  rand_cols <- matrix(sample.int(n_groups,size=n_samples*n_rows,replace=TRUE), nrow=length(rows_idx), ncol=n_samples)
+  # for each sample, create response-fitted cut by group_by_col and samples
+  for(i in 1:n_samples){
+    random_col <- rand_cols[,i]
+    # assemble the columns we need in the summary
+    if(weight %in% c('N','no weights')){
+      cols_to_summarise <- c(response, add_cols[1])
+    } else {
+      cols_to_summarise <- c(weight, response, add_cols[1])
+    }
+    # grab just the columns we need
+    d_subset <- cbind(group_by_col, random_col, d[rows_idx, ..cols_to_summarise])
+    d_summary <- d_subset[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), c('group_by_col', 'random_col'), .SDcols = cols_to_summarise]
+    # divide by weight if specified
+    if(weight == 'N'){
+      first_col <- 4
+      # divide all summary columns (4th onwards) by the weight (number of rows) column (3rd)
+      d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[3]]
+    } else if (weight != 'no weights'){
+      first_col <- 5
+      # divide all summary columns (5th onwards) by the weight column (4th)
+      d_summary[, first_col:ncol(d_summary)] <- d_summary[, first_col:ncol(d_summary)] / d_summary[[4]]
+    }
+    # calculate the sd for each group
+    d_summary[, difference:= d_summary[[first_col]] - d_summary[[first_col+1]] ]
+    sigma <- d_summary[, sd(difference), by = 'group_by_col']
+    setorder(sigma, 'group_by_col')
+    if(!exists('sigmas')){
+      sigmas <- matrix(0,nrow=nrow(sigma),ncol=n_samples)
+    }
+    sigmas[,i] <- sigma[[2]]
+  }
+  # average over samples, normalise with sqrt and multiply by chosen sigma_bars
+  sigmas <- cbind(sigma[,1], sigma = rowMeans(sigmas) * sigma_bars / sqrt(n_groups))
+  return(sigmas)
 }
