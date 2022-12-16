@@ -1,7 +1,5 @@
 filter
-price>2000
 age<25
-"between(age,40,50)"
 licence=='Provisional'
 make=='BMW'
 ownership==0
