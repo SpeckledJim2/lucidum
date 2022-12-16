@@ -41,8 +41,8 @@ app_ui <- function(request) {
           # this is still applying to EVERY sliderInput
           # tags$style(".irs-from, .irs-to, .irs-min, .irs-max, .irs-single{display:none}"),
           div(
-            style="margin-top:-10px; margin-bottom:0px;padding-top:0px;",
-            sliderInput("sidebarWidth", label = NULL, value = 250, min = 200, max = 400, step = 50, width = '80px', ticks = FALSE)
+            #style="margin-top:-10px; margin-bottom:0px;padding-top:0px;",
+            #sliderInput("sidebarWidth", label = NULL, value = 250, min = 200, max = 400, step = 50, width = '80px', ticks = FALSE)
           )
         )
       ),
