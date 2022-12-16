@@ -10,35 +10,35 @@
 mod_defineFilter_ui <- function(id){
   ns <- NS(id)
   tagList(
-    div(
-      style = 'margin-top:0px; margin-bottom:-28px; padding-top:0px ; padding-bottom:0px; position:relative',
-      radioGroupButtons(
-        inputId = ns('train_test_filter'),
-        label = 'Filter (0/0)',
-        choices = c('All','Train','Test'),
-        selected = 'All',
-        justified = TRUE,
-        size = 'xs',
-        width = '100%',
+    fluidRow(
+      column(
+        width = 12,
+        div(
+          radioGroupButtons(
+            inputId = ns('train_test_filter'),
+            label = 'Filter (0/0)',
+            choices = c('All','Train','Test'),
+            selected = 'All',
+            justified = TRUE,
+            size = 's',
+            width = '100%',
+          )
+        )
       )
     ),
-    #tags$style(paste0("#",ns('free_filter')," {margin-bottom:-30px;}")),
-    #tags$style(paste0("#",ns('filter_list')," {margin-bottom:0px; margin-top:0px;}")),
     fluidRow(
-      style = 'margin-bottom: -20px; margin-left:0px; margin-right:0px;padding-left:0px',
       column(
         width = 10,
-        style = 'margin-bottom: -7px; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:0px',
+        style = 'margin-top: -27px; margin-right:0px; padding-right: 0px',
         div(
-          style = 'margin-bottom:-20px; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:0px',
-          textInput(inputId = ns('free_filter'), placeholder = 'enter filter...', label = NULL, width = '100%')
+          textInput(inputId = ns('free_filter'), placeholder = 'enter filter...', label = NULL, width = '100%'),
         )
       ),
       column(
         width = 2,
-        style = 'margin-bottom: -7px; display: inline; margin-left:0px; margin-right:0px;padding-left:0px; padding-right:20px',
+        style = 'margin-left:-30px; margin-top:-21px; padding-left:0px;',
         div(
-          style = 'margin-top:12px; margin-left:-30px; margin-right:10px;padding-left:0px; padding-right:0px',
+          style = 'padding:0px; border-radius:0px',
           actionButton(
             width = '100%',
             inputId = ns('apply_filter'),
@@ -46,29 +46,39 @@ mod_defineFilter_ui <- function(id){
             icon = icon("filter")
           )
         )
-
       )
     ),
-    div(
-      style = 'margin-top:0px; margin-bottom:-30px; position:relative',
-      selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 8, selectize = FALSE, multiple = TRUE,
-                  choices = NULL
-                  )
+    fluidRow(
+      column(
+        width = 12,
+        div(
+          style = 'margin-top:-27px',
+          selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 6, selectize = FALSE, multiple = TRUE, choices = NULL)
+        )
+      )
     ),
-    div(
-      radioGroupButtons(
-        inputId = ns('filter_operation'),
-        label = NULL,
-        choices = c('AND','OR','NAND','NOR'),
-        individual = FALSE,
-        size = 'xs',
-        justified = TRUE
-      ),
-      style = 'padding-top:0px ; padding-bottom:0px'
+    fluidRow(
+      column(
+        width = 12,
+        style = 'margin-top: -27px',
+        div(
+          radioGroupButtons(
+            inputId = ns('filter_operation'),
+            label = NULL,
+            choices = c('AND','OR','NAND','NOR'),
+            individual = FALSE,
+            size = 'xs',
+            justified = TRUE
+          ),
+        )
+      )
     ),
-    div(
-      style = 'margin-top:-10px; margin-bottom:0px; margin-left:20px; font-size: 10px',
-      textOutput(ns('message'))
+    fluidRow(
+      column(
+        width = 12,
+        style = 'margin-left:18px; margin-top: -5px; font-size: 9px',
+          textOutput(ns('message'))
+      )
     )
   )
 }
