@@ -496,9 +496,8 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
       prefix <- format_row$kpi_prefix
       suffix <- format_row$kpi_suffix
       if(is.na(significant_digits)) significant_digits <- 6
-      if(is.na(decimal_places)) significant_digits <- 3
+      if(is.na(decimal_places)) decimal_places <- 3
       if(is.na(divisor)) divisor <- 1
-      #if(is.na(decimal_places)) decimal_places <- 3
       if(is.na(prefix)) prefix <- ''
       if(is.na(suffix)) suffix <- ''
       # format number
