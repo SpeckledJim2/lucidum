@@ -484,6 +484,11 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
       n_col <- 1
     }
     format_row <- kpi_spec[kpi_numerator==response & kpi_denominator==weight,]
+    if(nrow(format_row)>1){
+      # duplicate rows int he kpi specification
+      # take just the first row
+      format_row <- format_row[1,]
+    }
     if(nrow(format_row)>0){
       significant_digits <- as.numeric(format_row$kpi_signif)
       divisor <- as.numeric(format_row$kpi_divisor)
@@ -491,6 +496,7 @@ apply_kpi_format <- function(x, response, weight, kpi_spec){
       prefix <- format_row$kpi_prefix
       suffix <- format_row$kpi_suffix
       if(is.na(significant_digits)) significant_digits <- 6
+      if(is.na(decimal_places)) significant_digits <- 3
       if(is.na(divisor)) divisor <- 1
       #if(is.na(decimal_places)) decimal_places <- 3
       if(is.na(prefix)) prefix <- ''
