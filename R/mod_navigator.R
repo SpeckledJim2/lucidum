@@ -67,10 +67,17 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(kpi_spec(), {
-      updateSelectInput(
-        inputId = 'kpi_chooser',
-        choices = setNames(1:nrow(kpi_spec()), kpi_spec()[[1]])
+      if(nrow(kpi_spec())>0){
+        updateSelectInput(
+          inputId = 'kpi_chooser',
+          choices = setNames(1:nrow(kpi_spec()), kpi_spec()[[1]])
         )
+      } else {
+        updateSelectInput(
+          inputId = 'kpi_chooser',
+          choices = 'No KPIs'
+        )
+      }
     })
     observeEvent(GlimmaR_models(), {
       if(!is.null(GlimmaR_models())){
