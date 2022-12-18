@@ -6,7 +6,8 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList 
+#' @importFrom shiny NS tagList
+#' @importFrom tippy tippy_this
 mod_dashboardHeader_ui <- function(id){
   bs <- '30px'
   pd <- 'padding:3px 5px 3px 5px'
@@ -17,27 +18,27 @@ mod_dashboardHeader_ui <- function(id){
       titleWidth = 250,
       # controls placed in the header
       # Specs
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_kpi_spec'), label = tagList(tags$img(src='www/kpi.png', height=bs, width=bs)), style = pd), get_golem_options('show_DevelopaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_feature_spec'), label = tagList(tags$img(src='www/features.png', height=bs, width=bs)), style = pd), get_golem_options('show_DevelopaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_filter_spec'), label = tagList(tags$img(src='www/filter.png', height=bs, width=bs)), style = pd), get_golem_options('show_DevelopaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_shinyAce'), label = tagList(tags$img(src='www/shinyAce.png', height=bs, width=bs)), style = 'padding:3px 5px 3px 5px; margin-right: 12px'), get_golem_options('show_DevelopaR')),
+      dashboardButton(ns, 'GoTo_kpi_spec', 'kpi', 'KPI specification', 'show_DevelopaR', bs, pd),
+      dashboardButton(ns, 'GoTo_feature_spec', 'features', 'Feature specification', 'show_DevelopaR', bs, pd),
+      dashboardButton(ns, 'GoTo_filter_spec', 'filter', 'Filter specification', 'show_DevelopaR', bs, pd),
+      dashboardButton(ns, 'GoTo_shinyAce', 'shinyAce', 'shinyAce console', 'show_DevelopaR', bs, pd_marg),
       # DataR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_dataset_viewer'), label = tagList(tags$img(src='www/dataset_viewer.png', height=bs, width=bs)), style = pd), get_golem_options('show_DataR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_column_summary'), label = tagList(tags$img(src='www/column_summary.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_DataR')),
+      dashboardButton(ns, 'GoTo_dataset_viewer', 'dataset_viewer', 'Dataset viewer', 'show_DataR', bs, pd),
+      dashboardButton(ns, 'GoTo_column_summary', 'column_summary', 'Dataset column summary', 'show_DataR', bs, pd_marg),
       # ChartaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_one_way'), label = tagList(tags$img(src='www/one_way_line_bar.png', height=bs, width=bs)), style = pd), get_golem_options('show_ChartaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_histogram'), label = tagList(tags$img(src='www/histogram.png', height=bs, width=bs)), style = pd), get_golem_options('show_ChartaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_SHAP'), label = tagList(tags$img(src='www/SHAP.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_ChartaR')),
+      dashboardButton(ns, 'GoTo_one_way', 'one_way_line_bar', 'One way line and bar chart', 'show_ChartaR', bs, pd),
+      dashboardButton(ns, 'GoTo_histogram', 'histogram', 'Histogram', 'show_ChartaR', bs, pd),
+      dashboardButton(ns, 'GoTo_SHAP', 'SHAP', 'SHAP viewer', 'show_ChartaR', bs, pd_marg),
       # MappaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_MappaR'), label = tagList(tags$img(src='www/UK.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_MappaR')),
+      dashboardButton(ns, 'GoTo_MappaR', 'UK', 'UK mapping', 'show_MappaR', bs, pd_marg),
       # BoostaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_build'), label = tagList(tags$img(src='www/BoostaR_features.png', height=bs, width=bs)), style = pd), get_golem_options('show_BoostaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_navigate'), tagList(tags$img(src='www/BoostaR_navigate.png', height=bs, width=bs)), style = pd), get_golem_options('show_BoostaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_BoostaR_tree'), label = tagList(tags$img(src='www/tree.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_BoostaR')),
+      dashboardButton(ns, 'GoTo_BoostaR_build', 'BoostaR_features', 'GBM features and parameters', 'show_BoostaR', bs, pd),
+      dashboardButton(ns, 'GoTo_BoostaR_navigate', 'BoostaR_navigate', 'GBM navigator', 'show_BoostaR', bs, pd),
+      dashboardButton(ns, 'GoTo_BoostaR_tree', 'tree', 'GBM tree diagram', 'show_BoostaR', bs, pd_marg),
       # GlimmaR
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_build'), label = tagList(tags$img(src='www/beta.png', height=bs, width=bs)), style = pd), get_golem_options('show_GlimmaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_navigate'), label = tagList(tags$img(src='www/GlimmaR_navigate.png', height=bs, width=bs)), style = pd), get_golem_options('show_GlimmaR')),
-      insertDashboardHeader(actionButton(inputId = ns('GoTo_GlimmaR_tabulate'), label = tagList(tags$img(src='www/tabulate.png', height=bs, width=bs)), style = pd_marg), get_golem_options('show_GlimmaR')),
+      dashboardButton(ns, 'GoTo_GlimmaR_build', 'beta', 'GLM formula and coefficient table', 'show_GlimmaR', bs, pd),
+      dashboardButton(ns, 'GoTo_GlimmaR_navigate', 'GlimmaR_navigate', 'GLM navigator', 'show_GlimmaR', bs, pd),
+      dashboardButton(ns, 'GoTo_GlimmaR_tabulate', 'tabulate', 'Tabulated GLMs', 'show_GlimmaR', bs, pd_marg),
       # dataset
       insertDashboardHeader(
         div(
@@ -154,4 +155,16 @@ insertDashboardHeader <- function(x, show){
       )
     )
   }
+}
+
+dashboardButton <- function(ns, button_name, icon_file, tooltip_text, golem_option, bs, pd){
+  icon_file <- paste0('www/', icon_file, '.png')
+  tooltip_text <- paste0("<span style='font-size:12px;'>",tooltip_text,"<span>")
+  insertDashboardHeader(
+    tagList(
+      actionButton(inputId = ns(button_name), label = tagList(tags$img(src=icon_file, height=bs, width=bs)), style = pd),
+      tippy_this(ns(button_name), placement = 'bottom', tooltip = tooltip_text)
+    ),
+    get_golem_options(golem_option)
+  )
 }
