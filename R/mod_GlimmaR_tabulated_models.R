@@ -13,7 +13,29 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
     fluidRow(
       column(
         width = 3,
-        h3('Tabulated models'),
+        fluidRow(
+          column(
+            width = 6,
+            h3('Tabulations')
+          ),
+          column(
+            width = 6,
+            align = 'right',
+            div(
+              style = 'margin-top:20px',
+              shinySaveButton(
+                id = ns('export_tables'),
+                label = 'Excel',
+                title = 'Choose location to save tables',
+                filename = "",
+                filetype=list(txt="xlsx"),
+                icon = icon('upload'),
+                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
+                viewtype = "detail"
+              )
+            )
+          )
+        ),
         selectInput(inputId = ns('model_chooser'), label = 'Select tabulated model', choices = NULL, size = 10, selectize = FALSE),
         selectInput(inputId = ns('table_chooser'), label = 'Select table', choices = NULL, size = 25, selectize = FALSE),
       ),
@@ -21,36 +43,33 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
         width = 9,
         fluidRow(
           column(
-            width = 4,
+            width = 3,
             h3('Tables')
           ),
           column(
-            width = 4,
-            align = 'center',
+            width = 3,
+            
+          ),
+          column(
+            width = 3,
             div(
               style = 'margin-top:20px',
               radioGroupButtons(
-                inputId = ns('transpose_table'),
-                label = NULL,
-                choices = c('Normal','Transpose'),
-                selected = 'Normal'
+                inputId = ns('transform'),
+                choices = c('-','exp'),
+                selected = '-'
               )
             )
           ),
           column(
-            width = 4,
+            width = 3,
             align = 'right',
             div(
               style = 'margin-top:20px',
-              shinySaveButton(
-                id = ns('export_tables'),
-                label = 'Export to Excel',
-                title = 'Choose location to save tables',
-                filename = "",
-                filetype=list(txt="xlsx"),
-                icon = icon('upload'),
-                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-                viewtype = "detail"
+              checkboxInput(
+                inputId = ns('show_terms'),
+                label = 'Show terms',
+                value = FALSE
               )
             )
           )
@@ -65,30 +84,34 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
 #' tabulatedGlimmaR Server Functions
 #'
 #' @noRd 
-mod_GlimmaR_tabulated_models_server <- function(id, tabulated_models){
+mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    observeEvent(tabulated_models(), {
-      if(length(tabulated_models())>0){
-        nmes <- names(tabulated_models())
-        selected <- nmes[1]
+    observeEvent(GlimmaR_models(), {
+      if(length(GlimmaR_models())>0){
+        # identify which models have a tabulations slot present and their names
+        tabulated <- !sapply(lapply(GlimmaR_models(), '[[','tabulations'), is.null)
+        tabulated_models <- names(GlimmaR_models())[tabulated]
+        selected <- tabulated_models[1]
+        # don't change the selection
         if(!is.null(input$model_chooser)){
-          if(input$model_chooser %in% nmes){
+          if(input$model_chooser %in% tabulated_models){
             selected <- input$model_chooser
           }
         }
-        updateSelectInput(session, inputId = 'model_chooser', choices = names(tabulated_models()), selected = selected)
+        updateSelectInput(session, inputId = 'model_chooser', choices = tabulated_models, selected = selected)
       }
     })
+    
     output$tabulated_model <- renderDT({
       if(!is.null(input$model_chooser)){
-        tabulated_model <- tabulated_models()[[input$model_chooser]]
-        GlimmaR_format_table_DT(tabulated_model, input$table_chooser, input$transpose_table)
+        tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms)
       }
     })
     observeEvent(input$model_chooser, ignoreInit = TRUE, {
       curr_selection <- input$table_chooser
-      choices <- model_table_list(tabulated_models()[[input$model_chooser]])
+      choices <- model_table_list(GlimmaR_models()[[input$model_chooser]]$tabulations)
       if(length(curr_selection)==0){
         selected <- choices[1]
       } else {
@@ -109,11 +132,32 @@ mod_GlimmaR_tabulated_models_server <- function(id, tabulated_models){
 ## To be copied in the server
 # mod_tabulatedGlimmaR_server("tabulatedGlimmaR_1")
 
-GlimmaR_format_table_DT <- function(tabulated_model, table_name, transpose){
-  if(length(tabulated_model)>0 & !is.null(table_name)){
-    dt <- tabulated_model[[table_name]]$table
-    if(transpose=='Transpose' & tabulated_model$format=='solo'){
-      dt <- transpose(dt, keep.names = names(dt)[1], make.names = names(dt)[1])
+GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms){
+  if(!is.null(tabulation)){
+    # split out the individual vars in the table
+    vars <- unlist(strsplit(vars, '|', fixed = TRUE))
+    dt <- copy(tabulation)
+    if(show_terms){
+      # leave alone
+    } else {
+      if(vars[1]=='base'){
+        # leave alone
+      } else {
+        # keep the cols containing vars and the last column
+        # i.e. leave out the terms columns
+        keep_idx <- c(1:length(vars), ncol(dt))
+        keep_cols <- names(dt)[keep_idx]
+        dt <- dt[, ..keep_cols]
+      }
+    }
+    if(transform=='exp'){
+      if(vars[1]=='base'){
+        transform_idx <- 1
+      } else {
+        transform_idx <- setdiff(1:ncol(dt), 1:length(vars))
+      }
+      transform_cols <- names(dt)[transform_idx]
+      dt[, (transform_cols) := exp(.SD),.SDcols=transform_cols]
     }
     if(!is.null(dt)){
       t <- dt %>% DT::datatable(rownames= TRUE,
@@ -126,13 +170,6 @@ GlimmaR_format_table_DT <- function(tabulated_model, table_name, transpose){
                                 )
       ) %>%
         DT::formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '80%')
-      if(tabulated_model$format %in% c('long','long norm')){
-        # make first row bold as total row
-        t <- t %>% DT::formatStyle(0, target = "row", fontWeight = DT::styleEqual(1, "bold"))
-        t <- t %>% DT::formatRound(c("observed", "fitted"), 4, mark = ',')
-        t <- t %>% DT::formatRound(c('weight'), digits=0, mark = ',')
-        t <- t %>% DT::formatRound(c('model_relativity'), digits=4, mark = ',')
-      }
     } else {
       t <- data.table(V1 = 'no model tabulated') %>% DT::datatable()
     }
@@ -140,11 +177,11 @@ GlimmaR_format_table_DT <- function(tabulated_model, table_name, transpose){
   }
 }
 
-model_table_list <- function(tabulated_model){
-  if(is.null(tabulated_model)){
+model_table_list <- function(tabulations){
+  if(is.null(tabulations)){
     table_list <- NULL
   } else {
-    table_list <- names(tabulated_model)[1:(length(tabulated_model)-1)]
+    table_list <- names(tabulations)
     table_list <- as.list(table_list)
     names(table_list) <- paste0(1:length(table_list),' - ',table_list)
   }

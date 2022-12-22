@@ -33,15 +33,26 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     tabulated_models <- reactiveVal(list())
     mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
     mod_GlimmaR_navigate_server('navigateGlimmaR', d, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, tabulated_models)
-    mod_GlimmaR_tabulated_models_server('tabulateGlimmaR', tabulated_models)
-    observeEvent(GlimmaR_idx(), {
-      if(!is.null(GlimmaR_idx())){
+    mod_GlimmaR_tabulated_models_server('tabulateGlimmaR', GlimmaR_models)
+    observeEvent(c(GlimmaR_models(), GlimmaR_idx()), {
+      if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
         # copy model predictions to d
-        rows_idx <- GlimmaR_models()[[GlimmaR_idx()]]$pred_rows
-        preds <- GlimmaR_models()[[GlimmaR_idx()]]$predictions
+        g <- GlimmaR_models()[[GlimmaR_idx()]]
+        rows_idx <- g$pred_rows
+        preds <- g$predictions
         if('glm_prediction' %in% names(d())){
           d()[, glm_prediction:= NULL]
         }
+        # if there are tabulated predictions copy those
+        if('glm_tabulated_prediction' %in% names(d())){
+          d()[, glm_tabulated_prediction:= NULL]
+        }
+        if(!is.null(g$tabulated_predictions)){
+          x <- g$tabulated_predictions$total
+          x <- link_function(x, g$link)
+          d()[rows_idx, glm_tabulated_prediction := x]
+        }
+        
         d()[rows_idx, glm_prediction := preds]
         dt_update(dt_update()+1)
         # copy LP cols
@@ -49,8 +60,8 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
         if(length(existing_LP_cols)>0){
           d()[, (existing_LP_cols) := NULL]
         }
-        new_LP_idx <- GlimmaR_models()[[GlimmaR_idx()]]$pred_rows
-        new_LP_cols <- GlimmaR_models()[[GlimmaR_idx()]]$LP_contributions
+        new_LP_idx <- g$pred_rows
+        new_LP_cols <- g$LP_contributions
         if(!is.null(new_LP_cols)){
           LP_names <- names(new_LP_cols)
           d()[new_LP_idx, (LP_names) := new_LP_cols]
@@ -61,4 +72,13 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
   })
 }
 
+link_function <- function(x, link){
+  if(link=='identity'){
+    x
+  } else if(link=='log'){
+    exp(x)
+  } else if(link=='logit'){
+    exp(x)/(1+exp(x))
+  }
+}
 

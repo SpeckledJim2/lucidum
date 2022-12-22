@@ -153,7 +153,9 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
         }
         rows_selected
         if(length(GlimmaR_models())>0){
-          g <- GlimmaR_models()[[names(GlimmaR_models())[rows_selected]]]
+          # QUESTION - need to check for multiple selections
+          model_name <- names(GlimmaR_models())[rows_selected]
+          g <- GlimmaR_models()[[model_name]]
           if(!is.null(g)){
             base_risk <- get_base_risk(d(), feature_spec(), g$weight)
             withProgress(message = 'GlimmaR', detail = 'tabulate', value = 0.5, {
@@ -169,7 +171,25 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                               g$predictions,
                                               model_name = g$name
               )
-              # save into list
+              # NEW LINES
+              glm_term_summary <- summarise_glm_vars(g$glm)
+              if(!is.null(glm_term_summary)){
+                var_terms <- split(glm_term_summary, by ='vars', keep.by = FALSE)
+              } else {
+                var_terms <- NULL
+              }
+              tabulations <- prepare_glm_tabulations(d()[g$pred_rows], var_terms, feature_spec())
+              tabulations <- predict_on_tabulations(tabulations, g$glm, var_terms)
+              tabulations_adj <- adjust_base_levels(tabulations, feature_spec())
+              predictions <- predict_tabulations(d()[g$pred_rows], tabulations_adj, feature_spec())
+              predictions <- cbind(predictions, glm_fitted = g$predictions)
+              sd_error <- sd(predictions$total-g$predictions)
+              # save the tabulations into the GlimmaR model
+              temp <- GlimmaR_models()
+              temp[[model_name]][['tabulations']] <- tabulations_adj
+              temp[[model_name]][['tabulated_predictions']] <- predictions
+              GlimmaR_models(temp)
+              # save into list - THIS WILL GO AWAY
               temp <- tabulated_models()
               temp[[g$name]] <- tabulated_model
               tabulated_models(temp)
@@ -883,6 +903,10 @@ feature_banding <- function(d, feature_col, feature_spec){
     f_min <- feature_spec[feature==feature_col,'min'][[1]]
     f_max <- feature_spec[feature==feature_col,'max'][[1]]
     f_banding <- feature_spec[feature==feature_col,'banding'][[1]]
+    # in case the feature spec is character cols
+    f_min <- as.numeric(f_min)
+    f_max <- as.numeric(f_max)
+    f_banding <- as.numeric(f_banding)
     # check for NAs or empties
     # and derive banding from raw data if so
     got_banding <- T
@@ -1028,6 +1052,9 @@ band_var_with_feature_spec <- function(x, var_name, feature_spec){
       f_min <- feature_spec$min[feature_spec$feature==var_name]
       f_max <- feature_spec$max[feature_spec$feature==var_name]
       f_banding <- feature_spec$banding[feature_spec$feature==var_name]
+      f_min <- as.numeric(f_min)
+      f_max <- as.numeric(f_max)
+      f_banding <- as.numeric(f_banding)
       if(any(length(f_min)==0,length(f_max)==0,length(f_banding)==0)) got_banding <- F
       if(any(is.na(f_min),is.na(f_max),is.na(f_banding))) got_banding <- F
     }
@@ -1045,7 +1072,7 @@ band_var_with_feature_spec <- function(x, var_name, feature_spec){
   }
   return(x)
 }
-predict_tabulations <- function(dt, tabulations, feature_spec, link){
+predict_tabulations <- function(dt, tabulations, feature_spec){
   # matrix to hold the predictions for each table in tablulations
   # and each row in dt
   predictions <- matrix(data=NA, nrow=nrow(dt),ncol=length(tabulations))
@@ -1075,7 +1102,6 @@ predict_tabulations <- function(dt, tabulations, feature_spec, link){
   predictions_dt <- data.table(predictions)
   setnames(predictions_dt, names(tabulations))
   predictions_dt[, total := rowSums(predictions_dt)]
-  predictions_dt <- exp(predictions_dt)
   return(predictions_dt)
 }
 extract_offsets <- function(glm){
