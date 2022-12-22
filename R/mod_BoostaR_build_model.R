@@ -745,7 +745,7 @@ make_BoostaR_feature_grid <- function(d, feature_spec){
   dt
 }
 remove_lucidum_cols <- function(x){
-  l_cols <- c('lgbm_prediction','glm_prediction','lgbm_residual','glm_residual',
+  l_cols <- c('lgbm_prediction','glm_prediction','glm_tabulated_prediction','lgbm_residual','glm_residual',
               'train_test','user_filter','total_filter')
   l_contains_cols <- c('lgbm_SHAP_','glm_LP_')
   return_cols <- NULL
