@@ -32,6 +32,6 @@ glucidum(
   show_MappaR = T,
   show_BoostaR = T,
   show_GlimmaR = T,
-  num_threads = 8,
+  num_threads = -1,
   specification_path = 'inst'
   )

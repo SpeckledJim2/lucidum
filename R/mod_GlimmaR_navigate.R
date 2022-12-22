@@ -757,3 +757,367 @@ return_banded_levels <- function(factor_name, feature_spec, use_mid_point_column
   list(expanded_factor = expanded_factor, expanded_factor_for_prediction = expanded_factor_for_prediction)
   
 }
+
+#' @import stats
+summarise_glm_vars <- function(glm){
+  # extract the terms
+  term.labels <- attr(terms.formula(glm$formula), "term.labels")
+  # extract the offsets
+  all_vars <- as.character(attr(stats::terms(glm), 'variables'))
+  offsets <- all_vars[grep('offset\\(', all_vars)]
+  # add them to the term.labels
+  term.labels <- c(term.labels, offsets)
+  if(length(term.labels)>0){
+    term.labels.form <- paste0('~', term.labels)
+    # extract the vars in each term
+    vars <- term.labels.form |>
+      lapply(formula) |>              # make into a formula
+      lapply(all.vars) |>             # extract vars from formula
+      lapply(sort) |>                 # alphabetical sort
+      lapply(paste0, collapse = '|')  # collapse into string
+    # return data.table
+    data.table(
+      terms = term.labels,
+      vars = unlist(vars)
+    )
+  }
+}
+uncentered_terms_new <- function(object, newdata, terms, na.action = na.pass, ...) {
+  offset_term <- ifelse(length(grep('offset(', terms, fixed = TRUE))>0,T,F)
+  if(offset_term){
+    # evaluate the offset directly
+    begin <- min(unlist(gregexpr('(', terms, fixed = TRUE))) + 1
+    end <- max(unlist(gregexpr(')', terms, fixed = TRUE))) - 1
+    form <- substr(terms,begin,end)
+    predictor <- newdata[, eval(parse(text = form))]
+    result <- data.table(predictor)
+    setnames(result, terms)
+  } else {
+    # use model matrix
+    # get all the terms
+    tt <- terms(object)
+    n_terms <- length(attr(tt, 'term.labels'))
+    
+    # keep only the terms we are going to use
+    component_terms <- terms[grep(':', terms)]
+    if(length(component_terms)>0){
+      component_terms <- unique(unlist(strsplit(component_terms, ':')))
+    }
+    component_terms <- c(component_terms, terms)
+    component_terms <- intersect(component_terms, attr(tt, 'term.labels'))
+    keep <- which(attr(tt, 'term.labels') %in% component_terms)
+    drop_terms <- setdiff(1:n_terms, keep)
+    if(length(drop_terms)>0){
+      tt <- drop.terms2(tt, drop_terms)
+    }
+    tt <- delete.response(tt)
+    predvars <- attr(tt, "predvars")
+    vars <- attr(tt, 'variables')
+    if (!is.null(predvars)) {
+      predvars_char <- as.character(predvars)
+      vars_char <- as.character(vars)
+      offset_loc <- grep('offset(', predvars_char, fixed = TRUE)
+      if(length(offset_loc)>0){
+        attr(tt, "predvars") <- predvars[-offset_loc]
+      }
+      offset_loc <- grep('offset(', vars_char, fixed = TRUE)
+      if(length(offset_loc)>0){
+        attr(tt, "variables") <- vars[-offset_loc]
+      }
+    }
+    
+    n_terms <- length(terms)
+    
+    m <- model.frame(tt, newdata, na.action = na.action, xlev = object$xlevels, drop.unused.levels = TRUE)
+    if (!is.null(cl <- attr(tt, "dataClasses"))) .checkMFClasses(cl, m)
+    new_form <- as.formula(paste0('~',paste0(terms, collapse = '+')))
+    X <- model.matrix(new_form, m, contrasts.arg = object$contrasts)
+    aa <- attr(X, "assign")
+    
+    hasintercept <- attr(tt, "intercept") > 0L
+    if (hasintercept){
+      ll <- c("(Intercept)", terms)
+      keep <- c(1,keep+1)
+      n_terms <- n_terms + 1
+    }
+    aaa <- factor(aa, labels = ll)
+    asgn <- split(order(aa), aaa)
+    
+    # keep the coefficients we need
+    coeff_names <- dimnames(X)[[2]]
+    # NEW- populate beta
+    beta <- vector('list', length = length(coeff_names))
+    names(beta) <- coeff_names
+    beta[1:length(beta)] <- 0
+    for(i in 1:length(beta)){
+      if(names(beta)[i] %in% names(object$coefficients)){
+        beta[i] <- object$coefficients[names(beta)[i]]
+      }
+    }
+    beta <- unlist(beta)
+    beta[is.na(beta)] <- 0 # glm returns NA for coefficients it drops from the model - zero ensures no contribution
+    predictor <- matrix(ncol = n_terms, nrow = NROW(X))
+    for(i in seq.int(1L, n_terms, length.out = n_terms)) {
+      ii <- asgn[[i]]
+      predictor[, i] <- X[, ii, drop = FALSE] %*% beta[ii]
+    }
+    result <- data.table(predictor)
+    setnames(result, levels(aaa))
+  }
+  return(result)
+}
+uncentered_vars <- function(uncentered_terms, var_terms){
+  uc_vars <- setNames(data.table(matrix(nrow = nrow(uncentered_terms), ncol = length(var_terms))), names(var_terms))
+  for(i in 1:length(var_terms)){
+    cols <- var_terms[[i]]$terms
+    if(all(cols %in% names(uncentered_terms))){
+      uc_vars[,i] <- uncentered_terms[,rowSums(.SD),.SDcols=cols]
+    }
+  }
+  uc_vars
+}
+feature_banding <- function(d, feature_col, feature_spec){
+  if(inherits(d[[feature_col]], 'factor')){
+    levels(d[[feature_col]])
+  } else if (inherits(d[[feature_col]], c('integer','numeric'))){
+    f_min <- feature_spec[feature==feature_col,'min'][[1]]
+    f_max <- feature_spec[feature==feature_col,'max'][[1]]
+    f_banding <- feature_spec[feature==feature_col,'banding'][[1]]
+    # check for NAs or empties
+    # and derive banding from raw data if so
+    got_banding <- T
+    if(any(length(f_min)==0,length(f_max)==0,length(f_banding)==0)) got_banding <- F
+    if(any(is.na(f_min),is.na(f_max),is.na(f_banding))) got_banding <- F
+    if(!got_banding){
+      f_min <- min(d[[feature_col]])
+      f_max <- max(d[[feature_col]])
+      f_banding <- banding_guesser(d[[feature_col]])
+      f_min <- floor(f_min/f_banding)*f_banding
+      f_max <- floor(f_max/f_banding)*f_banding + f_banding
+    }
+    seq(from = f_min, to = f_max, by = f_banding)
+  }
+}
+position <- function(input_attr, test_attr){
+  # calculate the positions of each element of input_attr within test_attr
+  input_char <- as.character(input_attr)
+  test_attr <- as.character(test_attr)
+  which(test_attr %in% input_char)
+}
+drop.terms2 <- function (termobj, dropx = NULL, keep.response = FALSE){
+  # copy of drop.terms from glm to correctly handle predvars and dataClasses
+  if (is.null(dropx)) 
+    termobj
+  else {
+    if (!inherits(termobj, "terms")) 
+      stop(gettextf("'termobj' must be a object of class %s", dQuote("terms")), domain = NA)
+    newformula <- reformulate(attr(termobj, "term.labels")[-dropx], 
+                              response = if (keep.response) 
+                                termobj[[2L]], intercept = attr(termobj, "intercept"), 
+                              env = environment(termobj))
+    result <- terms(newformula, specials = names(attr(termobj, "specials")))
+    response <- attr(termobj, "response")
+    dropOpt <- if (response && !keep.response) 
+      c(response, dropx + length(response))
+    else dropx + max(response)
+    loc <- position(attr(termobj, 'term.labels')[dropx], attr(termobj, 'var'))
+    # extract the individual term labels in termobj
+    # stripping down interaction terms (that use ":")
+    tl <- attr(termobj, 'term.labels')[-dropx]
+    int_tl <- tl[grep(':', tl)]
+    if(length(int_tl)>0){
+      int_tl <- unique(unlist(strsplit(int_tl, ':')))
+    }
+    tl <- unique(c(tl,int_tl))
+    
+    # find where the term labels are in attr(termobj, 'var')
+    # and keep only those in predvars and dataClasses
+    keep_loc <- position(tl, attr(termobj, 'var'))
+    if (!is.null(predvars <- attr(termobj, "predvars"))) {
+      attr(result, "predvars") <- predvars[c(1,keep_loc)]
+    }
+    if (!is.null(dataClasses <- attr(termobj, "dataClasses"))) {
+      attr(result, "dataClasses") <- dataClasses[(keep_loc-1)] 
+    }
+    result
+  }
+}
+prepare_glm_tabulations <- function(dt, var_terms, feature_spec){
+  tabulations <- list()
+  tabulations[['base']] <- data.table(base=0L)
+  if(!is.null(var_terms)){
+    for(i in 1:length(var_terms)){
+      # get the vars and terms
+      terms <- var_terms[[i]][[1]]
+      vars <- unlist(strsplit(names(var_terms)[[i]], '|', fixed = TRUE))
+      banded_vars <- list()
+      for(j in 1:length(vars)){
+        banded_vars[[vars[j]]] <- feature_banding(dt, vars[j], feature_spec)
+      }
+      # create data.table with all combinations of banded_vars
+      expanded_vars <- expand.grid(banded_vars)
+      tabulations[[names(var_terms)[i]]] <- setDT(expanded_vars)
+    }
+  }
+  return(tabulations)
+}
+predict_on_tabulations <- function(tabulations, glm, var_terms){
+  # first table is the base level
+  # pick up the glm intercept
+  if('(Intercept)' %in% names(glm$coefficients)){
+    tabulations[['base']][, base:= glm$coefficients[['(Intercept)']]]
+  } else {
+    tabulations[['base']][, base := 0]
+  }
+  if(!is.null(var_terms)){
+    for(i in 2:length(tabulations)){
+      predictions <- uncentered_terms_new(glm, newdata = tabulations[[i]], terms = var_terms[[i-1]]$terms)
+      if('(Intercept)' %in% names(predictions)){
+        predictions[, `(Intercept)`:=NULL]
+      }
+      total <- rowSums(predictions)
+      tabulations[[i]] <- cbind(tabulations[[i]], predictions, total)
+    }
+  }
+  return(tabulations)
+}
+adjust_base_levels <- function(tabulations, feature_spec){
+  cumulative_adjustment <- 0
+  if(length(tabulations)>1){
+    for(i in 2:length(tabulations)){
+      # get the base levels for the table
+      vars <- unlist(strsplit(names(tabulations)[i], '|', fixed = TRUE))
+      base_levels <- tabulations[[i]][1,1:length(vars)]
+      all_present <- TRUE
+      for(j in 1:length(vars)){
+        b <- feature_spec[feature==vars[j], base_level]
+        if(!inherits(tabulations[[i]][[j]], c('character','factor'))){
+          b <- as.numeric(b)
+        }
+        if(shiny::isTruthy(b)){
+          base_levels[[j]][1] <- b
+        } else {
+          base_levels[[j]][1] <- NA
+          all_present <- FALSE
+        }
+      }
+      # identify the base level row in tabulations
+      if(all_present){
+        setkeyv(tabulations[[i]], vars)
+        setkeyv(base_levels, vars)
+        adjustment <- tabulations[[i]][base_levels]$total
+      } else {
+        adjustment <- 0
+      }
+      tabulations[[i]][['total']] <- tabulations[[i]][['total']] - adjustment
+      cumulative_adjustment <- cumulative_adjustment + adjustment
+    }
+  }
+  # adjust the base level
+  tabulations[['base']] <- tabulations[['base']] + cumulative_adjustment
+  return(tabulations)
+}
+band_var_with_feature_spec <- function(x, var_name, feature_spec){
+  if(inherits(x, c('character','factor'))){
+    x
+  } else {
+    got_banding <- T
+    if(is.null(feature_spec)){
+      got_banding <- F
+    } else {
+      f_min <- feature_spec$min[feature_spec$feature==var_name]
+      f_max <- feature_spec$max[feature_spec$feature==var_name]
+      f_banding <- feature_spec$banding[feature_spec$feature==var_name]
+      if(any(length(f_min)==0,length(f_max)==0,length(f_banding)==0)) got_banding <- F
+      if(any(is.na(f_min),is.na(f_max),is.na(f_banding))) got_banding <- F
+    }
+    if(!got_banding){
+      # derive banding from raw data
+      f_min <- min(x)
+      f_max <- max(x)
+      f_banding <- banding_guesser(x)
+      f_min <- floor(f_min/f_banding)*f_banding
+      f_max <- floor(f_max/f_banding)*f_banding + f_banding
+    }
+    # band and apply min/max
+    x <- floor(x/f_banding)*f_banding
+    x <- pmax(f_min, pmin(f_max, x))
+  }
+  return(x)
+}
+predict_tabulations <- function(dt, tabulations, feature_spec, link){
+  # matrix to hold the predictions for each table in tablulations
+  # and each row in dt
+  predictions <- matrix(data=NA, nrow=nrow(dt),ncol=length(tabulations))
+  # base level is the same for every row
+  predictions[,1] <- tabulations[[1]][['base']]
+  if(length(tabulations)>1){
+    # loop over the remaining tables
+    for(i in 2:length(tabulations)){
+      vars <- unlist(strsplit(names(tabulations)[[i]], '|', fixed = TRUE))
+      dt_var_cols <- dt[, ..vars]
+      # band numerical columns
+      for(v in vars){
+        x_banded <- band_var_with_feature_spec(dt_var_cols[[v]],v,feature_spec)
+        dt_var_cols[, (v):= x_banded]
+      }
+      # create index col so can reorder after merge
+      dt_var_cols[, row_idx_temp := 1:.N]
+      # now values are banded, we can
+      # merge tabulation onto dt_var_cols
+      setkeyv(dt_var_cols, vars)
+      setkeyv(tabulations[[i]], vars)
+      merged <- tabulations[[i]][dt_var_cols]
+      setorder(merged, 'row_idx_temp')
+      predictions[,i] <- merged$total
+    }
+  }
+  predictions_dt <- data.table(predictions)
+  setnames(predictions_dt, names(tabulations))
+  predictions_dt[, total := rowSums(predictions_dt)]
+  predictions_dt <- exp(predictions_dt)
+  return(predictions_dt)
+}
+extract_offsets <- function(glm){
+  tt <- glm$terms
+  offset_idx <- attr(tt, 'offset')
+  as.character(attr(glm$terms, 'predvar')[offset_idx+1])
+}
+predict_offsets <- function(dt, offsets){
+  results <- matrix(data=NA, nrow=nrow(dt), ncol = length(offsets))
+  for(i in 1:length(offsets)){
+    results[,i] <- dt[, eval(parse(text = offsets[i]))]
+  }
+  results <- data.table(results)
+  setnames(results, offsets)
+  return(results)
+}
+offset_importances <- function(dt, offsets){
+  results <- data.table(names = offsets, importance = 0)
+  for(i in 1:length(offsets)){
+    x <- dt[, eval(parse(text = offsets[i]))]
+    results[i,importance := sd(x)]
+  }
+  return(results)
+}
+calc_terms_importances <- function(glm){
+  offsets <- extract_offsets(glm)
+  terms_predictions <- predict(glm, type = 'terms')
+  if(length(offsets)>0){
+    offsets_predictions <- predict_offsets(dt, offsets)
+    terms_offset_predictions <- cbind(terms_predictions, offsets_predictions)
+  } else {
+    terms_offset_predictions <- data.table(terms_predictions)
+  }
+  if(ncol(terms_offset_predictions)>0){
+    terms_importances <- apply(terms_offset_predictions, 2, sd)
+    terms_importances <- data.table(names = names(terms_importances), importance = terms_importances)[order(-importance)]
+    var_importances <- uncentered_vars(terms_offset_predictions, var_terms)
+    var_importances <- apply(var_importances, 2, sd)
+    var_importances <- data.table(names = names(var_importances), importance = var_importances)[order(-importance)]
+  } else {
+    terms_importances <- NA
+    var_importances <- NA
+  }
+  return(list(terms=terms_importances, vars = var_importances))
+}

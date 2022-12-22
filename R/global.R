@@ -27,6 +27,17 @@ globalVariables(
     'lgbm_prediction',
     'glm_prediction',
     '..non_lucidum_cols',
-    '..lucidum_cols'
+    '..lucidum_cols',
+    'base_level',
+    'importance',
+    'var_terms',
+    '..cols_to_summarise',
+    'difference',
+    'sigma_bar',
+    '(Intercept)',
+    '..vars',
+    'row_idx_temp',
+    'total',
+    'base'
     )
   )
