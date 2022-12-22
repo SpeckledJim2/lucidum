@@ -51,30 +51,30 @@ mod_DataR_columnSummary_server <- function(id, d, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     selected_row <- reactiveVal(NULL)
-    output$column_summary <- renderDT({
-      dt_update()
-      format_column_summary_DT(
-        get_column_summary(d(), sample = FALSE, columns_to_display = input$columns_to_display),
-        isolate(selected_row())
-      )
+    selected_feature <- reactiveVal(NULL)
+    column_summary <- reactiveVal(NULL)
+    observeEvent(c(d(), dt_update(), input$columns_to_display), {
+      col_sum <- get_column_summary(d(), sample = FALSE, columns_to_display = input$columns_to_display)
+      column_summary(col_sum)
+      # QUESTION - why do I need an isolate here?
+      # we are inside an observeEvent
+      output$column_summary <- renderDT({format_column_summary_DT(col_sum, isolate(selected_row()))})
     })
-    output$feature <- renderUI({
-      if(!is.null(input$column_summary_rows_selected)){
-        selected_row(input$column_summary_rows_selected)
-        col <- names(d())[input$column_summary_rows_selected]
-      } else {
-        selected_row(NULL)
-        col <- 'select feature'
-      }
-      p(col, style = 'font-size: 20px; margin-top: 18px; margin-bottom:-15px')
+    observeEvent(input$column_summary_rows_selected, {
+      selected_row(input$column_summary_rows_selected)
+      selected_feature(column_summary()[[1]][selected_row()])
     })
-    output$feature_summary <- renderDT({
-      if(!is.null(input$column_summary_rows_selected)){
-        col <- names(d())[input$column_summary_rows_selected]
-        format_feature_summary_DT(
-          get_feature_summary(d(), col)
-        )
-      }
+    observeEvent(c(selected_feature(), dt_update()), {
+      output$feature <- renderUI({
+        p(selected_feature(), style = 'font-size: 20px; margin-top: 18px; margin-bottom:-15px')
+      })
+      output$feature_summary <- renderDT({
+        if(!is.null(selected_feature())){
+          format_feature_summary_DT(
+            get_feature_summary(d(), selected_feature())
+          )
+        }
+      })
     })
   })
 }
@@ -151,75 +151,82 @@ countNAs <- function(x){
   sum(is.na(x))
 }
 get_feature_summary <- function(d, col){
-  if(col %in% names(d)){
-    x <- d[which(total_filter==1)][[col]]
-    if(is.null(x)){
-      # do nothing
-    } else if(class(x)[1] %in% c('numeric','logical','integer','POSIXct','Date','IDate')){
-      metrics <- c('Min',
-                   '1st percentile',
-                   '5th percentile',
-                   '25th percentile',
-                   'Median',
-                   'Mean',
-                   '75th percentile',
-                   '95th percentile',
-                   '99th percentile',
-                   'Max',
-                   'Standard deviation'
-      )
-      summary <- data.table(
-        metrics=c('Min',
-                  '1st percentile',
-                  '5th percentile',
-                  '25th percentile',
-                  'Median',
-                  'Mean',
-                  '75th percentile',
-                  '95th percentile',
-                  '99th percentile',
-                  'Max',
-                  'Standard deviation'
-                  ),
-        value=rep(0,11)
+  if(!is.null(d) & !is.null(col)){
+    if(col %in% names(d)){
+      x <- d[which(total_filter==1)][[col]]
+      if(is.null(x)){
+        # do nothing
+      } else if(class(x)[1] %in% c('numeric','logical','integer','POSIXct','Date','IDate')){
+        metrics <- c('Min',
+                     '1st percentile',
+                     '5th percentile',
+                     '25th percentile',
+                     'Median',
+                     'Mean',
+                     '75th percentile',
+                     '95th percentile',
+                     '99th percentile',
+                     'Max',
+                     'Standard deviation'
         )
-      summary[1, value := min(x,na.rm=TRUE)]
-      summary[2, value := stats::quantile(x,prob=0.01,na.rm=TRUE, type = 8)]
-      summary[3, value := stats::quantile(x,prob=0.05,na.rm=TRUE, type = 8)]
-      summary[4, value := stats::quantile(x,prob=0.25,na.rm=TRUE, type = 8)]
-      summary[5, value := stats::quantile(x,prob=0.50,na.rm=TRUE, type = 8)]
-      summary[6, value := mean(x, na.rm = TRUE)]
-      summary[7, value := stats::quantile(x,prob=0.75,na.rm=TRUE, type = 8)]
-      summary[8, value := stats::quantile(x,prob=0.95,na.rm=TRUE, type = 8)]
-      summary[9, value := stats::quantile(x,prob=0.99,na.rm=TRUE, type = 8)]
-      summary[10, value := max(x,na.rm=TRUE)]
-      summary[11, value := stats::sd(x,na.rm=TRUE)]
-      if(class(x)[1] %in% c('numeric')){
-        summary[, value := signif(value, 6)]
+        summary <- data.table(
+          metrics=c('Min',
+                    '1st percentile',
+                    '5th percentile',
+                    '25th percentile',
+                    'Median',
+                    'Mean',
+                    '75th percentile',
+                    '95th percentile',
+                    '99th percentile',
+                    'Max',
+                    'Standard deviation'
+          ),
+          value=rep(0,11)
+        )
+        summary[1, value := min(x,na.rm=TRUE)]
+        summary[2, value := stats::quantile(x,prob=0.01,na.rm=TRUE, type = 8)]
+        summary[3, value := stats::quantile(x,prob=0.05,na.rm=TRUE, type = 8)]
+        summary[4, value := stats::quantile(x,prob=0.25,na.rm=TRUE, type = 8)]
+        summary[5, value := stats::quantile(x,prob=0.50,na.rm=TRUE, type = 8)]
+        summary[6, value := mean(x, na.rm = TRUE)]
+        summary[7, value := stats::quantile(x,prob=0.75,na.rm=TRUE, type = 8)]
+        summary[8, value := stats::quantile(x,prob=0.95,na.rm=TRUE, type = 8)]
+        summary[9, value := stats::quantile(x,prob=0.99,na.rm=TRUE, type = 8)]
+        summary[10, value := max(x,na.rm=TRUE)]
+        summary[11, value := stats::sd(x,na.rm=TRUE)]
+        if(class(x)[1] %in% c('numeric')){
+          summary[, value := signif(value, 6)]
+        }
+      } else {
+        frequencies <- sort(table(x, useNA = 'ifany'),decreasing=TRUE)
+        summary <- as.data.table(frequencies)
+        names(summary) <- c('Level','count')
+        num_levels <- nrow(summary)
+        if(num_levels>10000){
+          other_total <- summary[10001:.N, sum(count)]
+          summary <- summary[1:10000,]
+          summary <- rbind(data.table(value='Levels outside top 10k', count = other_total), summary)
+        }
       }
-    } else {
-      frequencies <- sort(table(x, useNA = 'ifany'),decreasing=TRUE)
-      summary <- as.data.table(frequencies)
-      names(summary) <- c('Level','count')
-      num_levels <- nrow(summary)
-      if(num_levels>10000){
-        other_total <- summary[10001:.N, sum(count)]
-        summary <- summary[1:10000,]
-        summary <- rbind(data.table(value='Levels outside top 10k', count = other_total), summary)
+      if(class(x)[1] %in% c('IDate','POSIXct','Date')){
+        sd <- as.character(as.numeric(summary[nrow(summary), value]))
+        summary[nrow(summary), value := as.numeric(as.Date(value))]
+        summary[, value := as.character(as.Date(value))]
+        summary[nrow(summary), value := sd]
       }
+      summary
     }
-    if(class(x)[1] %in% c('IDate','POSIXct','Date')){
-      sd <- as.character(as.numeric(summary[nrow(summary), value]))
-      summary[nrow(summary), value := as.numeric(as.Date(value))]
-      summary[, value := as.character(as.Date(value))]
-      summary[nrow(summary), value := sd]
-    }
-    summary
   }
 }
 
 #' @importFrom DT datatable formatStyle formatSignif
 format_column_summary_DT <- function(d, selected_row){
+  if(!is.null(selected_row)){
+    if(selected_row>nrow(d)){
+      selected_row <- 1
+    }
+  }
   pg_length <- min(100, nrow(d))
   dt <- datatable(d,
                   rownames= FALSE,
