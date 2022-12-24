@@ -93,8 +93,10 @@ mod_BoostaR_navigate_ui <- function(id){
               style = 'margin-top:16px; margin-bottom:-16px',
               actionButton(
                 inputId = ns('BoostaR_gain_table_goto_ChartaR'),
-                label = tags$img(src='www/SHAP.png', height='16px', width='16px')
-              )
+                label = tags$img(src='www/SHAP.png', height='26px', width='26px'),
+                style = 'padding:3px 5px 3px 5px'
+              ),
+              tippy_this(ns('BoostaR_gain_table_goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature(s) in ChartaR',12))
             )
           )
         ),
@@ -149,7 +151,8 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
                                          )
                         )
           ) |>
-          DT::formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '12px')
+          formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '12px') |>
+          formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(BoostaR_idx(), rgb(100/255,180/255,220/255)))
       })
     })
     observeEvent(BoostaR_idx(), {

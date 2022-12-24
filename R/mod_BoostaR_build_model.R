@@ -99,8 +99,10 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             actionButton(
               inputId = ns("BoostaR_goto_ChartaR"),
-              label = tagList(tags$img(src='www/one_way_line_bar.png', height="16px", width="16px")),
-            )
+              label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
+              style = 'padding:3px 5px 3px 5px'
+            ),
+            tippy_this(ns('BoostaR_goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature in ChartaR',12))
           )
         ),
         div(rHandsontableOutput(ns("BoostaR_features")), style = 'font-size: 12px')

@@ -159,12 +159,16 @@ insertDashboardHeader <- function(x, show){
 
 dashboardButton <- function(ns, button_name, icon_file, tooltip_text, golem_option, bs, pd){
   icon_file <- paste0('www/', icon_file, '.png')
-  tooltip_text <- paste0("<span style='font-size:12px;'>",tooltip_text,"<span>")
+  #tooltip_text <- paste0("<span style='font-size:12px;'>",tooltip_text,"<span>")
   insertDashboardHeader(
     tagList(
       actionButton(inputId = ns(button_name), label = tagList(tags$img(src=icon_file, height=bs, width=bs)), style = pd),
-      tippy_this(ns(button_name), placement = 'bottom', tooltip = tooltip_text)
+      tippy_this(ns(button_name), placement = 'bottom', tooltip = tippy_text(tooltip_text,12))
     ),
     get_golem_options(golem_option)
   )
+}
+
+tippy_text <- function(text, size){
+  paste0("<span style='font-size:", size, "px;'>",text,"<span>")
 }

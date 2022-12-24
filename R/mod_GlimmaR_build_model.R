@@ -244,8 +244,10 @@ mod_GlimmaR_build_model_ui <- function(id){
             br(),
             actionButton(
               inputId = ns('goto_ChartaR'),
-              label = tagList(tags$img(src='www/one_way_line_bar.png', height="16px", width="16px")),
-            )
+              label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
+              style = 'padding:3px 5px 3px 5px'
+            ),
+            tippy_this(ns('goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature in ChartaR',12))
           )
         ),
         br(),
@@ -254,7 +256,9 @@ mod_GlimmaR_build_model_ui <- function(id){
     )
   )
 }
-    
+
+
+
 #' buildGlimmaR Server Functions
 #'
 #' @import splines
@@ -546,6 +550,8 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
             # calculate linear predictor split by feature
             incProgress(0.1, detail = 'LP terms')
             LP_contributions <- gather_glm_terms(d[non_zero_weight_rows], glm_model)
+            # calculate the term and feature importances
+            importances <- calc_terms_importances(glm_model)
             # return GlimmaR_model
             l <- list(time = time,
                       predictions = fitted_glm,
@@ -566,6 +572,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                       dispersion = dispersion_estimate(glm_model),
                       count_NAs = count_NAs,
                       LP_contributions = LP_contributions,
+                      importances = importances,
                       message = message
             )
           }
