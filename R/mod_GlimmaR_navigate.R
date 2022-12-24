@@ -94,18 +94,72 @@ mod_GlimmaR_navigate_ui <- function(id){
              DTOutput(ns('model_summary')
              )
       )
+    ),
+    fluidRow(
+      column(
+        width = 6,
+        fluidRow(
+          column(
+            width = 12,
+            h3('Model details'),
+          )
+        ),
+        DTOutput(ns('detailed_model_summary'))
+      ),
+      column(
+        width = 6,
+        fluidRow(
+          column(
+            width = 5,
+            h3('Importances')
+          ),
+          column(
+            width = 5,
+            align = 'right',
+            div(
+              style = 'margin-top:16px; margin-bottom:-16px',
+              radioGroupButtons(
+                inputId = ns('importance_type'),
+                label = NULL,
+                choices = c('Features','Terms'),
+                selected = 'Features'
+              )
+            )
+          ),
+          column(
+            width = 2,
+            align = 'right',
+            div(
+              style = 'margin-top:16px; margin-bottom:-16px',
+              actionButton(
+                inputId = ns('GlimmaR_gain_table_goto_ChartaR'),
+                label = tags$img(src='www/SHAP.png', height='26px', width='26px'),
+                style = 'padding:3px 5px 3px 5px'
+              ),
+              tippy_this(ns('GlimmaR_gain_table_goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature(s) in ChartaR SHAP plot',12))
+            )
+          )
+        ),
+        DTOutput(ns('importance_summary'))
+      )
     )
   )
 }
     
 #' navigateGlimmaR Server Functions
 #'
+#' @importFrom DT styleEqual
+#'
 #' @noRd 
 mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, tabulated_models){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(GlimmaR_models(), {
-      output$model_summary <- DT::renderDT({
+      # QUESTION - this still triggers when GlimmaR_idx() is changed
+      # which is what I want to happen
+      # but why? We are inside an observeEvent
+      # or by creating output$model_summary does it remain "reactive" once created?
+      output$model_summary <- renderDT({
         # model summary table
         dt <- GlimmaR_model_summary(GlimmaR_models())
         dt |>
@@ -116,7 +170,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                        initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'Bfrt',
                                        scrollX = T,
-                                       scrollY = 'calc(70vh)',
+                                       scrollY = 'calc(20vh)',
                                        searchHighlight=TRUE,
                                        buttons =
                                          list('colvis', 'copy', list(
@@ -128,7 +182,36 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                          )
                         )
           ) |>
-          DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px') |>
+          formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(GlimmaR_idx(), rgb(100/255,180/255,220/255)))
+      })
+    })
+    observeEvent(c(GlimmaR_models(), GlimmaR_idx()), {
+      output$importance_summary <- renderDT({
+        # model summary table
+        if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
+          if(input$importance_type=='Terms'){
+            dt <- GlimmaR_models()[[GlimmaR_idx()]]$importances[[1]]
+          } else {
+            dt <- GlimmaR_models()[[GlimmaR_idx()]]$importances[[2]]
+          }
+        } else {
+          dt <- data.table('V1'='No GLMs')
+        }
+        dt |>
+          DT::datatable(rownames= FALSE,
+                        extensions = 'Buttons',
+                        selection='single',
+                        options = list(pageLength = nrow(dt),
+                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                       dom = 'rt',
+                                       scrollX = T,
+                                       scrollY = 'calc(80vh - 380px)',
+                                       searchHighlight=TRUE
+                                       )
+          ) |>
+          formatRound('importance', 4) |>
+          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
       })
     })
     observeEvent(input$delete_model, {
@@ -183,11 +266,13 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
               tabulations_adj <- adjust_base_levels(tabulations, feature_spec())
               predictions <- predict_tabulations(d()[g$pred_rows], tabulations_adj, feature_spec())
               predictions <- cbind(predictions, glm_fitted = g$predictions)
-              sd_error <- sd(predictions$total-g$predictions)
+              # calculate the sd between glm prediction and tabulated prediction
+              sd_error <- sd(link_function(predictions$total, g$link)-g$predictions)
               # save the tabulations into the GlimmaR model
               temp <- GlimmaR_models()
               temp[[model_name]][['tabulations']] <- tabulations_adj
               temp[[model_name]][['tabulated_predictions']] <- predictions
+              temp[[model_name]][['tabulated_error']] <- sd_error
               GlimmaR_models(temp)
               # save into list - THIS WILL GO AWAY
               temp <- tabulated_models()
@@ -1129,6 +1214,12 @@ offset_importances <- function(dt, offsets){
 calc_terms_importances <- function(glm){
   offsets <- extract_offsets(glm)
   terms_predictions <- predict(glm, type = 'terms')
+  glm_term_summary <- summarise_glm_vars(glm)
+  if(!is.null(glm_term_summary)){
+    var_terms <- split(glm_term_summary, by ='vars', keep.by = FALSE)
+  } else {
+    var_terms <- NULL
+  }
   if(length(offsets)>0){
     offsets_predictions <- predict_offsets(dt, offsets)
     terms_offset_predictions <- cbind(terms_predictions, offsets_predictions)

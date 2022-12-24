@@ -150,26 +150,30 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms){
         dt <- dt[, ..keep_cols]
       }
     }
+    if(vars[1]=='base'){
+      transform_idx <- 1
+    } else {
+      transform_idx <- setdiff(1:ncol(dt), 1:length(vars))
+    }
     if(transform=='exp'){
-      if(vars[1]=='base'){
-        transform_idx <- 1
-      } else {
-        transform_idx <- setdiff(1:ncol(dt), 1:length(vars))
-      }
-      transform_cols <- names(dt)[transform_idx]
-      dt[, (transform_cols) := exp(.SD),.SDcols=transform_cols]
+      dt[, (transform_idx) := exp(.SD),.SDcols=transform_idx]
+    }
+    if(nrow(dt)>1000){
+      dt <- head(dt,1000)
     }
     if(!is.null(dt)){
-      t <- dt %>% DT::datatable(rownames= TRUE,
-                                options = list(pageLength = nrow(dt),
-                                               dom = 'Bfrti',
-                                               scrollX = T,
-                                               scrollY = 'calc(100vh - 380px)',
-                                               columnDefs = list(list(visible = F, targets = 0)
-                                               )
-                                )
-      ) %>%
-        DT::formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '80%')
+      t <- dt |> datatable(
+        rownames= TRUE,
+        options = list(pageLength = nrow(dt),
+                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                       dom = 'Bfrti',
+                       scrollX = T,
+                       scrollY = 'calc(100vh - 380px)',
+                       columnDefs = list(list(visible = F, targets = 0))
+                       )
+        ) |>
+        formatStyle(columns = 1:ncol(dt), lineHeight='0%', fontSize = '12px') |>
+        formatRound(columns = transform_idx, digits = 6)
     } else {
       t <- data.table(V1 = 'no model tabulated') %>% DT::datatable()
     }

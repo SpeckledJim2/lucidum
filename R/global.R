@@ -1,3 +1,6 @@
+# QUESTION - these are all caused by data.table
+# and the way it works by reference
+# does it matter at all?
 globalVariables(
   c('PostcodeArea',
     'PostcodeArea_name',
@@ -38,6 +41,8 @@ globalVariables(
     '..vars',
     'row_idx_temp',
     'total',
-    'base'
+    'base',
+    '..keep_cols',
+    'glm_tabulated_prediction'
     )
   )
