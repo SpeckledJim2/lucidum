@@ -626,14 +626,14 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     yform2$overlaying <- 'y'
     yform2$side <- 'left'
     if(show_response=='Show'){
-      yform2$range <- return_y_axis_limits(as.matrix(dt[,first_line_col:ncol(dt)]))
+      yform2$range <- return_y_axis_limits(as.matrix(dt[, first_line_col:last_line_col]))
     } else if (show_response=='Hide'){
       if(ncol(dt)==last_line_col){
         col <- first_line_col
       } else {
         col <- last_line_col+1
       }
-      yform2$range <- return_y_axis_limits(as.matrix(dt[,col:ncol(dt)]))
+      yform2$range <- return_y_axis_limits(as.matrix(dt[, col:ncol(dt)]))
     }
     yform2$showgrid <- TRUE
     yform2$title <- boldify(names(dt)[first_line_col])
