@@ -157,7 +157,7 @@ histogram_table <- function(d, response, weight, kpi_spec){
       x[19, Value := quantile(value, prob = 0.995, na.rm = TRUE)[[1]]]
       x[20, Value := quantile(value, prob = 0.999, na.rm = TRUE)[[1]]]
       x[21, Value := max(value, na.rm = TRUE)]
-      x[, Value := as.character(format(Value, big.mark = ',', digits = 2))]
+      x[, Value := trimws(as.character(format(Value, big.mark = ',', scientific = FALSE, digits = 6)))]
       x
     }
   }
