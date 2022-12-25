@@ -45,7 +45,7 @@ mod_MappaR_ui <- function(id){
                            textOutput(ns('filters'))
                     )
                   ),
-                  br(),
+                  #br(),
                   fluidRow(
                     column(width = 12,
                            searchInput(
@@ -64,7 +64,7 @@ mod_MappaR_ui <- function(id){
                              min = 0,
                              max = 5,
                              value = 1,
-                             step = 0.1,
+                             step = 0.5,
                              ticks = FALSE,
                              width = '100%'
                            ),
@@ -74,7 +74,7 @@ mod_MappaR_ui <- function(id){
                              min = 0,
                              max = 1,
                              value = 1.00,
-                             step = 0.05,
+                             step = 0.1,
                              ticks = FALSE,
                              width = '100%'
                            ),
@@ -251,11 +251,11 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show
         viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
       }
     })
-    observeEvent(input$map_shape_mouseover,{
-      pointId <- input$map_shape_mouseover$id
-      output$panel_title <- renderText({pointId})
-      output$panel_location <- renderUI(({return_mouse_hover_postcode(pointId)}))
-    })
+    #observeEvent(input$map_shape_mouseover,{
+      #pointId <- input$map_shape_mouseover$id
+      #output$panel_title <- renderText({pointId})
+      #output$panel_location <- renderUI(({return_mouse_hover_postcode(pointId)}))
+    #})
     observeEvent(input$dark_mode, {
       if(input$dark_mode){
         session$sendCustomMessage("background-color", "#242d31")
@@ -379,7 +379,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
           smoothFactor = 0,
           fillColor = area_fillColor,
           fillOpacity = map_options$opacity * opacity_area_modifier,
-          label = lapply(paste(sep = "", '<b>',areas_sf$PostcodeArea,'</b><br/>',area_labels), HTML),
+          label = postcode_hover_labels(areas_sf, area_labels, response, weight),
           labelOptions = labelOptions(textOnly = FALSE, style=label_style),
           highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
           options = pathOptions(pane = "area_polygons")) |>
@@ -395,6 +395,39 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
           )
     }
   }
+}
+
+postcode_hover_labels <- function(areas_sf, area_labels, response, weight){
+  weights <- areas_sf[[weight]]
+  nmes <- postcode_area_name_mapping[order(PostcodeArea),PostcodeArea_name]
+  postcode_area_name_mapping <- postcode_area_name_mapping[order(PostcodeArea)]
+  lapply(
+    paste(
+      sep = "",
+      "<span style='font-size:48px; font-weight:200'>",
+      areas_sf$PostcodeArea,
+      "</span>",
+      '<br/>',
+      "<span style='font-size:16px; font-weight:400; color: rgb(60,141,188)'>",
+      nmes,
+      "</span>",
+      '<br/>',
+      "<span style='font-size:16px; font-weight:400'>",
+      response,
+      ': ',
+      "</span>",
+      "<span style='font-size:16px; font-weight:400'>",
+      area_labels,
+      "</span>",
+      '<br/>',
+      "<span style='font-size:16px; font-weight:400; color: grey'>",
+      weight,
+      ': ',
+      weights,
+      "</span>"
+      ),
+    HTML
+    )
 }
 
 #' Summarise dataset columns by postcode
@@ -426,7 +459,7 @@ postcode_summary <- function(d, response, weight, resolution){
   }
   setnames(d_cols, c('resolution','response','weight'))
   summary <- d_cols[, list(V1 = sum(weight, na.rm = TRUE), V2 = sum(response, na.rm = TRUE)), by = 'resolution']
-  setnames(summary, c(resolution, response, weight))
+  setnames(summary, c(resolution, weight, response))
   return(summary)
 }
 base_map <- function(){
