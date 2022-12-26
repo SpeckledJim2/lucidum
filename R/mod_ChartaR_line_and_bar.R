@@ -228,8 +228,27 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
             banded_col <- banded[rows_idx]
           } else {
-            banded_col <- group_by_col
-            new_colname <- group_by_col
+            # group low weight groups into a single group
+            if(group_low_exposure!='0' & weight != 'no weights'){
+              if(weight %in% c('N','no weights')){
+                d_summary <- d[rows_idx, .(weight = .N), group_by_col]
+              } else {
+                d_summary <- d[rows_idx, .(weight = lapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = weight]
+              }
+              if(group_low_exposure=='1%'){
+                min_exposure <- 0.01 * sum(d_summary[,2])
+              } else {
+                min_exposure <- as.numeric(group_low_exposure)
+              }
+              low_weight_groups <- as.character(d_summary[weight<min_exposure, 1][[1]])
+              # replace low exposure groups with "Small weights"
+              banded_col <- as.character(g[rows_idx])
+              banded_col[banded_col %in% low_weight_groups] <- 'Small weights'
+              new_colname <- group_by_col
+            } else {
+              banded_col <- group_by_col
+              new_colname <- group_by_col
+            }
           }
           # assemble the columns we need in the summary
           if(weight %in% c('N','no weights')){
@@ -237,7 +256,11 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           } else {
             cols_to_summarise <- c(weight, response, add_cols)
           }
-          # summarise and order
+          # make banded_col a factor if a character
+          if(length(banded_col)>1 & inherits(banded_col, 'character')){
+            banded_col <- as.factor(banded_col)
+          }
+          # summarise data
           if(length(rows_idx)==nrow(d)){
             d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
           } else {
@@ -340,34 +363,34 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             d_summary <- cbind(d_summary, LP_summary[, 2])
           }
           # group low exposure rows and remove from summary
-          if(!is.numeric(g)){
-            min_exposure <- 0
-            if(group_low_exposure!='0' & weight != 'no weights'){
-              if(group_low_exposure=='1%'){
-                if(weight=='N'){
-                  min_exposure <- 0.01 * sum(d_summary[,2])
-                } else {
-                  min_exposure <- 0.01 * sum(d_summary[,3])
-                }
-              } else {
-                min_exposure <- as.numeric(group_low_exposure)
-              }
-              if(weight=='N'){
-                low_exposure_rows <- which(d_summary[[2]]<min_exposure)
-              } else {
-                low_exposure_rows <- which(d_summary[[3]]<min_exposure)
-              }
-              low_exposure_summary <- d_summary[low_exposure_rows,
-                                                lapply(.SD, sum, na.rm = TRUE),
-                                                .SDcols = 2:ncol(d_summary)]
-              if(nrow(low_exposure_summary)>0){
-                col <- names(d_summary)[1]
-                low_exposure_summary[, (col) := 'Small weights']
-                d_summary <- d_summary[-low_exposure_rows,]
-                d_summary <- rbind(d_summary, low_exposure_summary)
-              }
-            }
-          }
+          # if(!is.numeric(g)){
+          #   min_exposure <- 0
+          #   if(group_low_exposure!='0' & weight != 'no weights'){
+          #     if(group_low_exposure=='1%'){
+          #       if(weight=='N'){
+          #         min_exposure <- 0.01 * sum(d_summary[,2])
+          #       } else {
+          #         min_exposure <- 0.01 * sum(d_summary[,3])
+          #       }
+          #     } else {
+          #       min_exposure <- as.numeric(group_low_exposure)
+          #     }
+          #     if(weight=='N'){
+          #       low_exposure_rows <- which(d_summary[[2]]<min_exposure)
+          #     } else {
+          #       low_exposure_rows <- which(d_summary[[3]]<min_exposure)
+          #     }
+          #     low_exposure_summary <- d_summary[low_exposure_rows,
+          #                                       lapply(.SD, sum, na.rm = TRUE),
+          #                                       .SDcols = 2:ncol(d_summary)]
+          #     if(nrow(low_exposure_summary)>0){
+          #       col <- names(d_summary)[1]
+          #       low_exposure_summary[, (col) := 'Small weights']
+          #       d_summary <- d_summary[-low_exposure_rows,]
+          #       d_summary <- rbind(d_summary, low_exposure_summary)
+          #     }
+          #   }
+          # }
           # divide by weight if specified
           if(weight == 'N'){
             first_col <- 3
@@ -429,6 +452,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           if(length(add_cols)==1 & sigma_bars!=0){
             fitted <- add_cols[1]
             if(inherits(banded_col, 'character')){
+              # low exposure rows
               bands <- d[[banded_col]][rows_idx]
             } else {
               bands <- banded_col
