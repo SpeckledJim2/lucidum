@@ -390,13 +390,15 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
     observe({
       if(!is.null(BoostaR_idx())){
         b <- BoostaR_models()[[BoostaR_idx()]]
-        updateSelectInput(
-          session,
-          inputId = 'helper_feature',
-          choices = make_GlimmaR_helper_features(d(), b, input$helper_feature_choice, input$helper_search)
-          )
-        
+      } else {
+        b <- NULL
       }
+      updateSelectInput(
+        session,
+        inputId = 'helper_feature',
+        choices = make_GlimmaR_helper_features(d(), b, input$helper_feature_choice, input$helper_search)
+        )
+        
     })
     observe({
       updateSelectInput(session,
@@ -658,9 +660,9 @@ make_GlimmaR_helper_features <- function(d, BoostaR_model, choice, search){
   features <- NULL
   if(!is.null(d)){
     if(choice=='Original'){
-      features <- names(d)
+      features <- remove_lucidum_cols(names(d))
     } else if (choice=='A-Z'){
-      features <- sort(names(d))
+      features <- sort(remove_lucidum_cols(names(d)))
     } else if (choice=='GBM'){
       if(!is.null(BoostaR_model)){
         features <- BoostaR_model$importances$Feature
