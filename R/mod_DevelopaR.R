@@ -12,7 +12,7 @@ mod_DevelopaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'KPI specification', title = span(tagList(tags$img(src='www/kpi.png', height="20px", width="20px"), 'KPI specification')),
+                tabPanel(value = 'KPI specification', title = span(tagList(tags$img(src='www/kpi.png', height="30px", width="30px"), 'KPI specification')),
                          br(),
                          fluidRow(
                            column(
@@ -41,7 +41,7 @@ mod_DevelopaR_ui <- function(id){
                          tags$hr(style="border-color: black; margin-bottom: 6px"),
                          mod_editSpecification_ui(ns('kpi'))
                          ),
-                tabPanel(value = 'Feature specification', title = span(tagList(tags$img(src='www/features.png', height="20px", width="20px"), 'Feature specification')),
+                tabPanel(value = 'Feature specification', title = span(tagList(tags$img(src='www/features.png', height="30px", width="30px"), 'Feature specification')),
                          br(),
                          fluidRow(
                            column(
@@ -70,7 +70,7 @@ mod_DevelopaR_ui <- function(id){
                          tags$hr(style="border-color: black; margin-bottom: 6px"),
                          mod_editSpecification_ui(ns('feature'))
                          ),
-                tabPanel(value = 'Filter specification', title = span(tagList(tags$img(src='www/filter.png', height="20px", width="20px"), 'Filter specification')),
+                tabPanel(value = 'Filter specification', title = span(tagList(tags$img(src='www/filter.png', height="30px", width="30px"), 'Filter specification')),
                          br(),
                          fluidRow(
                            column(
@@ -99,7 +99,7 @@ mod_DevelopaR_ui <- function(id){
                          tags$hr(style="border-color: black; margin-bottom: 6px"),
                          mod_editSpecification_ui(ns('filter'))
                          ),
-                tabPanel(value = 'shinyAce', title = span(tagList(tags$img(src='www/shinyAce.png', height="20px", width="20px"), 'shinyAce')),
+                tabPanel(value = 'shinyAce', title = span(tagList(tags$img(src='www/shinyAce.png', height="30px", width="30px"), 'shinyAce')),
                          fluidRow(
                            column(
                              width = 12,

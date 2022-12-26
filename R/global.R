@@ -43,6 +43,7 @@ globalVariables(
     'total',
     'base',
     '..keep_cols',
-    'glm_tabulated_prediction'
+    'glm_tabulated_prediction',
+    '.'
     )
   )

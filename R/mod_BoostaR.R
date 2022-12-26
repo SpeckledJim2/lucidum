@@ -11,13 +11,13 @@ mod_BoostaR_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
-                tabPanel(value = 'Features and parameters', span(tagList(tags$img(src='www/BoostaR_features.png', height="20px", width="20px"), 'Features and parameters')),
+                tabPanel(value = 'Features and parameters', span(tagList(tags$img(src='www/BoostaR_features.png', height="30px", width="30px"), 'Features and parameters')),
                          mod_BoostaR_build_model_ui(ns('buildBoostaR'))
                          ),
-                tabPanel(value = 'Model navigator', span(tagList(tags$img(src='www/BoostaR_navigate.png', height="20px", width="20px"), 'Model navigator')),
+                tabPanel(value = 'Model navigator', span(tagList(tags$img(src='www/BoostaR_navigate.png', height="30px", width="30px"), 'Model navigator')),
                          mod_BoostaR_navigate_ui(ns('navigateBoostaR'))
                          ),
-                tabPanel(value = 'Tree viewer', title = span(tagList(tags$img(src='www/tree.png', height="20px", width="20px"), 'Tree viewer')),
+                tabPanel(value = 'Tree viewer', title = span(tagList(tags$img(src='www/tree.png', height="30px", width="30px"), 'Tree viewer')),
                          mod_BoostaR_tree_viewer_ui(ns('treeViewer'))
                 )
     ),

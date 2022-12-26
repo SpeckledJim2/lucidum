@@ -12,16 +12,16 @@ mod_ChartaR_ui <- function(id){
   tagList(
     tabsetPanel(id = ns('tabsetPanel'),
                 tabPanel(value = '1-way line and bar',
-                         title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="20px", width="20px"),'1-way line and bar')),
+                         title = span(tagList(tags$img(src='www/one_way_line_bar.png', height="30px", width="30px"),'1-way line and bar')),
                          br(),
                          mod_ChartaR_line_and_bar_ui(ns('line_and_bar'))
                 ),
                 tabPanel(value = 'Histogram',
-                         title = span(tagList(tags$img(src='www/histogram.png', height="20px", width="20px"),'Histogram')),
+                         title = span(tagList(tags$img(src='www/histogram.png', height="30px", width="30px"),'Histogram')),
                          br(),
                          mod_histogram_ui(ns('histogram_tab'))
                          ),
-                tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/SHAP.png', height="20px", width="20px"), 'SHAP')),
+                tabPanel(value = 'SHAP', title = span(tagList(tags$img(src='www/SHAP.png', height="30px", width="30px"), 'SHAP')),
                          br(),
                          mod_ChartaR_SHAP_ui(ns('SHAP'))
                          )

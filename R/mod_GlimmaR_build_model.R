@@ -126,6 +126,7 @@ mod_GlimmaR_build_model_ui <- function(id){
           column(
             width = 4,
             div(
+              id = ns('wrapper'),
               style = 'margin-top: 22px',
               selectInput(
                 inputId = ns('objective'),
@@ -134,13 +135,15 @@ mod_GlimmaR_build_model_ui <- function(id){
                 choices = list('identity link' = list('gaussian'),
                                'log link' = list('poisson',
                                                  'quasipoisson',
+                                                 'gaussian (log link)',
                                                  'gamma',
                                                  'tweedie'),
                                'logit link' = list('binomial')
                 ),
                 selected = 'gamma'
               )
-            )
+            ),
+            tippy_this(ns('wrapper'), placement = 'bottom', tooltip = tippy_text('Choose GLM error and link function',12))
           ),
           column(
             width = 4,
@@ -155,6 +158,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
               multiple = FALSE
             ),
+            tippy_this(ns('formula_load'), placement = 'bottom', tooltip = tippy_text('Load GLM formula from .txt file',12)),
             shinySaveButton(
               id = ns('formula_save'),
               label = '',
@@ -164,7 +168,8 @@ mod_GlimmaR_build_model_ui <- function(id){
               icon = icon('upload'),
               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
               viewtype = "detail"
-            )
+            ),
+            tippy_this(ns('formula_save'), placement = 'bottom', tooltip = tippy_text('Save GLM formula to .txt file',12)),
           )
         ),
         # QUESTION - need to move
@@ -192,7 +197,8 @@ mod_GlimmaR_build_model_ui <- function(id){
               label = NULL,
               choices = c('All rows', 'Training only'),
               selected = 'Training only'
-            )
+            ),
+            tippy_this(ns('data_to_use'), placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
           ),
           column(
             width = 3,
@@ -216,7 +222,8 @@ mod_GlimmaR_build_model_ui <- function(id){
               label = "Build",
               icon = icon("chevron-right"),
               style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
-            )
+            ),
+            tippy_this(ns('build_GLM'), placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
           )
         )
       ),
@@ -483,6 +490,9 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
         link <-  'logit'
       } else if (glm_objective=='poisson'){
         family <- stats::poisson(link = 'log')
+        link <-  'log'
+      } else if (glm_objective=='gaussian (log link)'){
+        family <- stats::gaussian(link = 'log')
         link <-  'log'
       } else if (glm_objective=='gamma'){
         family <- stats::Gamma(link = 'log')

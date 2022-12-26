@@ -7,7 +7,7 @@ options(shiny.port = httpuv::randomPort())
 
 # Detach all loaded packages and clean your environment
 golem::detach_all_attached()
-rm(list=ls(all.names = TRUE))
+#rm(list=ls(all.names = TRUE))
 
 # Document and reload your package
 golem::document_and_reload()
@@ -19,7 +19,8 @@ filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 # load some datasets
 #GoCompare <- data.table::setDT(feather::read_feather('~/Dropbox/Work/Stella/Postcodes 2022_10/01 formatted data/GoCompare.feather'))
 #iris <- data.table::copy(iris)
-#football <- data.table::fread('~/Dropbox/lucidum support/lucidum training/football.csv')
+#football <- data.table::fread('~/Dropbox/lucidum support/lucidum training/football.csv', stringsAsFactors = T)
+#glucidum()
 
 # Run the application
 glucidum(

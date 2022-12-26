@@ -16,9 +16,9 @@ mod_navigator_ui <- function(id){
       radioGroupButtons(
         inputId = ns('type'),
         label = 'KPIs (0/0)',
-        choices = c(`<i class='fa fa-gears'></i>` = 'KPI',
-                    `<i class='fa fa-rocket'></i>` = 'GBM', 
-                    `<i class='fa fa-star'></i>` = 'GLM'),
+        choices = c('KPIs' = 'KPI',
+                    'GBMs' = 'GBM', 
+                    'GLMs' = 'GLM'),
         selected = 'KPI',
         size = 'sm',
         justified = TRUE,
