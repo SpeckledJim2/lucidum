@@ -573,10 +573,24 @@ format_table_DT <- function(dt, response, weight, kpi_spec, response_transform){
   cols <- names(dt)[first_response_col:ncol(dt)]
   setnames(formatted_kpis, cols)
   dt[, (cols):= formatted_kpis]
+  
+  # to format NAs
+  rowCallback <- c(
+    "function(row, data){",
+    "  for(var i=0; i<data.length; i++){",
+    "    if(data[i] === null){",
+    "      $('td:eq('+i+')', row).html('NA')",
+    "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
+    "    }",
+    "  }",
+    "}"  
+  )
+  
   datatable(
     dt,
     rownames= FALSE,
     options = list(pageLength = min(1000, nrow(dt)),
+                   rowCallback = JS(rowCallback),
                    scrollX = T,
                    dom = 'tp',
                    columnDefs = 
@@ -633,7 +647,6 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     # xform
     xform$xaxis_type <- 'category'
     xform$categoryorder <- 'array'
-    xform$categoryarray <- dt[[1]]
     xform$autotick <- FALSE
     xform$title <- boldify(ifelse(nrow(dt)>200, paste0(names(dt)[1], ' (', nrow(dt), ' levels)'), names(dt)[1]))
     xform$range <- NULL
@@ -661,6 +674,12 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     }
     yform2$showgrid <- TRUE
     yform2$title <- boldify(names(dt)[first_line_col])
+    # plotly won't plot NAs
+    # so replace with "NA"
+    col <- names(dt)[[1]]
+    dt[,(col):=lapply(.SD, \(x){x[is.na(x)] <- 'NA';x}), .SDcols = col]
+    #dt[,(col):=lapply(.SD, as.factor), .SDcols = col]
+    xform$categoryarray <- dt[[1]]
     # add the bars, with distinct colours for NA and X
     colours <- rep('rgba(200, 240, 250,1.0)', nrow(dt))
     na_col <- which(dt[[1]]=='NA')
@@ -673,6 +692,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     } else if (show_labels %in% c('Weight','All')){
       weight_text_template <- '%{y:.3s}'
     }
+    
     # add weight bars
     p <- add_trace(p,
                    x = dt[[1]],
