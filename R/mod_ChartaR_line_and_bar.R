@@ -107,6 +107,7 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
                    
           ),
           tabPanel('Table',
+                   br(),
                    DTOutput(ns('one_way_table'))
           )
         )
@@ -589,16 +590,16 @@ format_table_DT <- function(dt, response, weight, kpi_spec, response_transform){
   datatable(
     dt,
     rownames= FALSE,
-    options = list(pageLength = min(1000, nrow(dt)),
+    extensions = 'Buttons',
+    options = list(pageLength = min(5000, nrow(dt)),
                    rowCallback = JS(rowCallback),
                    scrollX = T,
-                   dom = 'tp',
-                   columnDefs = 
-                   list(list(className = 'dt-right', targets = "_all")),
-                   scrollY = 'calc(90vh - 300px)'
+                   dom = 'Bfrtip',
+                   columnDefs = list(list(className = 'dt-right', targets = "_all")),
+                   scrollY = 'calc(90vh - 370px)'
     )
   ) |>
-    formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '12px') |>
+    formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '14px') |>
     #formatStyle(first_response_col:ncol(dt), `text-align` = 'right') |>
     formatStyle(names(dt), target = "row", fontWeight = DT::styleEqual('Total', 'bold')) |>
     formatRound(weight_cols, digits = 0)
