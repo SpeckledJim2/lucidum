@@ -132,7 +132,10 @@ mod_BoostaR_build_model_ui <- function(id){
 '#poisson_max_delta_step: 0.7
 #boost_from_average: TRUE
 #min_sum_hessian_in_leaf: 0.001
-
+#max_cat_threshold: 32
+#cat_l2: 0
+#cat_smooth: 10
+#max_cat_to_onehot: 4
 #objective: gamma
 #metric: gamma
 #deterministic: FALSE
@@ -160,10 +163,6 @@ mod_BoostaR_build_model_ui <- function(id){
 #top_rate: 0.2
 #other_rate: 0.1
 #min_data_per_group: 1
-#max_cat_threshold: 32
-#cat_l2: 0
-#cat_smooth: 10
-#max_cat_to_onehot: 4
 #top_k: 20
 #monotone_penalty: 0
 #refit_decay_rate: 0.9
@@ -888,8 +887,9 @@ extract_additional_lgbm_parameters <- function(x){
   x <- gsub(' ','', x)
   if(length(grep('#', x))>0){
     x <- x[-grep('#', x)]
+    x <- x[x!='']
   }
-  if(x==''){
+  if(length(x)==0){
     # no additional parameters
     result <- NULL
   } else {
