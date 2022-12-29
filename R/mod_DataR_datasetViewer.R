@@ -126,7 +126,7 @@ create_DT_from_dataframe <- function(d, transpose, columns_to_display){
                   "}"
                 ),
                 pageLength = pg_length,
-                dom = 'Brtip',
+                dom = 'Bfrtip',
                 scrollX = T,
                 scrollY = 'calc(90vh - 220px)',
                 searchHighlight=TRUE
