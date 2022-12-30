@@ -556,7 +556,7 @@ add_total_row <- function(dt, weight){
 format_table_DT <- function(dt, response, weight, kpi_spec, response_transform){
   # add a total row at the bottom
   dt <- add_total_row(dt, weight)
-  dt[,3:ncol(dt)] <- round(dt[,3:ncol(dt)],2)
+  dt[,3:ncol(dt)] <- round(dt[,3:ncol(dt)],4)
   if(weight=='N'){
     weight_cols <- 'N'
     first_response_col <- 3
