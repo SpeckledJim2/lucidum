@@ -469,13 +469,13 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           } else if(sort=='Wt'){
             setorderv(d_summary, weight, -1)
           } else if(sort=='Act'){
-            setorderv(d_summary, response, +1)
+            setorderv(d_summary, response, -1)
           } else if (sort=='Add'){
             if(length(add_cols)>0){
               first_add_col <- add_cols[1]
-              setorderv(d_summary, first_add_col, +1)
+              setorderv(d_summary, first_add_col, -1)
             } else {
-              setorderv(d_summary, response, +1)
+              setorderv(d_summary, response, -1)
             }
           } else if (sort=='PD'){
             if(show_partial_dependencies %in% c('Both','GBM')){
@@ -483,18 +483,18 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               if('mean' %in% names(d_summary)){
                 setorderv(d_summary, 'mean')
               } else if ('LP_mean' %in% names(d_summary)) {
-                setorderv(d_summary, 'LP_mean')
+                setorderv(d_summary, 'LP_mean' -1)
               } else {
-                setorderv(d_summary, new_colname)
+                setorderv(d_summary, new_colname, -1)
               }
             } else if (show_partial_dependencies=='GLM'){
               if('LP_mean' %in% names(d_summary)){
-                setorderv(d_summary, 'LP_mean')
+                setorderv(d_summary, 'LP_mean', -1)
               } else {
-                setorderv(d_summary, new_colname)
+                setorderv(d_summary, new_colname, -1)
               }
             } else {
-              setorderv(d_summary, new_colname, +1)
+              setorderv(d_summary, new_colname, -1)
             }
           }
         }
