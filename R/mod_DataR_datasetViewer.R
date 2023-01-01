@@ -120,11 +120,11 @@ create_DT_from_dataframe <- function(d, transpose, columns_to_display){
               extensions = 'Buttons',
               options = list(
                 # change font size of header row
-                headerCallback = JS(
-                  "function(thead) {",
-                  "  $(thead).css('font-size', '12px');",
-                  "}"
-                ),
+                # headerCallback = JS(
+                #   "function(thead) {",
+                #   "  $(thead).css('font-size', '12px');",
+                #   "}"
+                # ),
                 pageLength = pg_length,
                 dom = 'Bfrtip',
                 scrollX = T,
@@ -132,7 +132,7 @@ create_DT_from_dataframe <- function(d, transpose, columns_to_display){
                 searchHighlight=TRUE
               )
     ) |>
-      formatStyle(1:ncol(d_filter), lineHeight = '0%', fontSize = '12px') |>
+      formatStyle(1:ncol(d_filter), lineHeight = '0%', fontSize = '14px') |>
       formatStyle(1:ncol(d_filter), 'white-space' = 'nowrap')
   }
 }

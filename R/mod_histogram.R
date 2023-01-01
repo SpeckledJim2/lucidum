@@ -194,7 +194,7 @@ histogram_DT <- function(d){
             )
         )
       ) |>
-      formatStyle(1:2, fontSize = '85%', lineHeight='20%')
+      formatStyle(1:2, fontSize = '100%', lineHeight='20%')
   }
 }
 

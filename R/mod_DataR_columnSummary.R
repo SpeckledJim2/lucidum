@@ -230,18 +230,16 @@ format_column_summary_DT <- function(d, selected_row){
   pg_length <- min(100, nrow(d))
   dt <- datatable(d,
                   rownames= FALSE,
-                  #selection=list(mode="single", target="row"),
                   selection=list(mode="single", selected=selected_row),
                   extensions = 'Buttons',
                   options = list(pageLength = pg_length,
-                                 #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                  dom = 'Bfrtip',
                                  scrollX = T,
                                  scrollY = 'calc(100vh - 330px)',
                                  searchHighlight=TRUE
                   )
   ) |>
-    formatStyle(1:ncol(d), lineHeight='0%', fontSize = '12px') |>
+    formatStyle(1:ncol(d), lineHeight='0%', fontSize = '14px') |>
     formatStyle(c('mean','min','max'))
 }
 
@@ -260,7 +258,7 @@ format_feature_summary_DT <- function(d){
       searchHighlight=TRUE
       )
     ) |>
-    formatStyle(1:ncol(d), lineHeight='0%', fontSize = '12px')
+    formatStyle(1:ncol(d), lineHeight='0%', fontSize = '14px')
     if('value' %in% names(d)){
       DT |> formatRound(columns=c('value'), digits=4, interval = 3)
     } else {
