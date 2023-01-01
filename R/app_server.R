@@ -20,6 +20,7 @@ app_server <- function(input, output, session) {
   crosstab_selector <- reactiveVal()
   new_response <- reactiveVal(NULL)
   new_weight <- reactiveVal(NULL)
+  selected_tab <- reactiveVal(golem::get_golem_options('starting_tab'))
   
   # window dimensions to resize tables and ui elements
   observeEvent(input$dimensions, {
@@ -98,6 +99,11 @@ app_server <- function(input, output, session) {
     }
   })
 
+  # selected tab
+  observeEvent(input$tabs, {
+    selected_tab(input$tabs)
+  })
+  
   # menuItems
   showModule(output, 'Specs', 'chevron-right', golem::get_golem_options('show_DevelopaR'))
   showModule(output, 'DataR', 'bars', golem::get_golem_options('show_DataR'))
@@ -135,7 +141,7 @@ app_server <- function(input, output, session) {
   mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions)
   mod_DataR_server('DataR', d, dt_update)
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
-  mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, golem::get_golem_options('show_MappaR'))
+  mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, selected_tab, golem::get_golem_options('show_MappaR'))
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
   mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
   

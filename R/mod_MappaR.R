@@ -198,18 +198,14 @@ mod_MappaR_ui <- function(id){
 #' 
 #' @noRd
 #' 
-mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show_MappaR){
+mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, selected_tab, show_MappaR){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     plot_postcode_area <- reactiveVal()
-    # setup map
-    # QUESTION how can I make the map only update when it is visible or first selected?
-    # suspendWhenHidden doesn't seem to work, i.e. map is updated when it's not visible
+    trigger_update <- reactiveVal(TRUE)
     output$map <- leaflet::renderLeaflet({base_map()})
-    outputOptions(output, "map", suspendWhenHidden = FALSE) # TRUE doesn't do anything
-    
-    # assemble the map options
-    # QUESTION - must be an easier way of doing this - this works but feels clunky
+    outputOptions(output, "map", suspendWhenHidden = FALSE) # ensures base map is drawn even when not visible
+    # map options from input
     map_options <- reactiveVal()
     observeEvent(c(input$line_thickness,
                    input$opacity,
@@ -233,29 +229,18 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, show
         )
       )
     })
-    
-    # update map when one of the inputs up
-    observe({
-      # QUESTION - this "turns off" MappaR (no longer recalcs) - is there a better way?
-      # e.g. don't load up sf and leaflet if MappaR disabled
-      if(show_MappaR){
-        dt_update()
-        viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
+    observeEvent(c(dt_update(), d(), response(), weight(), kpi_spec(), map_options()), {
+      trigger_update(TRUE)
+    })
+    observeEvent(c(trigger_update(), selected_tab()), {
+      if(trigger_update()){
+        # only update when MappaR tab is selected (as otherwise will redraw in background and slow up app)
+        if(show_MappaR & selected_tab()=='MappaR'){
+          viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
+          trigger_update(FALSE)
+        }
       }
     })
-    
-    observeEvent(input$tabs, {
-      # QUESTION - why does this never trigger (linked to question above)
-      # input$tabs is always NULL - is that because I am in a module?
-      if(input$tabs=='MappaR'){
-        viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
-      }
-    })
-    #observeEvent(input$map_shape_mouseover,{
-      #pointId <- input$map_shape_mouseover$id
-      #output$panel_title <- renderText({pointId})
-      #output$panel_location <- renderUI(({return_mouse_hover_postcode(pointId)}))
-    #})
     observeEvent(input$dark_mode, {
       if(input$dark_mode){
         session$sendCustomMessage("background-color", "#242d31")
