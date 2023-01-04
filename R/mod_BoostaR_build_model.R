@@ -33,6 +33,28 @@ mod_BoostaR_build_model_ui <- function(id){
               margin = "20px",
               inline = TRUE,
               checkboxInput(inputId = ns('BoostaR_use_custom_interaction_constraints'),label = "Apply custom feature interaction constraints", value = FALSE),
+              fluidRow(
+                column(
+                  width = 8,
+                  sliderInput(
+                    inputId = ns('top_n_interactions'),
+                    label = 'Select top n interactions from current GBM',
+                    min = 1,
+                    max = 20,
+                    value = 10,
+                    step = 1,
+                    ticks = FALSE,
+                    width = '100%'
+                  )
+                ),
+                column(
+                  width = 4,
+                  actionButton(
+                    inputId = ns('copy_top_n_interactions'),
+                    label = 'Copy'
+                  )
+                )
+              ),
               textAreaInput(
                 inputId = ns('BoostaR_custom_interaction_constraints'),
                 value =
@@ -42,7 +64,7 @@ mod_BoostaR_build_model_ui <- function(id){
 # will be fitted with no interaction terms',
                 label = 'Specify interactions',
                 width = '520px',
-                height = '600px',
+                height = '500px',
                 resize = 'vertical'
               )
             )
@@ -397,6 +419,17 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         }
       }
     })
+    observeEvent(input$copy_top_n_interactions, {
+      if(!is.null(BoostaR_models()) & !is.null(BoostaR_idx())){
+        n <- input$top_n_interactions
+        gain_summary <- BoostaR_models()[[BoostaR_idx()]]$gain_summary
+        n <- min(n, nrow(gain_summary))
+        top_n <- gain_summary[1:n, tree_features]
+        updateTextAreaInput(inputId = 'BoostaR_custom_interaction_constraints', value = paste(top_n, collapse = '\n'))
+      } else {
+        updateTextAreaInput(inputId = 'BoostaR_custom_interaction_constraints', value = 'No active GBM')
+      }
+    })
     observeEvent(input$BoostaR_feature_specification, ignoreInit = TRUE, {
       fs <- feature_spec()
       if(!is.null(input$BoostaR_feature_specification) & !is.null(fs)){
@@ -472,8 +505,23 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       } else {
         # no error so good to build model
         # assemble constraints
+        features <- BoostaR_feature_table()[include==TRUE, feature]
         monotonicity_constraints <- make_monotonicity_constraints(BoostaR_feature_table(), input$BoostaR_objective)
-        feature_interaction_constraints <- make_fics(BoostaR_feature_table(), input$BoostaR_interaction_contraints)
+        #feature_interaction_constraints <- make_fics(BoostaR_feature_table(), input$BoostaR_interaction_contraints)
+        
+        # NEW BIT
+        if(input$BoostaR_use_custom_interaction_constraints==TRUE){
+          # extract the fics from the textAreaInput BoostaR_custom_interaction_constraints
+          feature_interaction_constraints <- make_custom_fics(input$BoostaR_custom_interaction_constraints, features)
+        } else {
+          groups_to_constrain <- input$BoostaR_interaction_contraints
+          if(!is.null(groups_to_constrain)){
+            feature_interaction_constraints <- make_fics(BoostaR_feature_table(), input$BoostaR_interaction_contraints)
+          } else {
+            feature_interaction_constraints <- NULL
+          }
+        }
+        
         # assemble model parameters depending on whether it's a grid search or not
         if(input$BoostaR_grid_search=='Off'){
           main_params_combos <- setDT(extract_main_lgbm_parameters(input))
@@ -490,7 +538,6 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           additional_params <- c(additional_params, interaction_constraints = list(feature_interaction_constraints))
         }
         # prepare the lgb.Dataset and rules (only need to do this just one when running a grid search)
-        features <- BoostaR_feature_table()[include==TRUE, feature]
         lgb_dat <- make_lgb_train_test(d(), response(), weight(), input$BoostaR_initial_score, features, input$BoostaR_objective)
         # loop over the combinations of parameters and build models
         for(i in 1:nrow(main_params_combos)){
@@ -568,10 +615,10 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         sliderInput(
           inputId = ns('BoostaR_learning_rate'),
           label = 'Learning rate',
-          min = 0.01,
+          min = 0.05,
           max = 1,
           value = learning_rate,
-          step = 0.01,
+          step = 0.05,
           ticks = FALSE,
           width = '100%'
         )
@@ -862,6 +909,20 @@ make_fics <- function(feature_table, groups){
     fics <- lapply(feature_groups, c)
   }
   return(fics)
+}
+make_custom_fics <- function(x, features){
+  x <- unlist(strsplit(x, '\n'))
+  x <- gsub(' ','', x)
+  if(length(grep('#', x))>0){
+    x <- x[-grep('#', x)]
+  }
+  fics <- strsplit(x, 'x')
+  # include all the features as one-way terms
+  # so these will still be included in the model
+  fics <- c(fics, features)
+  # only keep fics that involve features
+  keep <- sapply(fics, function(x){all(x %in% features)})
+  fics <- fics[keep]
 }
 extract_main_lgbm_parameters <- function(input){
   list(
@@ -1318,10 +1379,10 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
       sliderInput(
         inputId = ns('BoostaR_learning_rate'),
         label = 'Learning rate',
-        min = 0.01,
+        min = 0.05,
         max = 1,
         value = BoostaR_model$params$learning_rate,
-        step = 0.01,
+        step = 0.05,
         ticks = FALSE,
         width = '100%'
       )
@@ -1429,6 +1490,9 @@ populate_BoostaR_feature_grid <- function(all_features, selected_features, featu
     if(!is.null(current_grid)){
       # merge on gains
       setkey(current_grid, feature)
+      if('gain' %not_in% names(current_grid)){
+        current_grid[, gain := 0]
+      }
       dt <- current_grid[, c('feature','gain')][dt]
       dt[is.na(gain), gain := 0]
       setorder(dt, -gain, -include, feature)
