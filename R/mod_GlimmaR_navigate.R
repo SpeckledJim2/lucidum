@@ -1221,7 +1221,7 @@ calc_terms_importances <- function(glm){
     var_terms <- NULL
   }
   if(length(offsets)>0){
-    offsets_predictions <- predict_offsets(dt, offsets)
+    offsets_predictions <- predict_offsets(glm$data, offsets)
     terms_offset_predictions <- cbind(terms_predictions, offsets_predictions)
   } else {
     terms_offset_predictions <- data.table(terms_predictions)
