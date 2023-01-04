@@ -45,6 +45,7 @@ globalVariables(
     '..keep_cols',
     'glm_tabulated_prediction',
     '.',
-    'Value_formatted'
+    'Value_formatted',
+    'tree_features'
     )
   )
