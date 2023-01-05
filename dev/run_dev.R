@@ -23,14 +23,14 @@ filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 #glucidum()
 
 # load some models
-B <- readRDS('~/Dropbox/lucidum support/BoostaR_models.rds')
-G <- readRDS('~/Dropbox/lucidum support/GlimmaR_models.rds')
+#B <- readRDS('~/Dropbox/lucidum support/BoostaR_models.rds')
+#G <- readRDS('~/Dropbox/lucidum support/GlimmaR_models.rds')
 
 # Run the application
 glucidum(
   data = insurance,
-  BoostaR_models = B,
-  GlimmaR_models = G,
+  BoostaR_models = NULL,
+  GlimmaR_models = NULL,
   starting_response = 'price',
   starting_tab = 'ChartaR',
   show_DevelopaR = T,

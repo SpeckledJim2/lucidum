@@ -568,7 +568,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
             l <- list(time = time,
                       predictions = fitted_glm,
                       pred_rows = non_zero_weight_rows,
-                      glm = glm_model,
+                      glm = strip_glm(glm_model),
                       training_data = data_to_use,
                       formula = original_glm_formula,
                       coefficients = c,

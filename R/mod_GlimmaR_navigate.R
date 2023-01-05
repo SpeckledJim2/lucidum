@@ -242,18 +242,20 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
           if(!is.null(g)){
             base_risk <- get_base_risk(d(), feature_spec(), g$weight)
             withProgress(message = 'GlimmaR', detail = 'tabulate', value = 0.5, {
-              tabulated_model <- export_model(d()[g$pred_rows],
-                                              g$glm,
-                                              base_risk,
-                                              FALSE,
-                                              input$tabulate_scale,
-                                              feature_spec(),
-                                              input$tabulate_format,
-                                              weight(),
-                                              response(),
-                                              g$predictions,
-                                              model_name = g$name
-              )
+              # OLD WAY
+              # tabulated_model <- export_model(d()[g$pred_rows],
+              #                                 g$glm,
+              #                                 base_risk,
+              #                                 FALSE,
+              #                                 input$tabulate_scale,
+              #                                 feature_spec(),
+              #                                 input$tabulate_format,
+              #                                 weight(),
+              #                                 response(),
+              #                                 g$predictions,
+              #                                 model_name = g$name
+              # )
+              tabulated_model <- NULL
               # NEW LINES
               glm_term_summary <- summarise_glm_vars(g$glm)
               if(!is.null(glm_term_summary)){
@@ -932,7 +934,7 @@ uncentered_terms_new <- function(object, newdata, terms, na.action = na.pass, ..
     }
     
     n_terms <- length(terms)
-    
+    attr(tt, '.Environment') <- environment() # makes splines package available as loaded by lucidum
     m <- model.frame(tt, newdata, na.action = na.action, xlev = object$xlevels, drop.unused.levels = TRUE)
     if (!is.null(cl <- attr(tt, "dataClasses"))) .checkMFClasses(cl, m)
     new_form <- as.formula(paste0('~',paste0(terms, collapse = '+')))
