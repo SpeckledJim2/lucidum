@@ -16,48 +16,41 @@ mod_GlimmaR_navigate_ui <- function(id){
         width = 4,
         h3('GlimmaR model summary')
       ),
-      column(width = 3,
-             fluidRow(
-               column(
-                 width = 6,
-                 style = 'margin-right:0px; padding-right:0px',
-                 div(
-                   style = 'margin-bottom:-15px; margin-top:10px',
-                   radioGroupButtons(
-                     inputId = ns('tabulate_format'),
-                     label = NULL,
-                     choices = c('solo','long'),
-                     selected = 'solo',
-                     size = 'xs',
-                     justified = TRUE,
-                     )
-                   ),
-                 div(
-                   style = 'margin-bottom:0px; margin-top:0px',
-                   radioGroupButtons(
-                     inputId = ns('tabulate_scale'),
-                     label = NULL,
-                     choices = c('link','response'),
-                     selected = 'response',
-                     size = 'xs',
-                     justified = TRUE
-                     )
-                   )
-                 ),
-               column(
-                 width = 6,
-                 div(
-                   style = 'margin-top:15px',
-                   actionButton(
-                     inputId = ns('tabulate'),
-                     label = 'Tabulate',
-                     icon = icon("table")
-                     )
-                   )
-                 )
-               )
-             ),
-      column(width = 5,
+      # column(width = 3,
+      #        fluidRow(
+      #          column(
+      #            width = 6,
+      #            style = 'margin-right:0px; padding-right:0px',
+      #            div(
+      #              style = 'margin-bottom:-15px; margin-top:10px',
+      #              radioGroupButtons(
+      #                inputId = ns('tabulate_format'),
+      #                label = NULL,
+      #                choices = c('solo','long'),
+      #                selected = 'solo',
+      #                size = 'xs',
+      #                justified = TRUE,
+      #                )
+      #              ),
+      #            div(
+      #              style = 'margin-bottom:0px; margin-top:0px',
+      #              radioGroupButtons(
+      #                inputId = ns('tabulate_scale'),
+      #                label = NULL,
+      #                choices = c('link','response'),
+      #                selected = 'response',
+      #                size = 'xs',
+      #                justified = TRUE
+      #                )
+      #              )
+      #            ),
+      #          column(
+      #            width = 6,
+      # 
+      #            )
+      #          )
+      #        ),
+      column(width = 8,
              align = 'right',
              style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
              actionButton(
@@ -72,10 +65,15 @@ mod_GlimmaR_navigate_ui <- function(id){
                icon = icon("chevron-right")
              ),
              actionButton(
-               inputId = ns('generate_predictions'),
-               label = 'Predict',
-               icon = icon("chevron-right")
+               inputId = ns('tabulate'),
+               label = 'Tabulate',
+               icon = icon("table")
              ),
+             # actionButton(
+             #   inputId = ns('generate_predictions'),
+             #   label = 'Predict',
+             #   icon = icon("chevron-right")
+             # ),
              shinySaveButton(
                id = ns('save_model'),
                label = 'Save GLM',
@@ -241,7 +239,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
           g <- GlimmaR_models()[[model_name]]
           if(!is.null(g)){
             base_risk <- get_base_risk(d(), feature_spec(), g$weight)
-            withProgress(message = 'GlimmaR', detail = 'tabulate', value = 0.5, {
+            #withProgress(message = 'GlimmaR', detail = 'tabulate', value = 0.5, {
               # OLD WAY
               # tabulated_model <- export_model(d()[g$pred_rows],
               #                                 g$glm,
@@ -280,13 +278,17 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
               temp <- tabulated_models()
               temp[[g$name]] <- tabulated_model
               tabulated_models(temp)
-            })
-            confirmSweetAlert(session = session,
-                              type = 'success',
-                              inputId = ns('sweet_alert'),
-                              title = "GLM tabulated",
-                              text = paste0(length(tabulated_model), ' tables created'),
-                              btn_labels = c('OK'))
+            #})
+            showNotification(
+              paste0(length(tabulations), ' tables created'), duration = 5, type = 'message'
+            )
+            # confirmSweetAlert(session = session,
+            #                   type = 'success',
+            #                   inputId = ns('sweet_alert'),
+            #                   title = "GLM tabulated",
+            #                   text = paste0(length(tabulated_model), ' tables created'),
+            #                   btn_labels = c('OK')
+            #                   )
           }
         }
       }

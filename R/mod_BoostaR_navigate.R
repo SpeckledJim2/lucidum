@@ -31,11 +31,11 @@ mod_BoostaR_navigate_ui <- function(id){
                label = 'Make active',
                icon = icon("chevron-right")
                ),
-             actionButton(
-               inputId = ns('BoostaR_generate_predictions'),
-               label = 'Predict',
-               icon = icon("chevron-right")
-               ),
+             # actionButton(
+             #   inputId = ns('BoostaR_generate_predictions'),
+             #   label = 'Predict',
+             #   icon = icon("chevron-right")
+             #   ),
              shinySaveButton(
                id = ns('BoostaR_save_model'),
                label = 'Save model',
