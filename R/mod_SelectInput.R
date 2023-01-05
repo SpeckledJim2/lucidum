@@ -165,12 +165,12 @@ selectInput_choices <- function(
       # get features
       if(length(BoostaR_models)>0 | length(GlimmaR_models)>0){
         current_model_prediction <- intersect(cols, c('lgbm_prediction','glm_prediction','glm_tabulated_prediction'))
+        importance_cols <- NULL
         if(!is.null(BoostaR_idx)){
           if(BoostaR_idx %in% names(BoostaR_models)){
             importance_cols <- intersect(BoostaR_models[[BoostaR_idx]]$importances$Feature, cols)
           }
         }
-        importance_cols <- NULL
         lgbm_cols <- cols[grep('lgbm', cols)]
         SHAP_cols <- cols[grep('lgbm_SHAP', cols)]
         lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction'))
