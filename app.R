@@ -3,6 +3,7 @@
 # Or use the blue button on top of this file
 
 # QUESTION - what is the next line doing exactly?
+# when my app is "finished" could I just use library(glucidum)?
 pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE)
 options('golem.app.prod' = TRUE)
 

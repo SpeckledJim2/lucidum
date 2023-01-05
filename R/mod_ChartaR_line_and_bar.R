@@ -617,6 +617,11 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     p <- plotly_empty(type = "scatter", mode = "markers") |>
       config(displayModeBar = FALSE) |>
       layout(title = list(text = 'Select x-axis feature',yref = "paper", y = 0.5))
+  } else if (nrow(dt)>10000){
+    # nothing to display - return message to user
+    p <- plotly_empty(type = "scatter", mode = "markers") |>
+      config(displayModeBar = FALSE) |>
+      layout(title = list(text = 'Too many rows (>10,000) to display - view table instead',yref = "paper", y = 0.5))
   } else {
     p <- plot_ly()
     # make the first column character
