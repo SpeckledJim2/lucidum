@@ -141,7 +141,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
       if(!is.null(BoostaR_idx())){
         gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
       }
-      if(!is.null(GlimmaR_models())){
+      if(!is.null(GlimmaR_idx())){
         glm_link <- GlimmaR_models()[[GlimmaR_idx()]]$link
       }
       data_summary(

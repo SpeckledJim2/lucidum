@@ -29,7 +29,8 @@ app_server <- function(input, output, session) {
   })
   
   # lucidum startup
-  init_lucidum(session, golem::get_golem_options('data'), golem::get_golem_options('dataset_name'))  
+  init_lucidum(session, golem::get_golem_options('data'), golem::get_golem_options('dataset_name'))
+  
   # d is the dataset being analysed by lucidum
   # the golem option 'data' specifies the dataset
   # dt_update is used to trigger reactivity when d is changed
@@ -37,6 +38,10 @@ app_server <- function(input, output, session) {
   dt_update <- reactiveVal(0)
   d(load_dataset(golem::get_golem_options('data')))
   dataset_name(golem::get_golem_options('dataset_name'))
+  
+  # models
+  BoostaR_models(golem::get_golem_options('BoostaR_models'))
+  GlimmaR_models(golem::get_golem_options('GlimmaR_models'))
 
   # specification files
   kpi_spec <- reactiveVal()

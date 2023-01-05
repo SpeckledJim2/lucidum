@@ -576,7 +576,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       }
     })
     observeEvent(input$BoostaR_grid_search, {
-      if(is.null(BoostaR_models())){
+      if(is.null(BoostaR_models()) | is.null(BoostaR_idx())){
         B <- NULL
       } else {
         B <- BoostaR_models()[[BoostaR_idx()]]

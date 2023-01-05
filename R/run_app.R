@@ -43,6 +43,8 @@ glucidum <- function(data=NULL,
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
     golem_opts = list(data = data,
+                      BoostaR_models = BoostaR_models,
+                      GlimmaR_models = GlimmaR_models,
                       dataset_name = dataset_name,
                       kpi_spec = kpi_spec,
                       filter_spec = filter_spec,

@@ -22,9 +22,15 @@ filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 #football <- data.table::fread('~/Dropbox/lucidum support/lucidum training/football.csv', stringsAsFactors = T)
 #glucidum()
 
+# load some models
+B <- readRDS('~/Dropbox/lucidum support/BoostaR_models.rds')
+G <- readRDS('~/Dropbox/lucidum support/GlimmaR_models.rds')
+
 # Run the application
 glucidum(
   data = insurance,
+  BoostaR_models = B,
+  GlimmaR_models = G,
   starting_response = 'price',
   starting_tab = 'ChartaR',
   show_DevelopaR = T,
