@@ -309,11 +309,22 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             # how to do this depends on the choice of objective
             if(!is.null(gbm_link)){
               if(gbm_link=='identity'){
-                SHAP_summary[, 2:6] <- wtd_mean + SHAP_summary[, 2:6]
+                if(weight %in% c('N','no weights')){
+                  wtd_SHAP_mean <- sum(d_summary[,2]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
+                } else {
+                  wtd_SHAP_mean <- sum(d_summary[,3]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
+                }
+                SHAP_summary[, 2:6] <-  SHAP_summary[, 2:6] + wtd_mean- wtd_SHAP_mean
               } else if (gbm_link=='log'){
-                SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) * wtd_mean
-              } else if (gbm_link=='binary'){
-                # following is rough for now - won't always tie up due to logit
+                SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) # exponentiate for log link
+                if(weight %in% c('N','no weights')){
+                  wtd_SHAP_mean <- sum(d_summary[,2]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
+                } else {
+                  wtd_SHAP_mean <- sum(d_summary[,3]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
+                }
+                SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * wtd_mean / wtd_SHAP_mean # scale to mean
+              } else if (gbm_link=='logit'){
+                # following is rough for now - won't tie up due to logit
                 SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6])/(1+exp(SHAP_summary[, 2:6])) * wtd_mean * 2
               }
             }
@@ -646,6 +657,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     if('sigma_bar' %in% names(dt)) sigma_col <- TRUE else sigma_col <- FALSE
     # last non SHAP or LP line
     last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0) - ifelse(sigma_col,1,0)
+    last_ex_sigma <- ncol(dt) - ifelse(sigma_col,1,0)
     # setup plot
     xform <- list()
     yform <- list()
@@ -669,7 +681,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     yform2$overlaying <- 'y'
     yform2$side <- 'left'
     if(show_response=='Show'){
-      yform2$range <- return_y_axis_limits(as.matrix(dt[, first_line_col:last_line_col]))
+      yform2$range <- return_y_axis_limits(as.matrix(dt[, first_line_col:last_ex_sigma]))
     } else if (show_response=='Hide'){
       if(ncol(dt)==last_line_col){
         col <- first_line_col
