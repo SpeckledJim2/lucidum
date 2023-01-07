@@ -13,6 +13,8 @@ filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 
 glucidum::glucidum(
   data = insurance,
+  BoostaR_models = NULL,
+  GlimmaR_models = NULL,
   show_DevelopaR = T,
   show_MappaR = T,
   starting_response = 'price',

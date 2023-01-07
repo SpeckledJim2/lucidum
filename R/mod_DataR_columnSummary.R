@@ -227,7 +227,7 @@ format_column_summary_DT <- function(d, selected_row){
       selected_row <- 1
     }
   }
-  pg_length <- min(100, nrow(d))
+  pg_length <- min(1000, nrow(d))
   dt <- datatable(d,
                   rownames= FALSE,
                   selection=list(mode="single", selected=selected_row),

@@ -23,8 +23,8 @@ filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 #glucidum()
 
 # load some models
-B <- readRDS('~/Dropbox/lucidum support/BoostaR_models.rds')
-G <- readRDS('~/Dropbox/lucidum support/GlimmaR_models.rds')
+#B <- readRDS('~/Dropbox/lucidum support/BoostaR_models.rds')
+#G <- readRDS('~/Dropbox/lucidum support/GlimmaR_models.rds')
 
 # Run the application
 glucidum(
