@@ -447,7 +447,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 base_level <- as.numeric(base_level)
                 base_level_banded <- floor(base_level/banding) * banding
               }
-              idx <- which(d_summary[[1]]==base_level)
+              idx <- which(d_summary[[1]]==base_level_banded)
               if(length(idx)==1){
                 cols <- names(d_summary)[first_col:ncol(d_summary)]
                 denominator <- d_summary[idx, .SD, .SDcols = cols]

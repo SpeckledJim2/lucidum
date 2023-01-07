@@ -267,7 +267,7 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
   base_adj <- NA
   if(length(base_level)>0){
     base_level <- as.numeric(base_level)
-    base_level_banded <- as.numeric(band_var(base_level, q, banding_1))
+    base_level_banded <- floor(base_level/banding_1) * banding_1
     idx <- which(SHAP_summary[[1]]==base_level_banded)
     base_adj <- SHAP_summary[['mean']][idx]
   }
