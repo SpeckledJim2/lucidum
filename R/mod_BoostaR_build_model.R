@@ -867,9 +867,14 @@ check_model_features_and_parameters <- function(d, response, weight, init_score,
     }
   }
   # check response vs objective
-  if(check=='ok' & objective %in% c('Poisson','Gamma','Tweedie','Binomial')){
+  if(check=='ok' & objective %in% c('poisson','tweedie','binary')){
+    if(min(d[rows_idx, ..response], na.rm = TRUE)<0){
+      check <- paste0('Negative response not allowed for ', objective)
+    }
+  }
+  if(check=='ok' & objective %in% c('gamma')){
     if(min(d[rows_idx, ..response], na.rm = TRUE)<=0){
-      check <- paste0('Non-negative response not allowed for', objective)
+      check <- paste0('Non-negative response not allowed for ', objective)
     }
   }
   # check monotonicity only specified for numerical features
@@ -1089,9 +1094,9 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     # extract the evaluation log
     evaluation_log <- make_evaluation_log(lgbm, params)
     # extract the tree table
-    tree_table <- lgb.model.dt.tree(lgbm)
+    tree_table <- lgb.model.dt.tree(lgbm, num_iteration = length(evaluation_log$train_log))
     # extract the gain summarised by tree's feature combinations
-    gain_summary <- create_gain_summary_from_tree_summary(tree_table)
+    gain_summary <- create_gain_summary_from_tree_summary(tree_table, lgbm$best_iter)
     gain_summary <- gain_summary[order(-gain_summary$gain),]
   }
   # return list
@@ -1162,7 +1167,8 @@ make_evaluation_log <- function(lgbm, params){
                          metric = params$metric)
 }
 #' @importFrom stringr str_count
-create_gain_summary_from_tree_summary <- function(trees){
+create_gain_summary_from_tree_summary <- function(trees, best_iter){
+  trees <- trees[tree_index<best_iter] # less than as trees start at zero
   split_feature <- NULL
   tree_index <- NULL
   . <- NULL

@@ -84,7 +84,7 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
         updateSliderInput(
           session,
           inputId = 'BoostaR_tree_selector',
-          max = BoostaR_models()[[model_index]]$lgbm$best_iter-1
+          max = max(BoostaR_models()[[model_index]]$tree_table$tree_index, na.rm = TRUE)
           )
         if(!is.na(model_index)){
           if(model_index %in% names(BoostaR_models())){
