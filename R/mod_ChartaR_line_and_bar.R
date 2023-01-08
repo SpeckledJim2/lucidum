@@ -314,7 +314,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 } else {
                   wtd_SHAP_mean <- sum(d_summary[,3]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
                 }
-                SHAP_summary[, 2:6] <-  SHAP_summary[, 2:6] + wtd_mean- wtd_SHAP_mean
+                SHAP_summary[, 2:6] <-  SHAP_summary[, 2:6] + wtd_mean - wtd_SHAP_mean
               } else if (gbm_link=='log'){
                 SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) # exponentiate for log link
                 if(weight %in% c('N','no weights')){
@@ -324,7 +324,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 }
                 SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * wtd_mean / wtd_SHAP_mean # scale to mean
               } else if (gbm_link=='logit'){
-                # following is rough for now - won't tie up due to logit
+                # won't tie up due to logit, following leads to sensible chart
                 SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6])/(1+exp(SHAP_summary[, 2:6])) * wtd_mean * 2
               }
             }
@@ -353,15 +353,27 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
             setorderv(LP_summary, names(LP_summary)[1])
             names(LP_summary)[2] <- c('LP_mean')
-            # scale SHAP values to mean
+            # scale LP values to mean
             # how to do this depends on the choice of objective
             if(!is.null(glm_link)){
               if(glm_link=='identity'){
-                LP_summary[, 2] <- wtd_mean + LP_summary[, 2]
+                if(weight %in% c('N','no weights')){
+                  wtd_LP_mean <- sum(d_summary[,2]*LP_summary[['LP_mean']], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
+                } else {
+                  wtd_LP_mean <- sum(d_summary[,3]*LP_summary[['LP_mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
+                }
+                LP_summary[, 2] <- LP_summary[, 2] + wtd_mean - wtd_LP_mean
               } else if (glm_link=='log'){
-                LP_summary[, 2] <- exp(LP_summary[, 2]) * wtd_mean
+                
+                LP_summary[, 2] <- exp(LP_summary[, 2]) # exponentiate for log link
+                if(weight %in% c('N','no weights')){
+                  wtd_LP_mean <- sum(d_summary[,2]*LP_summary[['LP_mean']], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
+                } else {
+                  wtd_LP_mean <- sum(d_summary[,3]*LP_summary[['LP_mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
+                }
+                LP_summary[, 2] <- LP_summary[, 2] * wtd_mean / wtd_LP_mean # scale to mean
               } else if (glm_link=='logit'){
-                # following is rough for now - won't always tie up due to logit
+                # won't tie up due to logit, following leads to sensible chart
                 LP_summary[, 2] <- exp(LP_summary[, 2])/(1+exp(LP_summary[, 2])) * wtd_mean * 2
               }
             }
@@ -427,6 +439,8 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               if(is.numeric(d[[group_by_col]])){
                 base_level <- as.numeric(base_level)
                 base_level_banded <- floor(base_level/banding) * banding
+              } else {
+                base_level_banded <- base_level
               }
               idx <- which(d_summary[[1]]==base_level)
               if(length(idx)==1){
@@ -446,6 +460,8 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               if(is.numeric(d[[group_by_col]])){
                 base_level <- as.numeric(base_level)
                 base_level_banded <- floor(base_level/banding) * banding
+              } else {
+                base_level_banded <- base_level
               }
               idx <- which(d_summary[[1]]==base_level_banded)
               if(length(idx)==1){
@@ -454,7 +470,13 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 if(!is.null(SHAP_col)){
                   denominator[, (c('min','perc_5','perc_95','max')) := mean] # want to adjust to the mean, not the percentiles
                 }
-                rebased_values <- as.data.table(mapply('/',d_summary[, .SD, .SDcols=cols], denominator))
+                rebased_values <- mapply('/',d_summary[, .SD, .SDcols=cols], denominator)
+                if(inherits(rebased_values, 'matrix')){
+                  rebased_values <- data.table(rebased_values)
+                } else {
+                  # only one row of numbers, data.table won't keep column names so need next line
+                  rebased_values <- setDT(data.frame(as.list(rebased_values)))
+                }
                 d_summary[, (cols) := rebased_values]
               }
             }
