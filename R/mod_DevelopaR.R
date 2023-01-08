@@ -136,17 +136,19 @@ mod_DevelopaR_ui <- function(id){
                                height = 'calc(40vh)',
                                autoScrollEditorIntoView = TRUE,
                                value =
-"# create new columns using standard R syntax
-# the lucidum dataset is contained in d()
+"# evaluate glm tabulation error
+# d()[, sd(glm_prediction/glm_tabulated_prediction, na.rm=TRUE)]
 
-pred_cols <- c('glm_prediction','lgbm_prediction')
-dataset_cols <- names(d())
-if(all(pred_cols %in% dataset_cols)){
-  d()[, model_ratio := lgbm_prediction/glm_prediction]
-  round(quantile(d()$model_ratio, probs = 0:10/10),3)
-} else {
-  print('Ensure both GLM and GBM are present')
-}"
+# calculate the ratio of GBM to GLM prediction
+# d()[, model_ratio := lgbm_prediction/glm_prediction]
+# d()[, sd(model_ratio), by = train_test]
+
+# copy all GLM prediction to dataset
+# for(g in GlimmaR_models()){d()[, (g$name):=g$predictions]}
+
+# copy all GBM prediction to dataset
+# for(b in BoostaR_models()){d()[, (b$name):=b$predictions]}
+"
                              )
                            )
                          ),
