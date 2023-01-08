@@ -46,6 +46,7 @@ globalVariables(
     'glm_tabulated_prediction',
     '.',
     'Value_formatted',
-    'tree_features'
+    'tree_features',
+    'term'
     )
   )

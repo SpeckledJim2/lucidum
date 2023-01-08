@@ -8,34 +8,40 @@ pmax(4, pmin(8, NCD)) +
 ifelse(NCD>=9,1,0) +
 
 # experience
-poly(pmin(20, experience), 2) +
+ifelse(experience==0,1,0) + 
+pmin(10, experience) +
+pmax(10, pmin(20, experience)) +
+pmax(20, pmin(30, experience)) +
+
+# customer licence
+ifelse(licence=='Provisional',1,0) +
 
 # customer age
-ifelse(licence=='Provisional',pmin(30, age),0) +
-poly(pmin(30, age), 2) +
-poly(pmax(30, pmin(90, age)), 4) +
+ifelse(licence=='Provisional', pmin(age-25, 0),0) +
+pmin(25, age) +
+pmax(25, pmin(65, age)) +
+poly(pmax(65, pmin(90, age)), 2) +
 
 # how long has the customer owned their car
-ifelse(ownership==0,1,0) +
 pmin(10, ownership) +
 
 # vehicle engine capacity in cubic centimeters
 ns(EngineCC, 3) +
 
-# customer licence
-ifelse(licence=='Provisional',1,0) +
-
 # vehicle value
-pmin(1000, value) + 
-pmax(1000, value) +
+# interactions with age and vehicle_kept
+pmin(2000, value) + 
+pmax(2000, value) +
+ifelse(age<25, pmax(0, value-2000),0) +
+ifelse(vehicle_kept=='Garage', pmax(0, value-2000), 0) +
 
-# vehicle age
-# use a cublic spline with three knots
-ns(vehicle_age, knots = 3) +
+# vehicle age with ownership interaction
+poly(vehicle_age, 2) * ifelse(ownership==0, 1,0) +
 
-# mileage
+# mileage with age interaction
 pmin(4000, mileage) + 
 pmax(4000, mileage) +
+ifelse(mileage<=4000, pmin(20, pmax(0, 60-age)),0) +
 
 # number of motor claims made in the last three years
 claims +
@@ -50,6 +56,19 @@ vehicle_kept +
 # fuel
 ifelse(fuel=='D',1,0) +
 
+# make
+ifelse(make %in% c('BMW','LEXUS'),1,0) + 
+ifelse(make %in% c('AUDI','HONDA','MERCEDES-BENZ'),1,0) +
+ifelse(make %in% c('FIAT','MINI','SKODA'),1,0) +
+
 # PostcodeArea
-PostcodeArea
+ifelse(PostcodeArea %in% c('HS','IV','KW','PH'),1,0) +
+ifelse(PostcodeArea %in% c('CA','GU','HR','LA','LL','LN','OX','PA','RH','SN','WR','YO','ZE'),1,0) +
+ifelse(PostcodeArea %in% c('BH','BN','BS','CO','DL','DN','HG','HU','ML','PE','PO','SA','SG','SO','TN'),1,0) +
+ifelse(PostcodeArea %in% c('CM','CT','CW','DE','DH','G','KT','NN','NP','RG','SS','TF'),1,0) +
+ifelse(PostcodeArea %in% c('AL','BT','CF','CV','FY','HP','LE','ME','MK','NE','NG','SM','ST','TS'),1,0) +
+ifelse(PostcodeArea %in% c('BR','CH','DA','DY','PR','S','SR','WD','WF','WS'),1,0) +
+ifelse(PostcodeArea %in% c('EC','EN','HD','HX','LS','LU','RM','SK','SL','WA','WC','WN','WV'),1,0) +
+ifelse(PostcodeArea %in% c('B','BL','CR','HA','SE','SW','TW','W'),1,0) +
+ifelse(PostcodeArea %in% c('BB','BD','E','IG','L','M','N','NW','OL','UB'),1,0)
 
