@@ -164,7 +164,7 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
         )
     })
     observeEvent(data_summary(), {
-      output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), response(), weight(), kpi_spec(), input$response_transform)})
+      output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), response(), weight(), kpi_spec(), feature_spec(), input$response_transform)})
       output$chart <- renderPlotly({
         format_plotly(data_summary(),
                       response(),
@@ -586,56 +586,80 @@ add_total_row <- function(dt, weight){
   rbind(dt, total_row)
 }
 
-format_table_DT <- function(dt, response, weight, kpi_spec, response_transform){
-  # add a total row at the bottom
-  dt <- add_total_row(dt, weight)
-  dt[,3:ncol(dt)] <- round(dt[,3:ncol(dt)],4)
-  if(weight=='N'){
-    weight_cols <- 'N'
-    first_response_col <- 3
-  } else {
-    weight_cols <- c('N', weight)
-    first_response_col <- 4
-  }
-  # apply the kpi format
-  if(response_transform == '-'){
-    formatted_kpis <- apply_kpi_format(as.matrix(dt[,first_response_col:ncol(dt)]), response, weight, kpi_spec)
-  } else {
-    formatted_kpis <- apply_kpi_format(as.matrix(dt[,first_response_col:ncol(dt)]), 'dummy', 'dummy', kpi_spec)
-  }
-  formatted_kpis <- as.data.table(formatted_kpis)
-  cols <- names(dt)[first_response_col:ncol(dt)]
-  setnames(formatted_kpis, cols)
-  dt[, (cols):= formatted_kpis]
-  
-  # to format NAs
-  rowCallback <- c(
-    "function(row, data){",
-    "  for(var i=0; i<data.length; i++){",
-    "    if(data[i] === null){",
-    "      $('td:eq('+i+')', row).html('NA')",
-    "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
-    "    }",
-    "  }",
-    "}"  
-  )
-  
-  datatable(
-    dt,
-    rownames= FALSE,
-    extensions = 'Buttons',
-    options = list(pageLength = min(5000, nrow(dt)),
-                   rowCallback = JS(rowCallback),
-                   scrollX = T,
-                   dom = 'Bfrtip',
-                   columnDefs = list(list(className = 'dt-right', targets = "_all")),
-                   scrollY = 'calc(90vh - 370px)'
+format_table_DT <- function(dt, response, weight, kpi_spec, feature_spec, response_transform){
+  if(!is.null(dt) & !is.null(response) & !is.null(weight)){
+    # add a total row at the bottom
+    dt <- add_total_row(dt, weight)
+    # highlight the base level row if there is one
+    # get the variable name
+    col <- names(dt)[1]
+    if(substr(col,nchar(col)-6,nchar(col))=='_banded'){
+      # strip of the suffix _banded if it is present
+      col <- substr(col,1,nchar(col)-7)
+    }
+    # get the base level and row
+    base_level <- NULL
+    if(!is.null(feature_spec)){
+      base_level <- feature_spec[feature==col,base_level]
+      base_level <- as.character(base_level) # first column of dt is character
+      if(length(base_level)==0){
+        base_level <- NULL
+      } else if (base_level %not_in% dt[[1]]){
+        base_level <- NULL
+      }
+    }
+    #dt[,3:ncol(dt)] <- round(dt[,3:ncol(dt)],4)
+    # apply the kpi format
+    if(weight=='N'){
+      weight_cols <- 'N'
+      first_response_col <- 3
+    } else {
+      weight_cols <- c('N', weight)
+      first_response_col <- 4
+    }
+    if(response_transform == '-'){
+      formatted_kpis <- apply_kpi_format(as.matrix(dt[,first_response_col:ncol(dt)]), response, weight, kpi_spec)
+    } else {
+      formatted_kpis <- apply_kpi_format(as.matrix(dt[,first_response_col:ncol(dt)]), 'dummy', 'dummy', kpi_spec)
+    }
+    formatted_kpis <- as.data.table(formatted_kpis)
+    cols <- names(dt)[first_response_col:ncol(dt)]
+    setnames(formatted_kpis, cols)
+    dt[, (cols):= formatted_kpis]
+    
+    # to format NAs
+    rowCallback <- c(
+      "function(row, data){",
+      "  for(var i=0; i<data.length; i++){",
+      "    if(data[i] === null){",
+      "      $('td:eq('+i+')', row).html('NA')",
+      "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
+      "    }",
+      "  }",
+      "}"  
     )
-  ) |>
-    formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '14px') |>
-    #formatStyle(first_response_col:ncol(dt), `text-align` = 'right') |>
-    formatStyle(names(dt), target = "row", fontWeight = DT::styleEqual('Total', 'bold')) |>
-    formatRound(weight_cols, digits = 0)
+    
+    DT <- datatable(
+      dt,
+      rownames= FALSE,
+      extensions = 'Buttons',
+      options = list(pageLength = min(5000, nrow(dt)),
+                     rowCallback = JS(rowCallback),
+                     scrollX = T,
+                     dom = 'Bfrtip',
+                     columnDefs = list(list(className = 'dt-right', targets = "_all")),
+                     scrollY = 'calc(90vh - 370px)'
+      )
+    ) |>
+      formatStyle(1:ncol(dt), lineHeight='0%', fontSize = '14px') |>
+      formatStyle(names(dt), target = "row", fontWeight = DT::styleEqual('Total', 'bold')) |>
+      formatRound(weight_cols, digits = 0)
+    if(!is.null(base_level)){
+      DT <- DT |>
+        formatStyle(columns = 1, target='row', backgroundColor = styleEqual(base_level, rgb(100/255,180/255,220/255)))
+    }
+    return(DT)
+  }
 }
 
 #' @importFrom plotly plotly_empty add_text
