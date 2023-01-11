@@ -22,89 +22,6 @@ mod_GlimmaR_build_model_ui <- function(id){
                   style = "opacity: 1.0; z-index: 10;",
                   fluidRow(
                     column(width = 6,
-                           dropdownButton(inputId = ns('helper_dropdown'),
-                                          width = 700,
-                                          up = FALSE,
-                                          circle = FALSE,
-                                          size = 'default',
-                                          label = 'Formula helper',
-                                          right = TRUE,
-                                          margin = '10px',
-                                          fluidRow(
-                                            column(
-                                              width = 6,
-                                              div(
-                                                radioGroupButtons(
-                                                  inputId = ns('helper_feature_choice'),
-                                                  choices = c('Original','A-Z','GBM'),
-                                                  size = 's',
-                                                  label = 'Feature',
-                                                  justified = TRUE
-                                                ),
-                                                style = 'margin-top:0px; margin-bottom:-15px; padding-top:0px ; padding-bottom:0px'
-                                              ),
-                                              div(
-                                                textInput(
-                                                  inputId = ns('helper_search'),
-                                                  width = '100%',
-                                                  label = NULL,
-                                                  placeholder = 'filter'
-                                                ),
-                                                style = 'margin-top:0px; margin-bottom:-15px;'
-                                              ),
-                                              selectInput(
-                                                inputId = ns('helper_feature'),
-                                                label = NULL,
-                                                choices = NULL,
-                                                multiple = FALSE,
-                                                selectize = FALSE,
-                                                size = 15
-                                              )
-                                            ),
-                                            column(
-                                              width = 6,
-                                              div(
-                                                radioGroupButtons(
-                                                  inputId = ns('helper_levels_choice'),
-                                                  choices = c('Single','Group'),
-                                                  size = 's',
-                                                  label = 'Factor grouping/function selection',
-                                                  justified = TRUE,
-                                                ),
-                                                style = 'margin-top:0px; margin-bottom:-15px; padding-top:0px ; padding-bottom:0px'
-                                              ),
-                                              div(
-                                                textInput(
-                                                  inputId = ns('helper_level_text'),
-                                                  width = '100%',
-                                                  label = NULL,
-                                                  placeholder = 'function arguments seperated by commas'
-                                                ),
-                                                style = 'margin-top:0px; margin-bottom:-15px;'
-                                              ),
-                                              selectInput(
-                                                inputId = ns('helper_levels'),
-                                                label = NULL,
-                                                choices = NULL,
-                                                multiple = TRUE,
-                                                selectize = FALSE,
-                                                size = 15
-                                              )
-                                            )
-                                          ),
-                                          fluidRow(
-                                            column(
-                                              width = 12,
-                                              textAreaInput(
-                                                inputId = ns('formula_suggestion'),
-                                                label = NULL,
-                                                width = '100%',
-                                                height = '200px',
-                                                resize = 'none'
-                                              )
-                                            )
-                                          )
-                           )
                     ),
                     column(width = 3,
                            style = 'padding-left:0px; padding-right:0px',
@@ -120,7 +37,7 @@ mod_GlimmaR_build_model_ui <- function(id){
         width = 5,
         fluidRow(
           column(
-            width = 4,
+            width = 3,
             h3("Formula")
           ),
           column(
@@ -143,10 +60,99 @@ mod_GlimmaR_build_model_ui <- function(id){
                 selected = 'gamma'
               )
             ),
-            tippy_this(ns('wrapper'), placement = 'bottom', tooltip = tippy_text('Choose GLM error and link function',12))
+            tippy_this(ns('wrapper'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Choose GLM error and link function',12))
           ),
           column(
-            width = 4,
+            width = 2,
+            align = 'right',
+            br(),
+            dropdownButton(inputId = ns('helper_dropdown'),
+                           width = 700,
+                           up = FALSE,
+                           circle = FALSE,
+                           size = 'default',
+                           label = tags$img(src='www/formula_helper.png', height="18px", width="26px"),
+                           right = FALSE,
+                           margin = '10px',
+                           fluidRow(
+                             column(
+                               width = 6,
+                               div(
+                                 radioGroupButtons(
+                                   inputId = ns('helper_feature_choice'),
+                                   choices = c('Original','A-Z','GBM'),
+                                   size = 's',
+                                   label = 'Feature',
+                                   justified = TRUE
+                                 ),
+                                 style = 'margin-top:0px; margin-bottom:-15px; padding-top:0px ; padding-bottom:0px'
+                               ),
+                               div(
+                                 textInput(
+                                   inputId = ns('helper_search'),
+                                   width = '100%',
+                                   label = NULL,
+                                   placeholder = 'filter'
+                                 ),
+                                 style = 'margin-top:0px; margin-bottom:-15px;'
+                               ),
+                               selectInput(
+                                 inputId = ns('helper_feature'),
+                                 label = NULL,
+                                 choices = NULL,
+                                 multiple = FALSE,
+                                 selectize = FALSE,
+                                 size = 15
+                               )
+                             ),
+                             column(
+                               width = 6,
+                               div(
+                                 radioGroupButtons(
+                                   inputId = ns('helper_levels_choice'),
+                                   choices = c('Single','Group'),
+                                   size = 's',
+                                   label = 'Factor grouping/function selection',
+                                   justified = TRUE,
+                                 ),
+                                 style = 'margin-top:0px; margin-bottom:-15px; padding-top:0px ; padding-bottom:0px'
+                               ),
+                               div(
+                                 textInput(
+                                   inputId = ns('helper_level_text'),
+                                   width = '100%',
+                                   label = NULL,
+                                   placeholder = 'function arguments seperated by commas'
+                                 ),
+                                 style = 'margin-top:0px; margin-bottom:-15px;'
+                               ),
+                               selectInput(
+                                 inputId = ns('helper_levels'),
+                                 label = NULL,
+                                 choices = NULL,
+                                 multiple = TRUE,
+                                 selectize = FALSE,
+                                 size = 15
+                               )
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               width = 12,
+                               textAreaInput(
+                                 inputId = ns('formula_suggestion'),
+                                 label = NULL,
+                                 width = '100%',
+                                 height = '200px',
+                                 resize = 'none'
+                               )
+                             )
+                           )
+            ),
+            tippy_this(ns('helper_dropdown'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Create GLM formula',12))
+          ),
+          column(
+            width = 3,
             align = 'right',
             br(),
             shinyFilesButton(
@@ -158,7 +164,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
               multiple = FALSE
             ),
-            tippy_this(ns('formula_load'), placement = 'bottom', tooltip = tippy_text('Load GLM formula from .txt file',12)),
+            tippy_this(ns('formula_load'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Load GLM formula from .txt file',12)),
             shinySaveButton(
               id = ns('formula_save'),
               label = '',
@@ -169,7 +175,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
               viewtype = "detail"
             ),
-            tippy_this(ns('formula_save'), placement = 'bottom', tooltip = tippy_text('Save GLM formula to .txt file',12)),
+            tippy_this(ns('formula_save'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Save GLM formula to .txt file',12))
           )
         ),
         # QUESTION - need to move
@@ -198,7 +204,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               choices = c('All rows', 'Training only'),
               selected = 'Training only'
             ),
-            tippy_this(ns('data_to_use'), placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
+            tippy_this(ns('data_to_use'), delay = 1000, placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
           ),
           column(
             width = 3,
@@ -223,7 +229,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               icon = icon("chevron-right"),
               style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
             ),
-            tippy_this(ns('build_GLM'), placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
+            tippy_this(ns('build_GLM'), delay = 1000, placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
           )
         )
       ),
@@ -254,7 +260,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
               style = 'padding:3px 5px 3px 5px'
             ),
-            tippy_this(ns('goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature in ChartaR',12))
+            tippy_this(ns('goto_ChartaR'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Show selected feature in ChartaR',12))
           )
         ),
         br(),

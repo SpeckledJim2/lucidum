@@ -18,12 +18,22 @@ mod_BoostaR_build_model_ui <- function(id){
         fluidRow(
           column(
             width = 9,
-            h3('Feature scenarios & interactions')
+            h3('Features & interaction constraints')
           ),
           column(
             width = 3,
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
+            tippy_this(
+              ns('BoostaR_fics_dropdown'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Define custom feature interaction constraints</b><br/>
+                    Specify which interactions can be included in the GBM',
+                12
+              )
+            ),
             dropdownButton(
               inputId = ns('BoostaR_fics_dropdown'),
               right = TRUE,
@@ -80,7 +90,18 @@ mod_BoostaR_build_model_ui <- function(id){
               selectize = FALSE,
               choices = c(''),
               width = '100%'
-            )
+            ),
+            tippy_this(
+              ns('BoostaR_feature_specification'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Feature specification</b><br/>
+                    Select a feature specification<br/>
+                    to update the feature table below',
+                12
+              )
+            ),
           ),
           column(
             width = 6,
@@ -92,7 +113,18 @@ mod_BoostaR_build_model_ui <- function(id){
               selectize = FALSE,
               choices = NULL,
               width = '100%'
-            )
+            ),
+            tippy_this(
+              ns('BoostaR_interaction_contraints'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Feature interaction constraints (FICS)</b><br/>
+                    Applies FICS to the selected interaction grouping<br/>
+                    Hold down Ctrl or Command to select multiple rows',
+                12
+              )
+            ),
           )
         ),
         fluidRow(
@@ -109,23 +141,61 @@ mod_BoostaR_build_model_ui <- function(id){
               label = 'all',
               icon = icon("plus-circle")
             ),
+            tippy_this(
+              ns('BoostaR_add_features'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Include all features in GBM</b><br/>
+                    Includes all dataset columns in the feature table<br/>
+                    except for the response, weight and train_test columns',
+                12
+              )
+            ),
             actionButton(
               inputId = ns("BoostaR_clear_features"),
               label = 'all',
               icon = icon("minus-circle")
+            ),
+            tippy_this(
+              ns('BoostaR_clear_features'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Deselect all features</b><br/>',
+                12
+              )
             ),
             actionButton(
               inputId = ns("BoostaR_clear_interaction_groups"),
               label = 'int groups',
               icon = icon("minus-circle")
             ),
+            tippy_this(
+              ns('BoostaR_clear_interaction_groups'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Deselect interaction group features</b><br/>
+                Only features from highlighted interaction groups are removed',
+                12
+              )
+            ),
             actionButton(
               inputId = ns("BoostaR_goto_ChartaR"),
               label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
               style = 'padding:3px 5px 3px 5px'
             ),
-            tippy_this(ns('BoostaR_goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature in ChartaR',12))
-          )
+            tippy_this(
+              ns('BoostaR_goto_ChartaR'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Go to ChartaR one-way line and bar </b><br/>
+                with the highlighted feature as the x-axis feature',
+                12
+              )
+            ),          )
         ),
         div(rHandsontableOutput(ns("BoostaR_features")), style = 'font-size: 12px')
       ),
@@ -140,6 +210,16 @@ mod_BoostaR_build_model_ui <- function(id){
             width = 8,
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
+            tippy_this(
+              ns('BoostaR_additional_options'),
+              delay = 1000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Additional LightGBM parameters</b><br/>
+                    Access the full list of LightGBM training parameters',
+                12
+              )
+            ),
             dropdownButton(
               inputId = ns('BoostaR_additional_options'),
               right = TRUE,
@@ -240,7 +320,15 @@ mod_BoostaR_build_model_ui <- function(id){
                 textInput(
                   ns('BoostaR_num_rounds'),
                   'Max trees',
-                  value = 100)
+                  value = 100),
+                tippy_this(ns('BoostaR_num_rounds'),
+                           delay = 1000,
+                           placement = 'bottom',
+                           tooltip = tippy_text('<b>Max trees</b><br />
+                                                Number of boosting iterations'
+                                                ,12
+                           )
+                )
               ),
               column(
                 width = 5,
@@ -248,7 +336,17 @@ mod_BoostaR_build_model_ui <- function(id){
                 textInput(
                   ns('BoostaR_early_stopping'),
                   'Stopping',
-                  value = 20)
+                  value = 20),
+                tippy_this(ns('BoostaR_early_stopping'),
+                           delay = 1000,
+                           placement = 'bottom',
+                           tooltip = tippy_text("<b>Stopping</b><br />
+                                                Training stops when test data metric<br />
+                                                doesn't improve in this many rounds<br />
+                                                0 disables early stopping",
+                                                12
+                           )
+                )
               )
             ),
             fluidRow(
@@ -270,6 +368,15 @@ mod_BoostaR_build_model_ui <- function(id){
                        ns('BoostaR_grid_combinations'),
                        'Combos',
                        value = 10
+                     ),
+                     tippy_this(ns('BoostaR_grid_combinations'),
+                                delay = 1000,
+                                placement = 'bottom',
+                                tooltip = tippy_text("<b>Combos</b><br />
+                                                Maximum number of<br />
+                                                combinations to use for grid search"
+                                                     ,12
+                                )
                      )
               )
             ),
@@ -277,29 +384,59 @@ mod_BoostaR_build_model_ui <- function(id){
               column(
                 width = 12,
                 div(style = "margin-top:-4px"),
-                selectInput(
-                  inputId = ns('BoostaR_objective'),
-                  width = '100%',
-                  label = 'Objective function',
-                  selected = 'gamma',
-                  choices = list('identity link' = list('mean_squared_error',
-                                                        'mean_absolute_error',
-                                                        'mean_absolute_percentage_error',
-                                                        'huber',
-                                                        'fair'),
-                                 'log link' = list('poisson',
-                                                   'gamma',
-                                                   'tweedie'),
-                                 'logit link' = list('binary')
+                div(
+                  id = ns('objective_wrapper'),
+                  selectInput(
+                    inputId = ns('BoostaR_objective'),
+                    width = '100%',
+                    label = 'Objective',
+                    selected = 'gamma',
+                    choices = list('identity link' = list('mean_squared_error',
+                                                          'mean_absolute_error',
+                                                          'mean_absolute_percentage_error',
+                                                          'huber',
+                                                          'fair'),
+                                   'log link' = list('poisson',
+                                                     'gamma',
+                                                     'tweedie'),
+                                   'logit link' = list('binary')
+                    )
+                  )
+                ),
+                tippy_this(
+                  ns('objective_wrapper'),
+                  placement = 'bottom',
+                  delay = 1000,
+                  tooltip = tippy_text(
+                    "<b>Objective</b><br/>
+                    Objective function minimised during training<br/>
+                    Some objective functions use a log link<br/>
+                    The binary objective uses a logit link",
+                    12
                   )
                 ),
                 div(style = "margin-top:-6px"),
-                selectInput(
-                  inputId = ns('BoostaR_initial_score'),
-                  width = '100%',
-                  label = 'Initial score (offset)',
-                  choices = c('no offset')
+                div(
+                  id = ns('offset_wrapper'),
+                  selectInput(
+                    inputId = ns('BoostaR_initial_score'),
+                    width = '100%',
+                    label = 'Offset (initial score)',
+                    choices = c('no offset')
+                  )
                 ),
+                tippy_this(
+                  ns('offset_wrapper'),
+                  placement = 'bottom',
+                  delay = 1000,
+                  tooltip = tippy_text(
+                    "<b>Offset</b><br/>
+                    Also called the initial or base score<br/>
+                    Training begins from this value<br/>
+                    The initial score should be in the space of transformed values",
+                    12
+                    )
+                  ),
                 div(style = "margin-top:-6px"),
                 radioGroupButtons(
                   inputId = ns('BoostaR_calculate_SHAP_values'),
@@ -308,7 +445,19 @@ mod_BoostaR_build_model_ui <- function(id){
                   justified = TRUE,
                   choices = c('No','10k','All'),
                   selected = 'All',
-                )
+                ),
+                tippy_this(
+                  ns('BoostaR_calculate_SHAP_values'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Calculate SHAP values</b><br/>
+                    SHAP values can take a long time to calculate depending on model complexity<br/>
+                    Choose 10k to calculate SHAP values on a random sample<br/>
+                    Choose No to suppress SHAP value calculation',
+                    12
+                  )
+                ),
               ),
             )
           ),
@@ -325,13 +474,68 @@ mod_BoostaR_build_model_ui <- function(id){
                   choices = c('gbdt','goss'),
                   selected = 'gbdt'
                 ),
+                tippy_this(ns('BoostaR_boosting'),
+                           delay = 1000,
+                           placement = 'bottom',
+                           tooltip = tippy_text('<b>Boosting method</b><br />
+                                                gbdt = traditional gradient boosted decision trees<br />
+                                                goss = gradient-based one-side sampling<br />
+                                                goss requires row sample rate = 1.0 (no bagging)'
+                                                ,12
+                                                )
+                           ),
                 uiOutput(ns('BoostaR_learning_rate_UI')),
+                tippy_this(
+                  ns('BoostaR_learning_rate_UI'),
+                  delay = 1000, placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Learning rate</b><br/>
+                    Lower learning rates are usually more accurate<br/>
+                    but take longer to train',
+                    12
+                    )
+                  ),
                 div(style = "margin-top:-10px"),
                 uiOutput(ns('BoostaR_num_leaves_UI')),
+                tippy_this(
+                  ns('BoostaR_num_leaves_UI'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Number of leaves</b><br/>
+                    The maximum number of leaves in a single tree<br/>
+                    The maximum model interaction order equals<br/>
+                    the number of leaves minus 1',
+                    12
+                    )
+                  ),
                 div(style = "margin-top:-10px"),
                 uiOutput(ns('BoostaR_max_depth_UI')),
+                tippy_this(
+                  ns('BoostaR_max_depth_UI'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Max depth</b><br/>
+                    The maximum number of edges traversed from<br/>
+                    the root to a terminal leaf in a single tree',
+                    12
+                    )
+                ),
                 div(style = "margin-top:-10px"),
                 uiOutput(ns('BoostaR_row_sample_rate_UI')),
+                tippy_this(
+                  ns('BoostaR_row_sample_rate_UI'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Row sample rate</b><br/>
+                    Also called the bagging fraction<br/>
+                    Randomly select part of data without resampling<br/>
+                    Can reduce over-fitting and speed up training',
+                    12
+                  )
+                ),
               ),
               column(
                 width = 6,
@@ -339,13 +543,68 @@ mod_BoostaR_build_model_ui <- function(id){
                   ns('BoostaR_tweedie_variance_power'),
                   'Tweedie var power',
                   value = 1.5),
+                tippy_this(
+                  ns('BoostaR_tweedie_variance_power'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Tweedie variance power</b><br/>
+                    Only used with the Tweedie objective<br/>
+                    Set this closer to 2 to shift towards a Gamma distribution<br/>
+                    Set this closer to 1 to shift towards a Poisson distribution<br/>
+                    Constraints: 1.0 <= tweedie_variance_power < 2.0',
+                    12
+                  )
+                ),
                 uiOutput(ns('BoostaR_min_data_in_leaf')),
+                tippy_this(
+                  ns('BoostaR_min_data_in_leaf'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Minimum data in leaf</b><br/>
+                    The minimum number of rows in any leaf of any tree.<br/>
+                    Try increasing this value to reduce overfitting',
+                    12
+                  )
+                ),
                 div(style = "margin-top:-10px"),
                 uiOutput(ns('BoostaR_lambda_l1')),
+                tippy_this(
+                  ns('BoostaR_lambda_l1'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>L1 normalisation</b><br/>
+                    L1 normalisation tends to reduce the number of leaf splits.',
+                    12
+                  )
+                ),
                 div(style = "margin-top:-10px"),
                 uiOutput(ns('BoostaR_lambda_l2')),
+                tippy_this(
+                  ns('BoostaR_lambda_l2'),
+                  delay = 1000,
+                  placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>L2 normalisation</b><br/>
+                    L2 normalisation tends to reduce the<br/>
+                    number of leaves with large predictions',
+                    12
+                  )
+                ),
                 div(style = "margin-top:-10px"),
                 uiOutput(ns('BoostaR_column_sample_rate_UI')),
+                tippy_this(
+                  ns('BoostaR_column_sample_rate_UI'),
+                  delay = 1000, placement = 'bottom',
+                  tooltip = tippy_text(
+                    '<b>Column sample rate</b><br/>
+                    Randomly selects a subset of features on each tree<br/>
+                    if feature_fraction is smaller than 1.0',
+                    12
+                  )
+                ),
               )
             )
           )
