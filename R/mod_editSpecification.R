@@ -144,13 +144,19 @@ load_specification <- function(d, specification, specification_type){
     # check the working directory for folders containing specifications
     x <- specification_template(d, specification_type)
   } else if (inherits(specification, 'character')){
-    # check it is a .csv file
-    if(specification_type=='filter'){
-      x <- fread(specification, sep = NULL)
+    # check it is a .csv file and it exists
+    if(file.exists(specification)){
+      if(specification_type=='filter'){
+        x <- fread(specification, sep = NULL)
+      } else {
+        x <- fread(specification)
+      }
+      x[is.na(x)] <- ''
+      #showNotification(paste0(specification, ' loaded'), duration = 5, type = 'message')
     } else {
-      x <- fread(specification)
+      x <- specification_template(d, specification_type)
+      showNotification(paste0(specification_type, '_spec: "', specification, '" not found'), duration = NULL, type = 'error')
     }
-    x[is.na(x)] <- ''
   } else if (inherits(specification, 'data.table')){
     x <- setDT(specification)
   }
@@ -165,13 +171,9 @@ load_specification <- function(d, specification, specification_type){
     if(length(logical_cols)>0){
       x[, (logical_cols):= lapply(.SD, as.character), .SDcols = logical_cols]
     }
-    # if(specification_type=='filter'){
-    #   if(specification_type[[1]][1]!='no filter'){
-    #     x <- rbind(data.table(filter='no filter'), x)
-    #   }
-    # }
   } else {
     # invalid specification - use default
+    showNotification(paste0('Invalid ', specification_type, ' specification'), duration = NULL, type = 'error')
     x <- specification_template(d, specification_type)
   }
   x
