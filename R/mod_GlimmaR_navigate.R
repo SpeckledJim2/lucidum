@@ -280,7 +280,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
               tabulated_models(temp)
             #})
             showNotification(
-              paste0(length(tabulations), ' tables created'), duration = 5, type = 'message'
+              paste0(model_name,' tabulated with ', length(tabulations), ' tables'), duration = 5, type = 'message'
             )
             # confirmSweetAlert(session = session,
             #                   type = 'success',
