@@ -26,7 +26,7 @@ mod_BoostaR_build_model_ui <- function(id){
             align = 'right',
             tippy_this(
               ns('BoostaR_fics_dropdown'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Define custom feature interaction constraints</b><br/>
@@ -93,7 +93,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             tippy_this(
               ns('BoostaR_feature_specification'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Feature specification</b><br/>
@@ -116,7 +116,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             tippy_this(
               ns('BoostaR_interaction_contraints'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Feature interaction constraints (FICS)</b><br/>
@@ -143,7 +143,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             tippy_this(
               ns('BoostaR_add_features'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Include all features in GBM</b><br/>
@@ -159,7 +159,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             tippy_this(
               ns('BoostaR_clear_features'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Deselect all features</b><br/>',
@@ -173,7 +173,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             tippy_this(
               ns('BoostaR_clear_interaction_groups'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Deselect interaction group features</b><br/>
@@ -188,7 +188,7 @@ mod_BoostaR_build_model_ui <- function(id){
             ),
             tippy_this(
               ns('BoostaR_goto_ChartaR'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Go to ChartaR one-way line and bar </b><br/>
@@ -212,7 +212,7 @@ mod_BoostaR_build_model_ui <- function(id){
             align = 'right',
             tippy_this(
               ns('BoostaR_additional_options'),
-              delay = 1000,
+              delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
                 '<b>Additional LightGBM parameters</b><br/>
@@ -322,7 +322,7 @@ mod_BoostaR_build_model_ui <- function(id){
                   'Max trees',
                   value = 100),
                 tippy_this(ns('BoostaR_num_rounds'),
-                           delay = 1000,
+                           delay = 2000,
                            placement = 'bottom',
                            tooltip = tippy_text('<b>Max trees</b><br />
                                                 Number of boosting iterations'
@@ -338,7 +338,7 @@ mod_BoostaR_build_model_ui <- function(id){
                   'Stopping',
                   value = 20),
                 tippy_this(ns('BoostaR_early_stopping'),
-                           delay = 1000,
+                           delay = 2000,
                            placement = 'bottom',
                            tooltip = tippy_text("<b>Stopping</b><br />
                                                 Training stops when test data metric<br />
@@ -370,7 +370,7 @@ mod_BoostaR_build_model_ui <- function(id){
                        value = 10
                      ),
                      tippy_this(ns('BoostaR_grid_combinations'),
-                                delay = 1000,
+                                delay = 2000,
                                 placement = 'bottom',
                                 tooltip = tippy_text("<b>Combos</b><br />
                                                 Maximum number of<br />
@@ -406,7 +406,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 tippy_this(
                   ns('objective_wrapper'),
                   placement = 'bottom',
-                  delay = 1000,
+                  delay = 2000,
                   tooltip = tippy_text(
                     "<b>Objective</b><br/>
                     Objective function minimised during training<br/>
@@ -428,7 +428,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 tippy_this(
                   ns('offset_wrapper'),
                   placement = 'bottom',
-                  delay = 1000,
+                  delay = 2000,
                   tooltip = tippy_text(
                     "<b>Offset</b><br/>
                     Also called the initial or base score<br/>
@@ -448,7 +448,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 ),
                 tippy_this(
                   ns('BoostaR_calculate_SHAP_values'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Calculate SHAP values</b><br/>
@@ -475,7 +475,7 @@ mod_BoostaR_build_model_ui <- function(id){
                   selected = 'gbdt'
                 ),
                 tippy_this(ns('BoostaR_boosting'),
-                           delay = 1000,
+                           delay = 2000,
                            placement = 'bottom',
                            tooltip = tippy_text('<b>Boosting method</b><br />
                                                 gbdt = traditional gradient boosted decision trees<br />
@@ -487,7 +487,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_learning_rate_UI')),
                 tippy_this(
                   ns('BoostaR_learning_rate_UI'),
-                  delay = 1000, placement = 'bottom',
+                  delay = 2000, placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Learning rate</b><br/>
                     Lower learning rates are usually more accurate<br/>
@@ -499,7 +499,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_num_leaves_UI')),
                 tippy_this(
                   ns('BoostaR_num_leaves_UI'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Number of leaves</b><br/>
@@ -513,7 +513,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_max_depth_UI')),
                 tippy_this(
                   ns('BoostaR_max_depth_UI'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Max depth</b><br/>
@@ -526,7 +526,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_row_sample_rate_UI')),
                 tippy_this(
                   ns('BoostaR_row_sample_rate_UI'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Row sample rate</b><br/>
@@ -545,7 +545,7 @@ mod_BoostaR_build_model_ui <- function(id){
                   value = 1.5),
                 tippy_this(
                   ns('BoostaR_tweedie_variance_power'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Tweedie variance power</b><br/>
@@ -559,7 +559,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_min_data_in_leaf')),
                 tippy_this(
                   ns('BoostaR_min_data_in_leaf'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Minimum data in leaf</b><br/>
@@ -572,7 +572,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_lambda_l1')),
                 tippy_this(
                   ns('BoostaR_lambda_l1'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>L1 normalisation</b><br/>
@@ -584,7 +584,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_lambda_l2')),
                 tippy_this(
                   ns('BoostaR_lambda_l2'),
-                  delay = 1000,
+                  delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>L2 normalisation</b><br/>
@@ -597,7 +597,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 uiOutput(ns('BoostaR_column_sample_rate_UI')),
                 tippy_this(
                   ns('BoostaR_column_sample_rate_UI'),
-                  delay = 1000, placement = 'bottom',
+                  delay = 2000, placement = 'bottom',
                   tooltip = tippy_text(
                     '<b>Column sample rate</b><br/>
                     Randomly selects a subset of features on each tree<br/>
@@ -1004,7 +1004,8 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       )
     })
     observeEvent(input$BoostaR_goto_ChartaR, {
-      r <- input$BoostaR_features_select$select$r
+      # get the selected row in the table
+      r <- input$BoostaR_features_select$select$rAll
       if(!is.null(r)){
         last_clicked <- input$BoostaR_features$data[[r]][[1]]
       }
