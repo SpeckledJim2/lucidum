@@ -21,7 +21,7 @@ mod_defineFilter_ui <- function(id){
             selected = 'All',
             justified = TRUE,
             size = 's',
-            width = '100%',
+            width = '100%'
           )
         )
       )
@@ -38,8 +38,9 @@ mod_defineFilter_ui <- function(id){
         width = 2,
         style = 'margin-left:-30px; margin-top:-21px; padding-left:0px;',
         div(
-          style = 'padding:0px; border-radius:0px',
+          style = 'padding:0px;',
           actionButton(
+            style = 'height:34px; border-radius:0px',
             width = '100%',
             inputId = ns('apply_filter'),
             label = NULL,
@@ -89,6 +90,7 @@ mod_defineFilter_ui <- function(id){
 mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    user_filter <- reactiveVal(FALSE)
     free_filter <- reactiveVal(FALSE)
     stop_update <- reactiveVal(FALSE)
 
@@ -102,6 +104,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
         message <- apply_filter(d(), flt, input$train_test_filter)
         output$message <- renderText({message})
         updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+        user_filter(flt)
         free_filter(FALSE)
       }
       stop_update(FALSE)
@@ -112,6 +115,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       message <- apply_filter(d(), input$free_filter, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      user_filter(input$free_filter)
     })
     observeEvent(c(input$filter_list, input$filter_operation, input$train_test_filter), ignoreInit = TRUE, {
       dt_update(dt_update()+1)
@@ -129,11 +133,20 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       } else {
         updateTextInput(inputId = 'free_filter', value = '')
       }
+      user_filter(filter_formula)
       stop_update(TRUE)
     })
     observeEvent(filter_spec(), {
       updateSelectInput(inputId = 'filter_list', choices = no_filter(filter_spec()[[1]]))
     })
+    return(
+      reactive(
+        list(
+          train_test_filter = input$train_test_filter,
+          user_filter = user_filter()
+        )
+      )
+    )
   })
 }
 

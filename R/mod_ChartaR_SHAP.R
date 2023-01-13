@@ -213,10 +213,11 @@ viz_SHAP_chart <- function(d, weight, feature_1, feature_2, banding_1, banding_2
           }
         }
       }
+      # identify rows passing the filter and with non-zero weight
       if(weight=='N'){
-        idx <- 1:nrow(d)
+        idx <- which(d[['total_filter']]==1)
       } else {
-        idx <- which(d[[weight]]>0)
+        idx <- which(d[[weight]]>0 & d[['total_filter']]==1)
       }
       if(feature_2=='none'){
         # 1D chart
@@ -318,7 +319,13 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
                 showlegend = TRUE, name = 'SHAP_min_max')
   }
   # formatting
-  p <- p %>% layout(title = list(y= 0.98, text = boldify(paste0('SHAP flame plot: ',feature_1)), font = list(size = 16, face='bold')))
+  if((max(SHAP_summary[[1]], na.rm=TRUE)-min(SHAP_summary[[1]], na.rm = TRUE))/banding_1<100){
+    # only manually specify tick marks if there are going to be fewer than 100
+    p <- p |> layout(xaxis = list(dtick = banding_1, tickmode = 'linear', tickangle=0, tickfont = list(size = min(12,max(6,500/nrow(SHAP_summary))))))
+  }
+  p <- p %>% layout(
+    title = list(y= 0.98,text = boldify(paste0('SHAP flame plot: ',feature_1)),font = list(size = 16, face='bold'))
+    )
   return(p)
 }
 SHAP_box_and_whisker <- function(d, weight, feature_1, banding_1, factor_1, q, rebase, feature_spec){

@@ -26,7 +26,7 @@ mod_MappaR_ui <- function(id){
     tags$head(tags$style(HTML(paste0('#', ns('controls'), '{border-width: 2px; border-color: rgb(255,255,255)}')))),
     tags$head(tags$style(HTML(paste0('#', ns('panel_title'), ' {font-size: 48px; font-weight: 300; text-align:center}')))),
     tags$head(tags$style(HTML(paste0('#', ns('panel_location'), '{font-size: 20px; text-align:center}')))),
-    tags$head(tags$style(HTML(paste0('#', ns('filters'), '{margin-top:10px; font-size: 12px; text-align:center; font-style: italic}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('filters'), '{margin-top:5px; font-size: 14px; text-align:center; font-weight: 600}')))),
     tags$script(paste0("Shiny.addCustomMessageHandler('background-color', function(color) {var map = document.getElementById('" , ns('map') , "') ;map.style.backgroundColor = color;});")),
     absolutePanel(id = ns('controls'),
                   class = 'panel panel-default',
@@ -45,7 +45,7 @@ mod_MappaR_ui <- function(id){
                            textOutput(ns('filters'))
                     )
                   ),
-                  #br(),
+                  br(),
                   fluidRow(
                     column(width = 12,
                            searchInput(
@@ -198,7 +198,7 @@ mod_MappaR_ui <- function(id){
 #' 
 #' @noRd
 #' 
-mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, selected_tab, show_MappaR){
+mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, selected_tab, show_MappaR, filters){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     plot_postcode_area <- reactiveVal()
@@ -285,6 +285,20 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
           showNotification('Postcode not found', type = 'error')
         }
       }
+    })
+    observeEvent(c(response(), weight()), {
+      
+    })
+    observeEvent(filters(), {
+      # filter text
+      train_test_filter <- filters()$train_test_filter
+      user_filter <- filters()$user_filter
+      if(train_test_filter=='All'){train_test_filter <- ''}
+      if(train_test_filter=='Train'){train_test_filter <- 'Training data'}
+      if(train_test_filter=='Test'){train_test_filter <- 'Test data'}
+      output$filters <- renderText({
+        paste0(train_test_filter, ' ', user_filter)
+      })
     })
   })
 }

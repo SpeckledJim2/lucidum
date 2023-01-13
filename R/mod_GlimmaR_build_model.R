@@ -11,27 +11,6 @@
 mod_GlimmaR_build_model_ui <- function(id){
   ns <- NS(id)
   tagList(
-    absolutePanel(id = ns("helper_panel"),
-                  class = "panel panel-default",
-                  top = '60px',
-                  right = '14px',
-                  width = '160px',
-                  fixed=TRUE,
-                  draggable = TRUE,
-                  height = "auto",
-                  style = "opacity: 1.0; z-index: 10;",
-                  fluidRow(
-                    column(width = 6,
-                    ),
-                    column(width = 3,
-                           style = 'padding-left:0px; padding-right:0px',
-                    ),
-                    column(width = 3,
-                           align = 'center',
-                           style = 'padding-left:0px; padding-right:0px'
-                    )
-                  )
-    ),
     fluidRow(
       column(
         width = 5,

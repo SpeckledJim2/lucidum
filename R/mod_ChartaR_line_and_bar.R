@@ -119,7 +119,7 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
 #' ChartaR_line_and_bar Server Functions
 #'
 #' @noRd 
-mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx){
+mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, filters){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     data_summary <- reactiveVal(NULL)
@@ -134,7 +134,9 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     })
     banding_new <- mod_bandingChooser_server('x_banding', d, x_col, initial_banding)
     observeEvent(banding_new(), {
-      banding(banding_new())
+      if(banding_new()!=banding()){
+        banding(banding_new())
+      }
     })
     observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
       # QUESTION - how to stop this triggering twice on first call
@@ -172,7 +174,8 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
                       input$show_labels,
                       input$show_response,
                       input$sigma_bars,
-                      kpi_spec()
+                      kpi_spec(),
+                      filters()
                       )
         })
     })
@@ -663,7 +666,7 @@ format_table_DT <- function(dt, response, weight, kpi_spec, feature_spec, respon
 }
 
 #' @importFrom plotly plotly_empty add_text
-format_plotly <- function(dt, response, weight, show_labels, show_response, sigma_bars, kpi_spec){
+format_plotly <- function(dt, response, weight, show_labels, show_response, sigma_bars, kpi_spec, filters){
   if(is.null(dt)){
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
@@ -798,9 +801,13 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
         )
       }
     }
-    # format the chart
-    filter_text <- ''
-    train_test_filter_text <- ''
+    # filter text
+    filter_text <- filters$train_test_filter
+    train_test_filter_text <- filters$user_filter
+    if(filter_text=='All'){filter_text <- ''}
+    if(filter_text=='Train'){filter_text <- '(Training data)'}
+    if(filter_text=='Test'){filter_text <- '(Test data)'}
+    # make the chart
     p <- p |> layout(xaxis = xform,
                      yaxis = yform,
                      yaxis2 = yform2,

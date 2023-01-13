@@ -87,7 +87,7 @@ mod_histogram_ui <- function(id){
 #' 
 #' 
 #' @importFrom plotly renderPlotly layout
-mod_histogram_server <- function(id, d, dt_update, response, weight, kpi_spec){
+mod_histogram_server <- function(id, d, dt_update, response, weight, kpi_spec, filters){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     output$summary_table <- DT::renderDataTable({
@@ -96,7 +96,7 @@ mod_histogram_server <- function(id, d, dt_update, response, weight, kpi_spec){
     })
     output$histogram <- renderPlotly({
       dt_update()
-      histogram_chart(d(), response(), weight(), input$num_bins, input$log_scale, input$normalise, input$inc_cum, input$use_sample)
+      histogram_chart(d(), response(), weight(), input$num_bins, input$log_scale, input$normalise, input$inc_cum, input$use_sample, filters())
     })
   })
 }
@@ -199,7 +199,7 @@ histogram_DT <- function(d){
 }
 
 #' @importFrom plotly plot_ly layout
-histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise, inc_cum, use_sample){
+histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise, inc_cum, use_sample, filters){
   if(!is.null(response)){
     # only proceed if d and the filters have the same length
     if(response %in% names(d) &
@@ -223,8 +223,14 @@ histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise,
       } else {
         title <- paste(response, '/', weight)
       }
+      # filter text
+      train_test_filter <- filters$train_test_filter
+      user_filter <- filters$user_filter
+      if(train_test_filter=='All'){train_test_filter <- ''}
+      if(train_test_filter=='Train'){train_test_filter <- '(Training data)'}
+      if(train_test_filter=='Test'){train_test_filter <- '(Test data)'}
       # make title bold
-      title <- paste('<b>', title, '</b>')
+      title <- paste0(boldify(title), train_test_filter, ' ', user_filter)
       # set the number of bins, if NULL then plotly will automatically pick the number of bins
       num_bins <- as.numeric(num_bins)
       num_bins <- min(10000,num_bins)

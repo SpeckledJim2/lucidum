@@ -140,13 +140,13 @@ app_server <- function(input, output, session) {
   nav_options <- mod_navigator_server('navigator', kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
   
   # filter server
-  mod_defineFilter_server("filter", d, dt_update, filter_spec)
+  filters <- mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
   # tab servers
   mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions)
   mod_DataR_server('DataR', d, dt_update)
-  mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx)
-  mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, selected_tab, golem::get_golem_options('show_MappaR'))
+  mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, filters)
+  mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, selected_tab, golem::get_golem_options('show_MappaR'), filters)
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
   mod_GlimmaR_server('GlimmaR', d, dt_update, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
   
@@ -196,13 +196,7 @@ get_spec_filepath <- function(type, dataset_name){
   } else {
     # search for the spec file in the specification folder supplied as a golem option
     if(dataset_name!='NULL'){
-      search_name <- paste0(spec_folder, '/', dataset_name, '_', type, '_spec.csv')
-      if(file.exists(search_name)){
-        search_name
-      } else {
-        # nothing found - return NULL
-        NULL
-      }
+      paste0(spec_folder, '/', dataset_name, '_', type, '_spec.csv')
     }
   }
 }

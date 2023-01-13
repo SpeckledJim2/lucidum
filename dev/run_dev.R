@@ -12,9 +12,9 @@ golem::detach_all_attached()
 # Document and reload your package
 golem::document_and_reload()
 
-kpi_spec <- system.file('insurance_kpi_spec.csv', package="glucidum")
-feature_spec <- system.file('insurance_feature_spec.csv', package="glucidum")
-filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
+#kpi_spec <- system.file('insurance_kpi_spec.csv', package="glucidum")
+#feature_spec <- system.file('insurance_feature_spec.csv', package="glucidum")
+#filter_spec <- system.file('insurance_filter_spec.csv', package="glucidum")
 
 # load some datasets
 #GoCompare <- data.table::setDT(feather::read_feather('~/Dropbox/Work/Stella/Postcodes 2022_10/01 formatted data/GoCompare.feather'))

@@ -129,10 +129,10 @@ selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, B
       }
     })
     
-    # observeEvent(input$clear_selection, {
-    #   updateTextInput(session, inputId = 'search', value = '')
-    #   updateSelectInput(session, inputId = 'selectInput', selected = character(0))
-    # })
+    observeEvent(input$clear_selection, {
+       updateTextInput(session, inputId = 'search', value = '')
+       updateSelectInput(session, inputId = 'selectInput', selected = character(0))
+     })
     return(reactive({input$selectInput}))
   })
 }
