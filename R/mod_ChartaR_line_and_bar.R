@@ -67,10 +67,11 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
           ),
           column(
             width = 3,
+            style = 'padding-right: 0px',
             radioGroupButtons(
               inputId = ns('show_partial_dependencies'),
               label = "Partial dependencies",
-              choices = c('-','GLM','GBM','Both'),
+              choices = c('-','GLM','GBM','GBM-','Both'),
               individual = FALSE,
               size = 'xs',
               selected = '-'
@@ -175,6 +176,8 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
                       input$show_response,
                       input$sigma_bars,
                       kpi_spec(),
+                      feature_spec(),
+                      input$response_transform,
                       filters()
                       )
         })
@@ -279,7 +282,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           }
           # SHAP summary
           SHAP_col <- NULL
-          if (show_partial_dependencies %in% c('GBM','Both')){
+          if (show_partial_dependencies %in% c('GBM','GBM-','Both')){
             SHAP_col <- paste0('lgbm_SHAP_', group_by_col)
             if(!(SHAP_col %in% names(d))){
               SHAP_col <- NULL
@@ -289,7 +292,9 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             if(length(rows_idx)==nrow(d)){
               SHAP_summary <- d[,c(min = lapply(.SD, min, na.rm = TRUE),
                                    perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
+                                   perc_25 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.25),
                                    mean = lapply(.SD, mean, na.rm = TRUE),
+                                   perc_75 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.75),
                                    perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
                                    max = lapply(.SD, max, na.rm = TRUE)
               ),
@@ -299,7 +304,9 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               SHAP_summary <- d[rows_idx,
                                 c(min = lapply(.SD, min, na.rm = TRUE),
                                   perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
+                                  perc_25 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.25),
                                   mean = lapply(.SD, mean, na.rm = TRUE),
+                                  perc_75 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.75),
                                   perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
                                   max = lapply(.SD, max, na.rm = TRUE)
                                 ),
@@ -307,7 +314,13 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                                 .SDcols = SHAP_col]
             }
             setorderv(SHAP_summary, names(SHAP_summary)[1])
-            names(SHAP_summary)[2:6] <- c('min','perc_5','mean','perc_95','max')
+            names(SHAP_summary)[2:8] <- c('min','perc_5','perc_25','mean','perc_75','perc_95','max')
+            # remove min and max if selected
+            n_SHAP_cols <- 8
+            if(show_partial_dependencies=='GBM-'){
+              SHAP_summary[, c('min','max'):=NULL]
+              n_SHAP_cols <- 6
+            }
             # scale SHAP values to mean
             # how to do this depends on the choice of objective
             if(!is.null(gbm_link)){
@@ -317,28 +330,28 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 } else {
                   wtd_SHAP_mean <- sum(d_summary[,3]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
                 }
-                SHAP_summary[, 2:6] <-  SHAP_summary[, 2:6] + wtd_mean - wtd_SHAP_mean
+                SHAP_summary[, 2:n_SHAP_cols] <-  SHAP_summary[, 2:n_SHAP_cols] + wtd_mean - wtd_SHAP_mean
               } else if (gbm_link=='log'){
-                SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6]) # exponentiate for log link
+                SHAP_summary[, 2:n_SHAP_cols] <- exp(SHAP_summary[, 2:n_SHAP_cols]) # exponentiate for log link
                 if(weight %in% c('N','no weights')){
                   wtd_SHAP_mean <- sum(d_summary[,2]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
                 } else {
                   wtd_SHAP_mean <- sum(d_summary[,3]*SHAP_summary[['mean']], na.rm = TRUE)/sum(d_summary[,3], na.rm = TRUE)
                 }
-                SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * wtd_mean / wtd_SHAP_mean # scale to mean
+                SHAP_summary[, 2:n_SHAP_cols] <- SHAP_summary[, 2:n_SHAP_cols] * wtd_mean / wtd_SHAP_mean # scale to mean
               } else if (gbm_link=='logit'){
                 # won't tie up due to logit, following leads to sensible chart
-                SHAP_summary[, 2:6] <- exp(SHAP_summary[, 2:6])/(1+exp(SHAP_summary[, 2:6])) * wtd_mean * 2
+                SHAP_summary[, 2:n_SHAP_cols] <- exp(SHAP_summary[, 2:n_SHAP_cols])/(1+exp(SHAP_summary[, 2:n_SHAP_cols])) * wtd_mean * 2
               }
             }
             # multiply SHAP_summary by row weights
             # needed for later weighted average removal of rows
             if(weight=='N'){
-              SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * d_summary[[2]]
+              SHAP_summary[, 2:n_SHAP_cols] <- SHAP_summary[, 2:n_SHAP_cols] * d_summary[[2]]
             } else {
-              SHAP_summary[, 2:6] <- SHAP_summary[, 2:6] * d_summary[[3]]
+              SHAP_summary[, 2:n_SHAP_cols] <- SHAP_summary[, 2:n_SHAP_cols] * d_summary[[3]]
             }
-            d_summary <- cbind(d_summary, SHAP_summary[, 2:6])
+            d_summary <- cbind(d_summary, SHAP_summary[, 2:n_SHAP_cols])
           }
           # LP summary
           LP_col <- NULL
@@ -389,35 +402,6 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
             d_summary <- cbind(d_summary, LP_summary[, 2])
           }
-          # group low exposure rows and remove from summary
-          # if(!is.numeric(g)){
-          #   min_exposure <- 0
-          #   if(group_low_exposure!='0' & weight != 'no weights'){
-          #     if(group_low_exposure=='1%'){
-          #       if(weight=='N'){
-          #         min_exposure <- 0.01 * sum(d_summary[,2])
-          #       } else {
-          #         min_exposure <- 0.01 * sum(d_summary[,3])
-          #       }
-          #     } else {
-          #       min_exposure <- as.numeric(group_low_exposure)
-          #     }
-          #     if(weight=='N'){
-          #       low_exposure_rows <- which(d_summary[[2]]<min_exposure)
-          #     } else {
-          #       low_exposure_rows <- which(d_summary[[3]]<min_exposure)
-          #     }
-          #     low_exposure_summary <- d_summary[low_exposure_rows,
-          #                                       lapply(.SD, sum, na.rm = TRUE),
-          #                                       .SDcols = 2:ncol(d_summary)]
-          #     if(nrow(low_exposure_summary)>0){
-          #       col <- names(d_summary)[1]
-          #       low_exposure_summary[, (col) := 'Small weights']
-          #       d_summary <- d_summary[-low_exposure_rows,]
-          #       d_summary <- rbind(d_summary, low_exposure_summary)
-          #     }
-          #   }
-          # }
           # divide by weight if specified
           if(weight == 'N'){
             first_col <- 3
@@ -450,7 +434,11 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 cols <- names(d_summary)[first_col:ncol(d_summary)]
                 denominator <- d_summary[idx, .SD, .SDcols = cols]
                 if(!is.null(SHAP_col)){
-                  denominator[, (c('min','perc_5','perc_95','max')) := mean] # what to adjust to the mean, not the percentiles
+                  if(n_SHAP_cols==6){
+                    denominator[, (c('perc_5','perc_25','perc_75','perc_95')) := mean] # what to adjust to the mean, not the percentiles
+                  } else if (n_SHAP_cols==8){
+                    denominator[, (c('min','perc_5','perc_25','perc_75','perc_95','max')) := mean] # what to adjust to the mean, not the percentiles
+                  }
                 }
                 rebased_values <- as.data.table(mapply('-',d_summary[, .SD, .SDcols=cols], denominator))
                 d_summary[, (cols) := rebased_values]
@@ -471,7 +459,11 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 cols <- names(d_summary)[first_col:ncol(d_summary)]
                 denominator <- d_summary[idx, .SD, .SDcols = cols]
                 if(!is.null(SHAP_col)){
-                  denominator[, (c('min','perc_5','perc_95','max')) := mean] # want to adjust to the mean, not the percentiles
+                  if(n_SHAP_cols==6){
+                    denominator[, (c('perc_5','perc_25','perc_75','perc_95')) := mean] # what to adjust to the mean, not the percentiles
+                  } else if (n_SHAP_cols==8){
+                    denominator[, (c('min','perc_5','perc_25','perc_75','perc_95','max')) := mean] # what to adjust to the mean, not the percentiles
+                  }
                 }
                 rebased_values <- mapply('/',d_summary[, .SD, .SDcols=cols], denominator)
                 if(inherits(rebased_values, 'matrix')){
@@ -484,8 +476,11 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               }
             }
           }
-          # sigma bars
+          # sigma bars - only permit if not transforming the response
           sigma_bars <- as.numeric(sigma_bars)
+          if(response_transform != '-'){
+            sigma_bars <- 0
+          }
           if(length(add_cols)==1 & sigma_bars!=0){
             fitted <- add_cols[1]
             if(inherits(banded_col, 'character')){
@@ -514,7 +509,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               setorderv(d_summary, response, -1)
             }
           } else if (sort=='PD'){
-            if(show_partial_dependencies %in% c('Both','GBM')){
+            if(show_partial_dependencies %in% c('Both','GBM','GBM-')){
               # can't sort by both so sort by SHAP
               if('mean' %in% names(d_summary)){
                 setorderv(d_summary, 'mean')
@@ -566,7 +561,7 @@ banding_guesser_numeric_date <- function(d, col){
 }
 
 add_total_row <- function(dt, weight){
-  if(all(c('min','perc_5','mean','perc_95','max') %in% names(dt))) SHAP_cols <- TRUE else SHAP_cols <- FALSE
+  #if(all(c('min','perc_5','mean','perc_95','max') %in% names(dt))) SHAP_cols <- TRUE else SHAP_cols <- FALSE
   if(weight=='N'){
     weight_cols <- 'N'
     weight_extra <- 0
@@ -636,7 +631,7 @@ format_table_DT <- function(dt, response, weight, kpi_spec, feature_spec, respon
       "  for(var i=0; i<data.length; i++){",
       "    if(data[i] === null){",
       "      $('td:eq('+i+')', row).html('NA')",
-      "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
+      "        .css({'color': 'rgb(150,150,150)', 'font-style': 'italic'});",
       "    }",
       "  }",
       "}"  
@@ -666,7 +661,7 @@ format_table_DT <- function(dt, response, weight, kpi_spec, feature_spec, respon
 }
 
 #' @importFrom plotly plotly_empty add_text
-format_plotly <- function(dt, response, weight, show_labels, show_response, sigma_bars, kpi_spec, filters){
+format_plotly <- function(dt, response, weight, show_labels, show_response, sigma_bars, kpi_spec, feature_spec, response_transform, filters){
   if(is.null(dt)){
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
@@ -684,6 +679,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
       layout(title = list(text = 'Too many rows (>10,000) to display - view table instead',yref = "paper", y = 0.5))
   } else {
     p <- plot_ly()
+    p <- p |> layout(font=list(family = 'Helvetica Neue'))
     # make the first column character
     dt[[1]] <- as.character(dt[[1]])
     # work out first_line_col
@@ -696,16 +692,18 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     }
     # setup plot parameters
     # check for SHAP cols
-    if(all(c('min','perc_5','mean','perc_95','max') %in% names(dt))) SHAP_cols <- TRUE else SHAP_cols <- FALSE
+    SHAP_cols <- 0
+    if(all(c('perc_5','perc_25','mean','perc_75','perc_95') %in% names(dt))) SHAP_cols <- 5
+    if(all(c('min','perc_5','perc_25','mean','perc_75','perc_95','max') %in% names(dt))) SHAP_cols <- 7
     # remove rows with zero weight for plot (they make SHAP values look funny)
     include <- dt[[first_line_col-1]] > 0
     dt <- dt[include]
     # check for LP col
     if('LP_mean' %in% names(dt)) LP_col <- TRUE else LP_col <- FALSE
-    # check for sigma_bar col
-    if('sigma_bar' %in% names(dt)) sigma_col <- TRUE else sigma_col <- FALSE
+    # check for sigma_bar col - don't show if response_transform selected
+    if('sigma_bar' %in% names(dt) & response_transform == '-') sigma_col <- TRUE else sigma_col <- FALSE
     # last non SHAP or LP line
-    last_line_col <- ncol(dt) - ifelse(SHAP_cols,5,0) - ifelse(LP_col,1,0) - ifelse(sigma_col,1,0)
+    last_line_col <- ncol(dt) - SHAP_cols - ifelse(LP_col,1,0) - ifelse(sigma_col,1,0)
     last_ex_sigma <- ncol(dt) - ifelse(sigma_col,1,0)
     # setup plot
     xform <- list()
@@ -747,11 +745,28 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     dt[,(col):=lapply(.SD, \(x){x[is.na(x)] <- 'NA';x}), .SDcols = col]
     #dt[,(col):=lapply(.SD, as.factor), .SDcols = col]
     xform$categoryarray <- dt[[1]]
-    # add the bars, with distinct colours for NA and X
+    # get the base level and row
+    if(substr(col,nchar(col)-6,nchar(col))=='_banded'){
+      # strip of the suffix _banded if it is present
+      col <- substr(col,1,nchar(col)-7)
+    }
+    base_level <- NULL
+    if(!is.null(feature_spec)){
+      base_level <- feature_spec[feature==col,base_level]
+      base_level <- as.character(base_level) # first column of dt is character
+      if(length(base_level)==0){
+        base_level <- NULL
+      } else if (base_level %not_in% dt[[1]]){
+        base_level <- NULL
+      }
+    }
+    # add the bars, with distinct colours for NA, Small weights and the base level
     colours <- rep('rgba(200, 240, 250,1.0)', nrow(dt))
     na_col <- which(dt[[1]]=='NA')
     X_col <- which(dt[[1]]=='Small weights')
-    colours[na_col] <- 'rgba(255,150,150,1.0)'
+    base_col <- which(dt[[1]]==base_level)
+    colours[base_col] <- 'rgba(100,180,220,1.0)'
+    colours[na_col] <- 'rgba(150,150,150,1.0)'
     colours[X_col] <- 'rgba(255,150,150,1.0)'
     # choose weight labels
     if(show_labels=='-' | nrow(dt)>200){
@@ -759,7 +774,6 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     } else if (show_labels %in% c('Weight','All')){
       weight_text_template <- '%{y:.3s}'
     }
-    
     # add weight bars
     p <- add_trace(p,
                    x = dt[[1]],
@@ -801,18 +815,31 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
         )
       }
     }
-    # filter text
+    # filter text for title
     filter_text <- filters$train_test_filter
     train_test_filter_text <- filters$user_filter
     if(filter_text=='All'){filter_text <- ''}
-    if(filter_text=='Train'){filter_text <- '(Training data)'}
-    if(filter_text=='Test'){filter_text <- '(Test data)'}
+    if(filter_text=='Train'){filter_text <- 'training data'}
+    if(filter_text=='Test'){filter_text <- 'test data'}
+    # rescale text for title
+    rescale_text <- ''
+    if(response_transform %in% c('0','1')){
+      if(is.null(base_level)){
+        rescale_text <- 'rebased'
+      } else {
+        rescale_text <- paste0('rebased, base level: ', base_level)
+      }
+    }
     # make the chart
     p <- p |> layout(xaxis = xform,
                      yaxis = yform,
                      yaxis2 = yform2,
                      margin = list(r = 100, l = 50, t = 50),
-                     title = list(text = paste0(boldify(yform2$title), filter_text, ' ', train_test_filter_text), font = list(size = 16, face='bold'))
+                     title = list(
+                       x = 0.03,
+                       y = 0.97,
+                       text = paste0(boldify(yform2$title), filter_text, ' ', train_test_filter_text, ' ', rescale_text), font = list(size = 16)
+                       )
     ) |>
       layout(legend = list(traceorder = 'normal',
                            orientation = 'v',
@@ -822,7 +849,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
                            font = list(size = 10)
                            )
              )
-    if(SHAP_cols){
+    if(SHAP_cols>0){
       # add SHAP ribbons
       # mean
       # remove rows from d with NAs for SHAP values
@@ -830,22 +857,32 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
         add_trace(x = dt[[1]], y = dt[['mean']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   line = list(color = 'rgba(200, 50, 50, 1.0)', dash = 'dot'),
                   showlegend = TRUE, name = 'SHAP_mean')
+      # 25th-75th percentiles
+      p <- p %>%
+        add_trace(x = dt[[1]], y = dt[['perc_25']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  showlegend = FALSE, name = 'SHAP_25') %>%
+        add_trace(x = dt[[1]], y = dt[['perc_75']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                  fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  showlegend = TRUE, name = 'SHAP_25_75')
       # 5th-95th percentiles
       p <- p %>%
         add_trace(x = dt[[1]], y = dt[['perc_5']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                   showlegend = FALSE, name = 'SHAP_5') %>%
         add_trace(x = dt[[1]], y = dt[['perc_95']], type = 'scatter', mode = 'lines', yaxis = "y2",
-                  fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                  fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.2)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                   showlegend = TRUE, name = 'SHAP_5_95')
       # min to max SHAP
-      p <- p %>%
-        add_trace(x = dt[[1]], y = dt[['min']], type = 'scatter', mode = 'lines', yaxis = "y2",
-                  fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                  showlegend = FALSE, name = 'SHAP_min') %>%
-        add_trace(x = dt[[1]], y = dt[['max']], type = 'scatter', mode = 'lines', yaxis = "y2",
-                  fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                  showlegend = TRUE, name = 'SHAP_min_max')
+      if(SHAP_cols==7){
+        p <- p %>%
+          add_trace(x = dt[[1]], y = dt[['min']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                    fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                    showlegend = FALSE, name = 'SHAP_min') %>%
+          add_trace(x = dt[[1]], y = dt[['max']], type = 'scatter', mode = 'lines', yaxis = "y2",
+                    fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                    showlegend = TRUE, name = 'SHAP_min_max')
+      }
     }
     if(LP_col){
       p <- p %>%
