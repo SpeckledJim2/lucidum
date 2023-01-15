@@ -284,30 +284,6 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
     }
   }
   p <- plot_ly()
-  p <- p %>%
-    add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['mean']], type = 'scatter', mode = 'lines', yaxis = "y1",
-              line = list(color = 'rgba(200, 50, 50, 1.0)', dash = 'dot'),
-              showlegend = TRUE, name = 'SHAP_mean')
-  # 5th-95th percentiles
-  if(SHAP_ribbons %in% c('All','5_95')){
-    p <- p %>%
-      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_5']], type = 'scatter', mode = 'lines', yaxis = "y1",
-                fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = FALSE, name = 'SHAP_5') %>%
-      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_95']], type = 'scatter', mode = 'lines', yaxis = "y1",
-                fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = TRUE, name = 'SHAP_5_95')
-  }
-  # 25th-75th percentiles
-  if(SHAP_ribbons %in% c('All','25_75','5_95')){
-    p <- p %>%
-      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_25']], type = 'scatter', mode = 'lines', yaxis = "y1",
-                fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = FALSE, name = 'SHAP_25') %>%
-      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_75']], type = 'scatter', mode = 'lines', yaxis = "y1",
-                fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.2)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = TRUE, name = 'SHAP_25_75')
-  }
   # min to max SHAP
   if(SHAP_ribbons %in% c('All')){
     p <- p %>%
@@ -318,6 +294,31 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
                 fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                 showlegend = TRUE, name = 'SHAP_min_max')
   }
+  # 5th-95th percentiles
+  if(SHAP_ribbons %in% c('All','5_95')){
+    p <- p %>%
+      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_5']], type = 'scatter', mode = 'lines', yaxis = "y1",
+                fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                showlegend = FALSE, name = 'SHAP_5') %>%
+      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_95']], type = 'scatter', mode = 'lines', yaxis = "y1",
+                fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.2)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                showlegend = TRUE, name = 'SHAP_5_95')
+  }
+  # 25th-75th percentiles
+  if(SHAP_ribbons %in% c('All','25_75','5_95')){
+    p <- p %>%
+      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_25']], type = 'scatter', mode = 'lines', yaxis = "y1",
+                fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                showlegend = FALSE, name = 'SHAP_25') %>%
+      add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_75']], type = 'scatter', mode = 'lines', yaxis = "y1",
+                fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
+                showlegend = TRUE, name = 'SHAP_25_75')
+  }
+  # mean
+  p <- p %>%
+    add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['mean']], type = 'scatter', mode = 'lines', yaxis = "y1",
+              line = list(color = 'rgba(200, 50, 50, 1.0)', dash = 'dot'),
+              showlegend = TRUE, name = 'SHAP_mean')
   # formatting
   if((max(SHAP_summary[[1]], na.rm=TRUE)-min(SHAP_summary[[1]], na.rm = TRUE))/banding_1<100){
     # only manually specify tick marks if there are going to be fewer than 100
