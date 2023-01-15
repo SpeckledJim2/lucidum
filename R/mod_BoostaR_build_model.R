@@ -1313,7 +1313,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
       data = lgb_dat$l_train,
       verbose = -1,
       valids = list('train'=lgb_dat$l_train,'test'=lgb_dat$l_test), # so we score both train and test data
-      callbacks = list(cb.print.period(params$num_iterations)) # callback to enable progressbar to update
+      callbacks = list(cb.print.period(params$num_threads, params$num_iterations)) # callback to enable progressbar to update
     )},
     error = function(e){e}
   )
@@ -1342,7 +1342,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     } else if (lgb_dat$link=='logit'){
       predictions <- 1/(1+exp(-predictions))
     }
-    setProgress(detail = 'SHAP values')
+    setProgress(value = 0.9, detail = paste0('best iteration: ', lgbm$best_iter, ', calculating SHAP values...'))
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]
@@ -1386,10 +1386,17 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
     )
   )
 }
-cb.print.period <- function(n) {
+cb.print.period <- function(num_threads, n) {
   # callback function to output iteration
+  if(num_threads==1){
+    detail_message <- paste0('training (', num_threads, ' thread)')
+  } else {
+    detail_message <- paste0('training (', num_threads, ' threads)')
+  }
   callback <- function(env = parent.frame()) {
     incProgress(0.9/n) # leave a bit for incProgresses below
+    i <- env$iteration
+    setProgress(detail = paste0(detail_message, ', tree ', env$iteration))
   }
   attr(callback, 'call') <- match.call()
   attr(callback, 'name') <- 'cb.print.period'
