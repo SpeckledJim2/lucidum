@@ -17,6 +17,20 @@ input {autocorrect: "off"; spellcheck: "false";}
   max-width: 500px;
 }
 
+.shiny-notification {
+  background-color: rgb(34, 45, 50);
+}
+
+.progress-bar {background-color: red;}
+
+.progress-text {
+  color: white;
+}
+
+.progress-detail {
+  color: white;
+}
+
 /* Disable bouncy transition for sidebar toggle. */
 /* QUESTION - I don't like the bouncy transition
 /* but if I turn it off, plotly and DT elements don't resize automatically
