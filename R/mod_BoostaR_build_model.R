@@ -228,6 +228,8 @@ mod_BoostaR_build_model_ui <- function(id){
               label = 'Additional parameters',
               margin = "20px",
               inline = TRUE,
+              checkboxInput(inputId = ns('ebm_mode'),label = "Explainable boosting machine (EBM) mode", value = FALSE),
+              br(),
               textAreaInput(
                 inputId = ns('BoostaR_additional_parameters'),
                 value =
@@ -816,7 +818,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             setProgress(value = 0, message = message)
             params <- c(main_params_combos[i], additional_params)
             params$metric <- metric_from_objective(params$objective)
-            BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, BoostaR_feature_table())
+            BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, input$ebm_mode, BoostaR_feature_table())
             BoostaR_model$name <- model_name
             BoostaR_model$additional_params <- additional_params
             if(!is.null(BoostaR_model$lgbm)=='ok'){
@@ -1303,21 +1305,49 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
 #' 
 #' @importFrom lightgbm lgb.train lgb.importance lgb.model.dt.tree lgb.get.eval.result
 #' @importFrom stats predict
-build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
+build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_table){
   # build the model
   start_time <- Sys.time()
   params$num_threads <- getDTthreads()
+  
+  # callbacks
+  callbacks <- list(cb.print.period(params$num_threads, params$num_iterations))
+  if(ebm_mode){
+    es <- params$early_stopping_round
+    max_leaves <- params$num_leaves
+    lr <- params$learning_rate
+    params$early_stopping_round <- 0 # override the "normal" early stopping with ebm stopping
+    params$num_leaves <- 2 # start build with 1D terms, then 2D etc
+    #params$learning_rate <- 0.3 # for 1D terms use this learning rate, then revert to what user specified
+    callbacks <- add.cb(
+      cb_list = callbacks,
+      cb = cb_early_stop_ebm(
+        max_leaves = max_leaves,
+        learning_rate = lr,
+        stopping_rounds = es,
+        first_metric_only = isTRUE(params[["first_metric_only"]]),
+        verbose = FALSE
+      )
+    )
+  }
+  
   lgbm <- tryCatch({
     lgb.train(
       params = params,
       data = lgb_dat$l_train,
       verbose = -1,
       valids = list('train'=lgb_dat$l_train,'test'=lgb_dat$l_test), # so we score both train and test data
-      callbacks = list(cb.print.period(params$num_threads, params$num_iterations)) # callback to enable progressbar to update
+      callbacks = callbacks # callback to enable progressbar to update
     )},
     error = function(e){e}
   )
   run_time <- Sys.time() - start_time
+  if(ebm_mode){
+    # reinstate the original values
+    params$early_stopping_round <- es
+    params$num_leaves <- max_leaves
+    #params$learning_rate <- lr
+  }
   if(inherits(lgbm,'simpleError')){
     message <- lgbm$error
     lgbm <- NULL
@@ -1369,6 +1399,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, feature_table){
       weight = lgb_dat$weight,
       init_score = lgb_dat$init_score,
       params = params,
+      ebm_mode = ebm_mode,
       features = lgb_dat$features,
       offset = lgb_dat$offset,
       link = lgb_dat$link,
@@ -1792,4 +1823,185 @@ post_model_update_BoostaR_feature_grid <- function(original_feature_grid, featur
   setorder(dt, -include, -gain, feature)
   setcolorder(dt, c('feature','gain','include','interaction_grouping','monotonicity'))
   return(dt)
+}
+cb_early_stop_ebm <- function(max_leaves, learning_rate, stopping_rounds, first_metric_only, verbose) {
+  
+  factor_to_bigger_better <- NULL
+  best_iter <- NULL
+  best_score <- NULL
+  best_msg <- NULL
+  eval_len <- NULL
+  restart_stopping <- NULL
+  
+  # Initialization function
+  init <- function(env) {
+    # Early stopping cannot work without metrics
+    if (length(env$eval_list) == 0L) {
+      stop("For early stopping, valids must have at least one element")
+    }
+    
+    # Store evaluation length
+    eval_len <<- length(env$eval_list)
+    
+    # Check if verbose or not
+    if (isTRUE(verbose)) {
+      msg <- paste0(
+        "Will train until there is no improvement in "
+        , stopping_rounds
+        , " rounds."
+      )
+      print(msg)
+    }
+    
+    # Internally treat everything as a maximization task
+    factor_to_bigger_better <<- rep.int(1.0, eval_len)
+    best_iter <<- rep.int(-1L, eval_len)
+    best_score <<- rep.int(-Inf, eval_len)
+    best_msg <<- list()
+    
+    # Loop through evaluation elements
+    for (i in seq_len(eval_len)) {
+      
+      # Prepend message
+      best_msg <<- c(best_msg, "")
+      
+      # Internally treat everything as a maximization task
+      if (!isTRUE(env$eval_list[[i]]$higher_better)) {
+        factor_to_bigger_better[i] <<- -1.0
+      }
+      
+    }
+    
+    return(invisible(NULL))
+    
+  }
+  
+  # Create callback
+  callback <- function(env) {
+    # Check for empty evaluation
+    if (is.null(eval_len)) {
+      init(env = env)
+    }
+    
+    # Store iteration
+    cur_iter <- env$iteration
+    
+    # By default, any metric can trigger early stopping. This can be disabled
+    # with 'first_metric_only = TRUE'
+    if (isTRUE(first_metric_only)) {
+      evals_to_check <- 1L
+    } else {
+      evals_to_check <- seq_len(eval_len)
+    }
+    
+    # Loop through evaluation
+    for (i in evals_to_check) {
+      
+      # Store score
+      score <- env$eval_list[[i]]$value * factor_to_bigger_better[i]
+      
+      # Check if score is better
+      if (score > best_score[i]) {
+
+        # let stopping continue as normal
+        if(env$eval_list[[i]]$data_name=='test'){
+          restart_stopping <<- FALSE
+        }
+
+        # Store new scores
+        best_score[i] <<- score
+        best_iter[i] <<- cur_iter
+        
+      } else {
+        
+        # Check if early stopping is required
+        extra_rounds <- 0
+        if(isTRUE(restart_stopping)){
+          extra_rounds <- stopping_rounds
+        }
+        if (cur_iter - best_iter[i] >= stopping_rounds+extra_rounds) {
+          
+          # restart stopping
+          restart_stopping <<- TRUE
+          
+          # increase the number of leaves by one
+          new_params <- copy(env$model$params)
+          new_params$num_leaves <- new_params$num_leaves + 1
+          #new_params$learning_rate <- learning_rate
+          env$model$reset_parameter(params = new_params)
+          
+          if(env$model$params$num_leaves==max_leaves+1){
+            
+            if (!is.null(env$model)) {
+              env$model$best_score <- best_score[i]
+              env$model$best_iter <- best_iter[i]
+            }
+            
+            if (isTRUE(verbose)) {
+              print(paste0("Early stopping, best iteration is: ", best_msg[[i]]))
+            }
+            
+            # Store best iteration and stop
+            env$best_iter <- best_iter[i]
+            env$met_early_stop <- TRUE
+            
+          }
+          
+        }
+        
+      }
+      
+      if (!isTRUE(env$met_early_stop) && cur_iter == env$end_iteration) {
+        
+        if (!is.null(env$model)) {
+          env$model$best_score <- best_score[i]
+          env$model$best_iter <- best_iter[i]
+        }
+        
+        if (isTRUE(verbose)) {
+          print(paste0("Did not meet early stopping, best iteration is: ", best_msg[[i]]))
+        }
+        
+        # Store best iteration and stop
+        env$best_iter <- best_iter[i]
+        env$met_early_stop <- TRUE
+      }
+    }
+    
+    return(invisible(NULL))
+    
+  }
+  
+  attr(callback, "call") <- match.call()
+  attr(callback, "name") <- "cb_early_stop_ebm"
+  
+  return(callback)
+  
+}
+
+add.cb <- function(cb_list, cb) {
+  
+  # Combine two elements
+  cb_list <- c(cb_list, cb)
+  
+  # Set names of elements
+  names(cb_list) <- callback.names(cb_list = cb_list)
+  
+  if ("cb.early.stop" %in% names(cb_list)) {
+    
+    # Concatenate existing elements
+    cb_list <- c(cb_list, cb_list["cb.early.stop"])
+    
+    # Remove only the first one
+    cb_list["cb.early.stop"] <- NULL
+    
+  }
+  
+  return(cb_list)
+  
+}
+
+# Extract callback names from the list of callbacks
+callback.names <- function(cb_list) {
+  return(unlist(lapply(cb_list, attr, "name")))
 }
