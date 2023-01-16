@@ -675,17 +675,17 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
       config(displayModeBar = FALSE) |>
-      layout(title = list(text = 'Select x-axis feature',yref = "paper", y = 0.5))
+      layout(font=list(family = 'Helvetica Neue'), title = list(text = 'Select x-axis feature',yref = "paper", y = 0.5))
   } else if (nrow(dt)==0){
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
       config(displayModeBar = FALSE) |>
-      layout(title = list(text = 'Select x-axis feature',yref = "paper", y = 0.5))
+      layout(font=list(family = 'Helvetica Neue'), title = list(text = 'Select x-axis feature',yref = "paper", y = 0.5))
   } else if (nrow(dt)>10000){
     # nothing to display - return message to user
     p <- plotly_empty(type = "scatter", mode = "markers") |>
       config(displayModeBar = FALSE) |>
-      layout(title = list(text = 'Too many rows (>10,000) to display - view table instead',yref = "paper", y = 0.5))
+      layout(font=list(family = 'Helvetica Neue'), title = list(text = 'Too many rows (>10,000) to display - view table instead',yref = "paper", y = 0.5))
   } else {
     p <- plot_ly()
     p <- p |> layout(font=list(family = 'Helvetica Neue'))
@@ -828,15 +828,15 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     filter_text <- filters$train_test_filter
     train_test_filter_text <- filters$user_filter
     if(filter_text=='All'){filter_text <- ''}
-    if(filter_text=='Train'){filter_text <- 'training data'}
-    if(filter_text=='Test'){filter_text <- 'test data'}
+    if(filter_text=='Train'){filter_text <- '  training data  '}
+    if(filter_text=='Test'){filter_text <- '  test data  '}
     # rescale text for title
     rescale_text <- ''
     if(response_transform %in% c('0','1')){
       if(is.null(base_level)){
-        rescale_text <- 'rebased'
+        rescale_text <- '  rebased'
       } else {
-        rescale_text <- paste0('rebased, base level: ', base_level)
+        rescale_text <- paste0('  rebased, base level: ', base_level)
       }
     }
     # make the chart

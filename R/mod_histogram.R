@@ -227,8 +227,8 @@ histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise,
       train_test_filter <- filters$train_test_filter
       user_filter <- filters$user_filter
       if(train_test_filter=='All'){train_test_filter <- ''}
-      if(train_test_filter=='Train'){train_test_filter <- '(Training data)'}
-      if(train_test_filter=='Test'){train_test_filter <- '(Test data)'}
+      if(train_test_filter=='Train'){train_test_filter <- '  training data  '}
+      if(train_test_filter=='Test'){train_test_filter <- '  test data  '}
       # make title bold
       title <- paste0(boldify(title), train_test_filter, ' ', user_filter)
       # set the number of bins, if NULL then plotly will automatically pick the number of bins
@@ -247,7 +247,8 @@ histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise,
         layout(margin = list(l = 50, r = 50, b = 10, t = 70, pad = 4)) |>
         layout(xaxis = list(title = '', type = x_scale)) |>
         layout(yaxis = list(title = NULL, type = y_scale)) |>
-        layout(title = list(text = title, y = 0.95, font = list(size = 14))) |>
+        layout(title = list(text = title, x = 0.03, y = 0.97, font = list(size = 16))) |>
+        layout(font=list(family = 'Helvetica Neue')) |>
         layout(bargap=0.1)
     }
   }
