@@ -37,7 +37,7 @@ mod_ChartaR_server <- function(id, d, dt_update, response, weight, kpi_spec, fea
     ns <- session$ns
     mod_histogram_server('histogram_tab', d, dt_update, response, weight, kpi_spec, filters)
     mod_ChartaR_line_and_bar_server('line_and_bar', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, filters)
-    mod_ChartaR_SHAP_server('SHAP', d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec)
+    mod_ChartaR_SHAP_server('SHAP', d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec, filters)
   })
 }
     

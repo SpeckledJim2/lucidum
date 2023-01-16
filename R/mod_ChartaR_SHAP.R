@@ -105,7 +105,7 @@ mod_ChartaR_SHAP_ui <- function(id){
 #'
 #' @noRd 
 #' 
-mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec){
+mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec, filters){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     initial_banding_1 <- reactiveVal(NULL)
@@ -176,7 +176,8 @@ mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, Bo
             SHAP_quantile = input$quantile,
             rebase = input$rebase,
             SHAP_ribbons = input$SHAP_ribbons,
-            feature_spec = feature_spec()
+            feature_spec = feature_spec(),
+            filters = filters()
             )
       })
     })
@@ -184,16 +185,17 @@ mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, Bo
 }
 
 #' @importFrom plotly add_surface
-viz_SHAP_chart <- function(d, weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, SHAP_quantile, rebase, SHAP_ribbons, feature_spec){
+viz_SHAP_chart <- function(d, weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, SHAP_quantile, rebase, SHAP_ribbons, feature_spec, filters){
   if(!is.null(d) & !is.null(weight)){
     if(SHAP_quantile=='-'){
       q <- 0
     } else {
       q <- as.numeric(substr(SHAP_quantile,1,nchar(SHAP_quantile)-1))/100
     }
-    p <- plotly_empty(type = "scatter", mode = "markers") %>%
-      config(displayModeBar = FALSE) %>%
-      layout(title = list(text = 'No plot to show',yref = "paper", y = 0.5)
+    p <- plotly_empty(type = "scatter", mode = "markers") |>
+      config(displayModeBar = FALSE) |>
+      layout(font = list(family = 'Helvetica Neue'),
+             title = list(text = 'No GBM selected',yref = "paper", y = 0.5)
       )
     if(!is.null(feature_1)){
       if(feature_1=='none') feature_1 <- NULL
@@ -306,7 +308,7 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
   }
   # 25th-75th percentiles
   if(SHAP_ribbons %in% c('All','25_75','5_95')){
-    p <- p %>%
+    p <- p |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_25']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                 showlegend = FALSE, name = 'SHAP_25') %>%
@@ -315,7 +317,7 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
                 showlegend = TRUE, name = 'SHAP_25_75')
   }
   # mean
-  p <- p %>%
+  p <- p |>
     add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['mean']], type = 'scatter', mode = 'lines', yaxis = "y1",
               line = list(color = 'rgba(200, 50, 50, 1.0)', dash = 'dot'),
               showlegend = TRUE, name = 'SHAP_mean')
@@ -324,7 +326,8 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
     # only manually specify tick marks if there are going to be fewer than 100
     p <- p |> layout(xaxis = list(dtick = banding_1, tickmode = 'linear', tickangle=0, tickfont = list(size = min(12,max(6,500/nrow(SHAP_summary))))))
   }
-  p <- p %>% layout(
+  p <- p |> layout(
+    font = list(family = 'Helvetica Neue'),
     title = list(y= 0.98,text = boldify(paste0('SHAP flame plot: ',feature_1)),font = list(size = 16, face='bold'))
     )
   return(p)
@@ -363,7 +366,8 @@ SHAP_box_and_whisker <- function(d, weight, feature_1, banding_1, factor_1, q, r
   }
   # reorder plot by mean_SHAP
   setorderv(mean_SHAP, 'SHAP', order = -1)
-  xform <- list(autotick = TRUE,
+  xform <- list(autotick = FALSE,
+                tickfont = list(size = min(14,max(6,500/length(unique(d_cols[['feature_1']]))))),
                 categoryorder = 'array',
                 categoryarray = mean_SHAP[[1]])
   if(nrow(mean_SHAP)>500){
@@ -396,6 +400,7 @@ Whiskers extend to min/max <br>'),
       )
       ) %>%
       layout(xaxis = xform,
+             font = list(family = 'Helvetica Neue'),
              title = list(text = boldify(paste0('SHAP box plot: ',feature_1)), font = list(size = 16, face='bold'))
       )
   }
@@ -423,7 +428,8 @@ SHAP_surface <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
                y = d_summary[[1]],
                z = ~as.matrix(d_summary[,-1])) %>%
     add_surface(color = 'RdYlBlu') %>%
-    layout(scene = list(xaxis = list(title = feature_2),
+    layout(font = list(family = 'Helvetica Neue'),
+           scene = list(xaxis = list(title = feature_2),
                         yaxis = list(title = feature_1),
                         zaxis = list(title = 'SHAP'),
                         camera = list(eye = list(x=0.8, y=-0.3, z=2))
@@ -456,9 +462,6 @@ SHAP_heatmap <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
   d_summary <- dcast(d_summary, stats::as.formula('banded_1 ~ banded_2'), value.var = 'SHAP')
   
   p <- plotly::plot_ly(
-    # x = d_summary[[1]],
-    # y = d_summary[[2]],
-    # z = d_summary[['SHAP']],
     x = names(d_summary)[-1],
     y = d_summary[[1]],
     z = as.matrix(d_summary[,-1]),
@@ -469,8 +472,11 @@ SHAP_heatmap <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
     #   y = d_summary[[1]],
     #   text =  as.matrix(d_summary[,-1]),
     #   showarrow = FALSE) %>%
-    layout(plot_bgcolor='rgb(200, 200, 200)') %>%
-    layout(xaxis = list(showgrid = FALSE, title = feature_2), yaxis = list(showgrid = FALSE, title = feature_1))
+    layout(plot_bgcolor='rgb(200, 200, 200)',
+           font = list(family = 'Helvetica Neue')) |>
+    layout(xaxis = list(autotick = FALSE, showgrid = FALSE, title = feature_2, tickfont = list(size = min(14,max(6,500/ncol(d_summary))))),
+           yaxis = list(autotick = FALSE, showgrid = FALSE, title = feature_1, tickfont = list(size = min(14,max(6,500/nrow(d_summary)))))
+           )
   return(p)
 }
 SHAP_lines <- function(d, weight, feature_1, feature_2, banding_1, banding_2, factor_1, factor_2, q){
@@ -512,6 +518,7 @@ SHAP_lines <- function(d, weight, feature_1, feature_2, banding_1, banding_2, fa
                hovertemplate = paste('(%{x}, %{y:.3f})')
   ) %>%
     plotly::layout(
+      font = list(family = 'Helvetica Neue'),
       title = list(text = boldify(paste0('SHAP lines plot: ',feature_1, ' x ', feature_2)), font = list(size = 14), y= 0.98),
       xaxis = list(title = feature_1),
       yaxis = list(title = 'SHAP'),
