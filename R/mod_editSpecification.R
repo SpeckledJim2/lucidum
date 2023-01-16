@@ -155,7 +155,9 @@ load_specification <- function(d, specification, specification_type){
       #showNotification(paste0(specification, ' loaded'), duration = 5, type = 'message')
     } else {
       x <- specification_template(d, specification_type)
-      showNotification(paste0(specification_type, '_spec: "', specification, '" not found'), duration = NULL, type = 'error')
+      if(!is.null(get_golem_options('specification_path')) | !is.null(get_golem_options(paste0(specification_type, '_spec')))){
+        showNotification(paste0(specification_type, '_spec: "', specification, '" not found'), duration = NULL, type = 'error')
+      }
     }
   } else if (inherits(specification, 'data.table')){
     x <- setDT(specification)
