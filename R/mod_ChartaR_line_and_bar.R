@@ -29,10 +29,11 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
                    selected = 'A-Z')
           ),
           column(3,
+                 style = 'padding-right: 0px',
                  radioGroupButtons(
                    inputId = ns('group_low_exposure'),
                    label = "Group low weights",
-                   choices = c(0,5,10,20,50,'1%'),
+                   choices = c(0,5,10,20,50,'0.1%','1%'),
                    individual = FALSE,
                    size = 'xs',
                    selected = 0)
@@ -208,6 +209,12 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               q_low_banded <- floor(q_low/banding) * banding
               q_high_banded <- (1+floor(q_high/banding)) * banding
               banded <- pmax(q_low_banded, pmin(q_high_banded, banded))
+            } else if (group_low_exposure=='0.1%'){
+              q_low <- quantile(g[rows_idx], prob = 0.001, na.rm = TRUE)[[1]]
+              q_high <- quantile(g[rows_idx], prob = 0.999, na.rm = TRUE)[[1]]
+              q_low_banded <- floor(q_low/banding) * banding
+              q_high_banded <- (1+floor(q_high/banding)) * banding
+              banded <- pmax(q_low_banded, pmin(q_high_banded, banded))
             }
             banded_col <- banded[rows_idx]
             new_colname <- paste0(group_by_col, '_banded')
@@ -244,6 +251,8 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               }
               if(group_low_exposure=='1%'){
                 min_exposure <- 0.01 * sum(d_summary[,2])
+              } else if(group_low_exposure=='0.1%'){
+                min_exposure <- 0.001 * sum(d_summary[,2])
               } else {
                 min_exposure <- as.numeric(group_low_exposure)
               }
