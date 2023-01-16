@@ -122,6 +122,6 @@ weight_text <- function(d, weight){
         val <- d[, sum(.SD, na.rm = TRUE), .SDcols = weight]
       }
     }
-    paste0('= ', format(val, big.mark = ','))
+    paste0('= ', format(val, big.mark = ',', scientific = FALSE))
   }
 }

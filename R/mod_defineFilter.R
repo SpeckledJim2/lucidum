@@ -152,8 +152,8 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
 
 filter_text <- function(d){
   na_count <- sum(is.na(d[['total_filter']]))
-  rows_in_filter <- format(sum(d[['total_filter']], na.rm = TRUE), big.mark = ',')
-  rows <- format(nrow(d), big.mark = ',')
+  rows_in_filter <- format(sum(d[['total_filter']], na.rm = TRUE), big.mark = ',', scientific = FALSE)
+  rows <- format(nrow(d), big.mark = ',', scientific = FALSE)
   if(na_count>0){
     na_count <- format(na_count, big.mark = ',')
     paste0('Filter (', rows_in_filter,'/', rows, ', ', 'NAs)')
