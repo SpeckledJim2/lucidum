@@ -127,33 +127,35 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
         model_summary <- make_BoostaR_model_summary(BoostaR_models())
       }
       if(is.null(model_summary)){
-        model_summary <- data.table(`No GBMs`='')
+        model_summary <- data.table(name='No GBMs built')
       }
-      output$BoostaR_model_summary <- DT::renderDT({
-        # model summary table
-        model_summary |>
-          DT::datatable(rownames= FALSE,
-                        extensions = 'Buttons',
-                        selection=list(mode="multiple", target="row"),
-                        options = list(pageLength = nrow(model_summary),
-                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
-                                       dom = 'Bfrt',
-                                       scrollX = T,
-                                       scrollY = 'calc(20vh)',
-                                       searchHighlight=TRUE,
-                                       buttons =
-                                         list('colvis', 'copy', list(
-                                           extend = 'collection',
-                                           buttons = list(list(extend='csv',filename = ''),
-                                                          list(extend='excel',filename = ''),
-                                                          list(extend='pdf',filename= '')),
-                                           text = 'Download')
-                                         )
-                        )
-          ) |>
-          formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '12px') |>
-          formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(BoostaR_idx(), rgb(100/255,180/255,220/255)))
-      })
+      if(!is.null(model_summary)){
+        output$BoostaR_model_summary <- DT::renderDT({
+          # model summary table
+          model_summary |>
+            DT::datatable(rownames= FALSE,
+                          extensions = 'Buttons',
+                          selection=list(mode="multiple", target="row"),
+                          options = list(pageLength = nrow(model_summary),
+                                         initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                         dom = 'Bfrt',
+                                         scrollX = T,
+                                         scrollY = 'calc(20vh)',
+                                         searchHighlight=TRUE,
+                                         buttons =
+                                           list('colvis', 'copy', list(
+                                             extend = 'collection',
+                                             buttons = list(list(extend='csv',filename = ''),
+                                                            list(extend='excel',filename = ''),
+                                                            list(extend='pdf',filename= '')),
+                                             text = 'Download')
+                                           )
+                          )
+            ) |>
+            formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '12px') |>
+            formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(BoostaR_idx(), rgb(100/255,180/255,220/255)))
+        })
+      }
     })
     observeEvent(BoostaR_idx(), {
       if(BoostaR_idx()=='No GBMs'){
