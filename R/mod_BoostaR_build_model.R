@@ -615,7 +615,25 @@ mod_BoostaR_build_model_ui <- function(id){
           column(
             width = 12,
             div(style = "margin-top:-15px; padding-top:0px"),
-            h3('Evaluation log'),
+            fluidRow(
+              column(
+                width = 6,
+                h3('Evaluation log')
+              ),
+              column(
+                width = 6,
+                align = 'right',
+                div(
+                  style = 'margin-top:20px; margin-bottom:-10px',
+                  radioGroupButtons(
+                    inputId = ns('eval_log_view'),
+                    label = NULL,
+                    choices = c('All','Tail'),
+                    selected = 'All'
+                  )
+                )
+              )
+            ),
             plotlyOutput(ns('BoostaR_evaluation_plot'), height = 'calc(100vh - 600px)'),
           )
         )
@@ -1019,8 +1037,8 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
     })
     output$BoostaR_evaluation_plot <- plotly::renderPlotly({
       # QUESTION - better to use ObserveEvent on BoostaR_models and BoostaR_idx?
-      if(!is.null(BoostaR_idx())){
-        evaluation_plot(BoostaR_models()[[BoostaR_idx()]]$evaluation_log)
+      if(!is.null(BoostaR_idx()) & !is.null(BoostaR_models())){
+        evaluation_plot(BoostaR_models()[[BoostaR_idx()]], input$eval_log_view)
       }
     })
   })
@@ -1626,25 +1644,36 @@ get_main_params_combos <- function(input){
 }
 
 #' @importFrom plotly config add_trace layout
-evaluation_plot <- function(evaluation_log){
+evaluation_plot <- function(BoostaR_model, view){
+  evaluation_log <- BoostaR_model$evaluation_log
   if(!is.null(evaluation_log)){
     train <- evaluation_log$train_log
     test <- evaluation_log$test_log
-    # get into single table
+    # get into single table depending on view
     eval_results <- data.frame(iter = 1:length(train), model_train_error = train, model_test_error = test)
-    # if we plot too many points it can slow down the browser - limit to 100 rows
-    # always keep the first and last row
-    ex_rows <- 1:2
-    if(nrow(eval_results)>1000){
-      # make sure first and last row are kept
-      rows_to_keep <- c(1, floor(1:1000 * nrow(eval_results)/1000), evaluation_log$best_iteration, nrow(eval_results))
-      rows_to_keep <- unique(rows_to_keep)
-      eval_results <- eval_results[rows_to_keep,]
-      ex_rows <- 1:5
+    if(view=='All'){
+      # if we plot too many points it can slow down the browser
+      # always keep the first and last row
+      ex_rows <- 1:2
+      if(nrow(eval_results)>1000){
+        # make sure first and last row are kept
+        rows_to_keep <- c(1, floor(1:1000 * nrow(eval_results)/1000), evaluation_log$best_iteration, nrow(eval_results))
+        rows_to_keep <- unique(rows_to_keep)
+        eval_results <- eval_results[rows_to_keep,]
+        ex_rows <- 1:5
+      }
+      y_min <- min(eval_results$model_train_error[-ex_rows], eval_results$model_test_error[-ex_rows])
+      y_max <- max(eval_results$model_train_error[-ex_rows], eval_results$model_test_error[-ex_rows])
+      y_range <- y_max - y_min
+    } else if (view=='Tail'){
+      # just show the last 3 x early stopping rounds of test metric
+      es <- BoostaR_model$params$early_stopping_round
+      if(es<0) es <- 50
+      eval_results <- tail(eval_results, 3*es)
+      y_min <- min(eval_results$model_test_error)
+      y_max <- max(eval_results$model_test_error)
+      y_range <- y_max - y_min
     }
-    y_min <- min(eval_results$model_train_error[-ex_rows], eval_results$model_test_error[-ex_rows])
-    y_max <- max(eval_results$model_train_error[-ex_rows], eval_results$model_test_error[-ex_rows])
-    y_range <- y_max - y_min
     plot_ly(eval_results, hovertemplate = paste('(%{x}, %{y})')) %>%
       add_trace(x = ~iter, y = ~model_train_error, type = 'scatter', mode = 'markers', name = 'train', marker = list(color =  grDevices::rgb(255/255,0/255,0/255))) %>%
       add_trace(x = ~iter, y = ~model_test_error, type = 'scatter', mode = 'markers', name = 'test', marker = list(color =  grDevices::rgb(0/255,0/255,0/255))) %>%
