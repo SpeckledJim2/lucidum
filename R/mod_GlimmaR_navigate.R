@@ -165,7 +165,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                         extensions = 'Buttons',
                         selection=list(mode="multiple", target="row"),
                         options = list(pageLength = nrow(dt),
-                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                       #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'Bfrt',
                                        scrollX = T,
                                        scrollY = 'calc(20vh)',
@@ -180,7 +180,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                          )
                         )
           ) |>
-          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px') |>
+          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '14px') |>
           formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(GlimmaR_idx(), rgb(100/255,180/255,220/255)))
       })
     })
@@ -201,7 +201,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                         extensions = 'Buttons',
                         selection='single',
                         options = list(pageLength = nrow(dt),
-                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                       #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'rt',
                                        scrollX = T,
                                        scrollY = 'calc(80vh - 380px)',
@@ -209,7 +209,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                        )
           ) |>
           formatRound('importance', 4) |>
-          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '14px')
       })
     })
     observeEvent(input$delete_model, {

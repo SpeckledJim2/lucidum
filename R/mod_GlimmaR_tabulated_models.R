@@ -165,14 +165,14 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms){
       t <- dt |> datatable(
         rownames= TRUE,
         options = list(pageLength = nrow(dt),
-                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                       #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                        dom = 'Bfrti',
                        scrollX = T,
                        scrollY = 'calc(100vh - 380px)',
                        columnDefs = list(list(visible = F, targets = 0))
                        )
         ) |>
-        formatStyle(columns = 1:ncol(dt), lineHeight='0%', fontSize = '12px') |>
+        formatStyle(columns = 1:ncol(dt), lineHeight='0%', fontSize = '14px') |>
         formatRound(columns = transform_idx, digits = 6)
     } else {
       t <- data.table(V1 = 'no model tabulated') %>% DT::datatable()

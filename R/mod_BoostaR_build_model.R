@@ -1644,6 +1644,7 @@ get_main_params_combos <- function(input){
 }
 
 #' @importFrom plotly config add_trace layout
+#' @importFrom utils tail
 evaluation_plot <- function(BoostaR_model, view){
   evaluation_log <- BoostaR_model$evaluation_log
   if(!is.null(evaluation_log)){

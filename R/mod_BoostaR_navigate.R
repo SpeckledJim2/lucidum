@@ -137,7 +137,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
                           extensions = 'Buttons',
                           selection=list(mode="multiple", target="row"),
                           options = list(pageLength = nrow(model_summary),
-                                         initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                         #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                          dom = 'Bfrt',
                                          scrollX = T,
                                          scrollY = 'calc(20vh)',
@@ -152,7 +152,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
                                            )
                           )
             ) |>
-            formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '12px') |>
+            formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '14px') |>
             formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(BoostaR_idx(), rgb(100/255,180/255,220/255)))
         })
       }
@@ -172,14 +172,14 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
           DT::datatable(rownames= FALSE,
                         selection=list(mode="multiple", target="row"),
                         options = list(pageLength = nrow(detailed_summary),
-                                       initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                       #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'rt',
                                        scrollX = T,
                                        scrollY = 'calc(80vh - 380px)',
                                        searchHighlight=TRUE
                         )
           ) |>
-          DT::formatStyle(columns = colnames(detailed_summary), lineHeight='0%', fontSize = '12px')
+          DT::formatStyle(columns = colnames(detailed_summary), lineHeight='0%', fontSize = '14px')
       })
     })
     # QUESTION - this seems to work
@@ -213,7 +213,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
             datatable(rownames= FALSE,
                       selection = 'single',
                       options = list(pageLength = n_rows,
-                                     initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
+                                     #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                      dom = 'rt',
                                      scrollX = T,
                                      scrollY = 'calc(80vh - 380px)'
@@ -221,7 +221,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
             ) |>
             formatRound('gain', 0) |>
             formatPercentage('%', 1) |>
-            formatStyle(columns = colnames(gain_summary), fontSize = '12px', lineHeight='0%')
+            formatStyle(columns = colnames(gain_summary), fontSize = '14px', lineHeight='0%')
         }
       }
     })
