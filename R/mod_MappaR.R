@@ -171,10 +171,7 @@ mod_MappaR_ui <- function(id){
                         column(
                           width = 8,
                           align = 'center',
-                          div(
-                            #checkboxInput(inputId = ns('sectors'),label = "Sectors & units", value = FALSE),
-                            style = 'margin-top: -15px; padding-top: -10px;'
-                          )
+                          uiOutput(ns('sectors_ui'))
                         )
                       )
                     )
@@ -228,6 +225,20 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
           label_size = input$label_size
         )
       )
+    })
+    observeEvent(d(), {
+      if(!is.null(d())){
+        if('PostcodeSector' %in% names(d())){
+          output$sectors_ui <- renderUI({
+            div(
+              checkboxInput(inputId = ns('sectors'), label = 'Sectors', value = FALSE),
+              style = 'margin-top: -15px; padding-top: -10px;'
+            )
+          })
+        } else {
+          output$sectors_ui <- renderUI({})
+        }
+      }
     })
     observeEvent(c(dt_update(), d(), response(), weight(), kpi_spec(), map_options()), {
       trigger_update(TRUE)
@@ -327,8 +338,9 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
      weight %in% c('N', 'no weights', names(d)) &
      response != 'select feature'){
     
-    # summarise data and merge the area_summary onto the shapefile
+    # summarise data by PostcodeArea and merge onto area shapefile
     area_summary <- NULL
+    sector_summary <- NULL
     if('PostcodeArea' %in% names(d)){
       area_summary <- postcode_summary(d, response, weight, 'PostcodeArea')
       if(!is.null(area_summary)){
@@ -339,6 +351,20 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
           area_summary$area_plot <- area_summary[,3]/area_summary[,2]
         }
         areas_sf <- merge(x=uk_areas, y=area_summary, by = 'PostcodeArea', all.x = TRUE)
+      }
+    }
+    # summarise data by PostcodeSector and merge onto sector shapefile
+    if(is.null(map_options$sectors)) map_options$sectors <- FALSE
+    if(map_options$sectors & 'PostcodeSector' %in% names(d)){
+      sector_summary <- postcode_summary(d, response, weight, 'PostcodeSector')
+      if(!is.null(sector_summary)){
+        setDF(sector_summary)
+        if(weight=='no weights'){
+          sector_summary$sector_plot <- sector_summary[,3]
+        } else {
+          sector_summary$sector_plot <- sector_summary[,3]/sector_summary[,2]
+        }
+        sectors_sf <- merge(x=uk_sectors, y=sector_summary, by = 'PostcodeSector', all.x = TRUE)
       }
     }
     # clear the map
@@ -363,8 +389,40 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
       area_labels <- apply_kpi_format(areas_sf$area_plot, response, weight, kpi_spec)
       opacity_area_modifier <- hot_spotted_opacity(areas_sf$area_plot, map_options$hotspots)
     }
-    # add on the area polygons
+    # sector bins, labels and opacity
+    if(!is.null(sector_summary)){
+      bins_sector <- unique(stats::quantile(round(sector_summary$sector_plot,6), na.rm = TRUE, probs = 0:20/20))
+      bins_sector[1] <- bins_sector[1] - 0.000001
+      bins_sector[length(bins_sector)] <- bins_sector[length(bins_sector)] + 0.000001
+      pal_sector <- leaflet::colorBin(palette = grDevices::colorRamp(c(map_options$colour1,map_options$colour2,map_options$colour3), interpolate="linear"), domain = NULL, bins = bins_sector)
+      if(length(bins_sector)>1){sector_fillColor <- pal_sector(sectors_sf$sector_plot)} else {sector_fillColor <- 0}
+      sector_labels <- apply_kpi_format(sectors_sf$sector_plot, response, weight, kpi_spec)
+      opacity_sector_modifier <- hot_spotted_opacity(sectors_sf$sector_plot, map_options$hotspots)
+    }
+    # add on sectors if available - sectors before areas to get polygon order correct
     label_style <- list('box-shadow' = '3px 3px rgba(0,0,0,0.25)','font-size' = '16px','border-color' = 'rgba(0,0,0,0.5)')
+    if(!is.null(sector_summary)){
+      showNotification(
+        paste0('Redrawing map...'), duration = 8, type = 'warning'
+      )
+      m |>
+        leaflet::addMapPane('sector_polygons', zIndex = 405) %>%
+        leaflet::addPolygons(data = sectors_sf,
+                             layerId = sectors_sf$PostcodeSector,
+                             group = 'Sector',
+                             weight = map_options$line_thickness * 0.1,
+                             opacity = 1,
+                             color = "black",
+                             smoothFactor = 0,
+                             fillColor = sector_fillColor,
+                             fillOpacity = map_options$opacity * opacity_sector_modifier,
+                             label = postcode_hover_labels(sectors_sf, sector_labels, response, weight),
+                             labelOptions = labelOptions(textOnly = FALSE, style=label_style),
+                             highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
+                             options = pathOptions(pane = "sector_polygons")
+        )
+    }
+    # add on the area polygons
     if(!is.null(area_summary)){
       m |>
         leaflet::addMapPane('area_polygons', zIndex = 405) |>
@@ -396,37 +454,73 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
   }
 }
 
-postcode_hover_labels <- function(areas_sf, area_labels, response, weight){
-  weights <- areas_sf[[weight]]
-  nmes <- postcode_area_name_mapping[order(PostcodeArea),PostcodeArea_name]
-  postcode_area_name_mapping <- postcode_area_name_mapping[order(PostcodeArea)]
-  lapply(
-    paste(
-      sep = "",
-      "<span style='font-size:48px; font-weight:200'>",
-      areas_sf$PostcodeArea,
-      "</span>",
-      '<br/>',
-      "<span style='font-size:16px; font-weight:400; color: rgb(60,141,188)'>",
-      nmes,
-      "</span>",
-      '<br/>',
-      "<span style='font-size:16px; font-weight:400'>",
-      response,
-      ': ',
-      "</span>",
-      "<span style='font-size:16px; font-weight:400'>",
-      area_labels,
-      "</span>",
-      '<br/>',
-      "<span style='font-size:16px; font-weight:400; color: grey'>",
-      weight,
-      ': ',
-      weights,
-      "</span>"
+postcode_hover_labels <- function(postcode_summary, labels, response, weight){
+  resolution <- names(postcode_summary)[1]
+  weights <- postcode_summary[[weight]]
+  if(resolution=='PostcodeArea'){
+    nmes <- postcode_area_name_mapping[order(PostcodeArea),PostcodeArea_name]
+    postcode_area_name_mapping <- postcode_area_name_mapping[order(PostcodeArea)]
+    lapply(
+      paste(
+        sep = "",
+        "<span style='font-size:48px; font-weight:200'>",
+        postcode_summary$PostcodeArea,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400; color: rgb(60,141,188)'>",
+        nmes,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400'>",
+        response,
+        ': ',
+        "</span>",
+        "<span style='font-size:16px; font-weight:400'>",
+        labels,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400; color: grey'>",
+        weight,
+        ': ',
+        weights,
+        "</span>"
       ),
-    HTML
+      HTML
     )
+  } else if (resolution=='PostcodeSector'){
+    postcode_summary <- merge(postcode_summary, postcode_area_name_mapping, by = 'PostcodeArea', all.x = TRUE)
+    postcode_summary <- postcode_summary[order(postcode_summary$PostcodeSector),]
+    lapply(
+      paste(
+        sep = "",
+        "<span style='font-size:48px; font-weight:200'>",
+        postcode_summary$PostcodeSector,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400; color: rgb(60,141,188)'>",
+        postcode_summary$PostcodeArea_name,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400'>",
+        response,
+        ': ',
+        "</span>",
+        "<span style='font-size:16px; font-weight:400'>",
+        labels,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400; color: grey'>",
+        weight,
+        ': ',
+        weights,
+        "</span>"
+      ),
+      HTML
+    )
+  } else if (resolution=='PostcodeUnit'){
+    # not done yet
+  }
+
 }
 
 #' Summarise dataset columns by postcode
