@@ -1380,6 +1380,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
     predictions <- NULL
   } else {
     # get predictions (these are pre-offset)
+    setProgress(value = 0.9, detail = paste0('best iteration: ', lgbm$best_iter, ', predict...'))
     predictions <- predict(lgbm, as.matrix(lgb_dat$data), rawscore = TRUE)
     # add offset to predictions
     if(!is.null(offset)){
@@ -1390,11 +1391,12 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
     } else if (lgb_dat$link=='logit'){
       predictions <- 1/(1+exp(-predictions))
     }
-    setProgress(value = 0.9, detail = paste0('best iteration: ', lgbm$best_iter, ', calculating SHAP values...'))
+    setProgress(value = 0.92, detail = paste0('best iteration: ', lgbm$best_iter, ', SHAP values...'))
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]
     # extract feature importances and make predictions
+    setProgress(value = 0.94, detail = paste0('best iteration: ', lgbm$best_iter, ', feature importances...'))
     importances <- lgb.importance(lgbm, percentage = TRUE)
     importances[, 2:4] <- 100 * importances[, 2:4]
     # merge the importances onto the feature table
@@ -1402,8 +1404,10 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
     # extract the evaluation log
     evaluation_log <- make_evaluation_log(lgbm, params)
     # extract the tree table
+    setProgress(value = 0.96, detail = paste0('best iteration: ', lgbm$best_iter, ', tree table...'))
     tree_table <- lgb.model.dt.tree(lgbm, num_iteration = length(evaluation_log$train_log))
     # extract the gain summarised by tree's feature combinations
+    setProgress(value = 0.98, detail = paste0('best iteration: ', lgbm$best_iter, ', gain summary...'))
     gain_summary <- create_gain_summary_from_tree_summary(tree_table, lgbm$best_iter)
     gain_summary <- gain_summary[order(-gain_summary$gain),]
   }
