@@ -137,8 +137,8 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     observeEvent(banding_new(), {
       banding(banding_new())
     })
-    # QUESTION - is this isolate doing anything? It seems to make my bug go away
-    banding_new <- mod_bandingChooser_server('x_banding', d, x_col, isolate({initial_banding}))
+    # QUESTION - this isn't working right
+    banding_new <- mod_bandingChooser_server('x_banding', d, x_col, initial_banding)
     observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
       # QUESTION - how to stop this triggering twice on first call
       if(!is.null(BoostaR_idx())){
