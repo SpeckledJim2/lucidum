@@ -551,7 +551,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
             importances <- calc_terms_importances(glm_model)
             # return GlimmaR_model
             l <- list(time = time,
-                      predictions = fitted_glm,
+                      predictions = fitted_glm[non_zero_weight_rows],
                       pred_rows = non_zero_weight_rows,
                       glm = strip_glm(glm_model),
                       training_data = data_to_use,
