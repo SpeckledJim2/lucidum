@@ -672,10 +672,10 @@ coords <- function(postcode){
     }
   } else if (nchar(postcode)<=6){
     # most likely a postcode sector
-    # if(postcode %in% uk_sectors$PostcodeSector){
-    #   centroid <- list(uk_sectors$X[uk_sectors$PostcodeSector==postcode], uk_sectors$Y[uk_sectors$PostcodeSector==postcode])
-    #   zoom <- 13
-    # }
+    if(postcode %in% uk_sectors$PostcodeSector){
+       centroid <- list(uk_sectors$X[uk_sectors$PostcodeSector==postcode], uk_sectors$Y[uk_sectors$PostcodeSector==postcode])
+       zoom <- 13
+     }
   } else {
     # postcode unit
     # if(postcode %in% uk_units[['PostcodeUnit']]){
