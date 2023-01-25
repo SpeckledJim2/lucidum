@@ -217,7 +217,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
             banded_col <- banded[rows_idx]
             new_colname <- paste0(group_by_col, '_banded')
-          } else if (inherits(g,'Date') & banding!='0'){
+          } else if (inherits(g,c('POSIXt','Date')) & banding!='0'){
             if(banding=='Day'){
               # day
               banded <- g
@@ -550,7 +550,7 @@ banding_guesser_numeric_date <- function(d, col){
         type <- 'character'
       } else if (inherits(d[[col]],c('numeric','integer'))){
         type <- 'numeric'
-      } else if (inherits(d[[col]],'Date')){
+      } else if (inherits(d[[col]],c('POSIXt','Date'))){
         type <- 'date'
       } else if (col=='none'){
         type <- 'NULL'

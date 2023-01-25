@@ -154,9 +154,16 @@ get_feature_summary <- function(d, col){
   if(!is.null(d) & !is.null(col)){
     if(col %in% names(d)){
       x <- d[which(total_filter==1)][[col]]
+      type <- 8
       if(is.null(x)){
         # do nothing
       } else if(class(x)[1] %in% c('numeric','logical','integer','POSIXct','Date','IDate')){
+        if(inherits(x, c('Date','POSIXct'))){
+          # because otherwise the formulae below don't work
+          # but I need to do this better
+          x <- as.IDate(x)
+          type <- 1 # else perc doesn't always work
+        }
         metrics <- c('Min',
                      '1st percentile',
                      '5th percentile',
@@ -185,14 +192,14 @@ get_feature_summary <- function(d, col){
           value=rep(0,11)
         )
         summary[1, value := min(x,na.rm=TRUE)]
-        summary[2, value := stats::quantile(x,prob=0.01,na.rm=TRUE, type = 8)]
-        summary[3, value := stats::quantile(x,prob=0.05,na.rm=TRUE, type = 8)]
-        summary[4, value := stats::quantile(x,prob=0.25,na.rm=TRUE, type = 8)]
-        summary[5, value := stats::quantile(x,prob=0.50,na.rm=TRUE, type = 8)]
+        summary[2, value := stats::quantile(x,prob=0.01,na.rm=TRUE, type = type)]
+        summary[3, value := stats::quantile(x,prob=0.05,na.rm=TRUE, type = type)]
+        summary[4, value := stats::quantile(x,prob=0.25,na.rm=TRUE, type = type)]
+        summary[5, value := stats::quantile(x,prob=0.50,na.rm=TRUE, type = type)]
         summary[6, value := mean(x, na.rm = TRUE)]
-        summary[7, value := stats::quantile(x,prob=0.75,na.rm=TRUE, type = 8)]
-        summary[8, value := stats::quantile(x,prob=0.95,na.rm=TRUE, type = 8)]
-        summary[9, value := stats::quantile(x,prob=0.99,na.rm=TRUE, type = 8)]
+        summary[7, value := stats::quantile(x,prob=0.75,na.rm=TRUE, type = type)]
+        summary[8, value := stats::quantile(x,prob=0.95,na.rm=TRUE, type = type)]
+        summary[9, value := stats::quantile(x,prob=0.99,na.rm=TRUE, type = type)]
         summary[10, value := max(x,na.rm=TRUE)]
         summary[11, value := stats::sd(x,na.rm=TRUE)]
         if(class(x)[1] %in% c('numeric')){
@@ -211,9 +218,10 @@ get_feature_summary <- function(d, col){
       }
       if(class(x)[1] %in% c('IDate','POSIXct','Date')){
         sd <- as.character(as.numeric(summary[nrow(summary), value]))
-        summary[nrow(summary), value := as.numeric(as.Date(value))]
-        summary[, value := as.character(as.Date(value))]
-        summary[nrow(summary), value := sd]
+        formatted <- summary[-.N, as.character(as.Date(value, origin = '1970-01-01'))]
+        summary[, value := NULL]
+        summary[, value := '']
+        summary[, value := c(formatted, sd)]
       }
       summary
     }
@@ -259,9 +267,4 @@ format_feature_summary_DT <- function(d){
       )
     ) |>
     formatStyle(1:ncol(d), lineHeight='0%', fontSize = '14px')
-    if('value' %in% names(d)){
-      DT |> formatRound(columns=c('value'), digits=4, interval = 3)
-    } else {
-      DT
-    }
 }
