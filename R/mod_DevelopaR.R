@@ -131,7 +131,7 @@ mod_DevelopaR_ui <- function(id){
                              aceEditor(
                                ns('shinyAce_code'),
                                mode = "r",
-                               fontSize = 16,
+                               fontSize = 14,
                                wordWrap = FALSE,
                                height = 'calc(40vh)',
                                autoScrollEditorIntoView = TRUE,
@@ -148,6 +148,13 @@ mod_DevelopaR_ui <- function(id){
 
 # copy all GBM prediction to dataset
 # for(b in BoostaR_models()){d()[, (b$name):=b$predictions]}
+
+# create quantiles for numeric feature
+# target_col <- 'col_name'; q <- 10
+# qtile <- function(x, n){cut(x, quantile(x, probs=0:n/n), include.lowest=TRUE, labels=FALSE)}
+# col <- paste0(target_col,'_quantile', '_', q)
+# d()[, (col) := lapply(.SD, qtile, q), .SDcols = target_col]
+
 "
                              )
                            )
@@ -178,7 +185,7 @@ mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, featur
     updated_filter_spec <- reactiveVal()
     updated_feature_spec <- reactiveVal()
     ns <- session$ns
-    shinyAce_text_size <- reactiveVal(16)
+    shinyAce_text_size <- reactiveVal(14)
     observeEvent(input$shinyAce_evaluate, {
       result <- tryCatch({eval(parse(text = input$shinyAce_code))}, error = function(e){e})
       if(class(result)[1]=='simpleError'){
