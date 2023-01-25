@@ -133,6 +133,7 @@ mod_GlimmaR_build_model_ui <- function(id){
           column(
             width = 3,
             align = 'right',
+            style = 'padding-left: 0px;',
             br(),
             shinyFilesButton(
               id = ns('formula_load'),
@@ -174,20 +175,27 @@ mod_GlimmaR_build_model_ui <- function(id){
         ),
         fluidRow(
           column(
-            width = 6,
+            width = 4,
+            style = 'padding-right:0px',
             align = 'right',
             radioGroupButtons(
               inputId = ns('data_to_use'),
               justified =  TRUE,
               label = NULL,
-              choices = c('All rows', 'Training only'),
-              selected = 'Training only'
+              choices = c('All', 'Training'),
+              selected = 'Training'
             ),
             tippy_this(ns('data_to_use'), delay = 1000, placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
           ),
           column(
-            width = 3,
+            width = 5,
             align = 'right',
+            actionButton(
+              inputId = ns('clear_formula'),
+              label = 'clear',
+              icon = icon("minus-circle")
+            ),
+            tippy_this(ns('clear_formula'), delay = 1000, placement = 'right', tooltip = tippy_text('clear GLM formula above',12)),
             actionButton(
               inputId = ns('textsize_minus'),
               label = "A-",
@@ -291,6 +299,9 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       } else {
         confirmSweetAlert(session = session, type = 'error', inputId = ns('GlimmaR_error'), title = "Error", text = GlimmaR_model$message, btn_labels = c('OK'))
       }
+    })
+    observeEvent(input$clear_formula, {
+      updateTextAreaInput(session, inputId = 'glm_formula', value = '')
     })
     observeEvent(input$textsize_minus, {
       text_size(pmax(8,text_size()-1))
@@ -420,14 +431,14 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
   if(!(response %in% names(d))){
   } else if (!(weight %in% c('N',names(d)))){
   } else if (is.null(d)){
-  } else if (data_to_use=='Training only' & !('train_test' %in% names(d))){
+  } else if (data_to_use=='Training' & !('train_test' %in% names(d))){
     # training data selected but no train test column
     l$message <- 'no train_test column'
     confirmSweetAlert(session = session,
                       type = 'error',
                       inputId = "build_error",
                       title = l$message,
-                      text = 'Training only selected but there is no train_test column in the dataset',
+                      text = 'Training selected but there is no train_test column in the dataset',
                       btn_labels = c('OK')
     )
   } else {
@@ -491,7 +502,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
         link <-  'log'
       }
       # use whole dataset or just training
-      if(data_to_use=='All rows'){
+      if(data_to_use=='All'){
         include <- 1:nrow(d)
       } else {
         include <- which(d[['train_test']]==0)
