@@ -32,7 +32,7 @@ mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
             type <- 'character'
           } else if (inherits(d()[[col]],c('numeric','integer'))){
             type <- 'numeric'
-          } else if (inherits(d()[[col]],'Date')){
+          } else if (inherits(d()[[col]],c('POSIXt','Date'))){
             type <- 'date'
           } else if (col=='none'){
             type <- 'NULL'
