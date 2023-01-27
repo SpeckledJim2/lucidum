@@ -906,7 +906,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         max_depth <- c(32,32)
         col_sample_rate <- c(0.5,1.0)
         row_sample_rate <- c(0.5,1.0)
-        min_data_in_leaf <- c(0,1000)
+        min_data_in_leaf <- c(0,200)
         lambda_l1 <- c(0,1000)
         lambda_l2 <- c(0,1000)
       }
