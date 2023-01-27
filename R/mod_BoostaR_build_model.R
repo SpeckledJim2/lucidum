@@ -203,11 +203,32 @@ mod_BoostaR_build_model_ui <- function(id){
         width = 6,
         fluidRow(
           column(
-            width = 4,
+            width = 3,
             h3('Parameters')
           ),
           column(
-            width = 8,
+            width = 3,
+            align = 'right',
+            div(
+              id = ns('ebm_mode_wrapper'),
+              style = 'margin-top: 22px',
+              checkboxInput(inputId = ns('ebm_mode'),label = "EBM", value = FALSE),
+            ),
+            tippy_this(
+              ns('ebm_mode_wrapper'),
+              delay = 2000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Explainable Boosting Machine</b><br/>
+                    Trains 2-leaf trees (1D) terms first,<br/>
+                    then 3-leaf trees (2D) terms etc.<br/>
+                    up to the selected number of leaves',
+                12
+              )
+            )
+          ),
+          column(
+            width = 6,
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
             tippy_this(
@@ -225,10 +246,9 @@ mod_BoostaR_build_model_ui <- function(id){
               right = TRUE,
               up = FALSE,
               circle = FALSE,
-              label = 'Additional parameters',
+              label = 'LGBM params',
               margin = "20px",
               inline = TRUE,
-              checkboxInput(inputId = ns('ebm_mode'),label = "Explainable boosting machine (EBM) mode", value = FALSE),
               br(),
               textAreaInput(
                 inputId = ns('BoostaR_additional_parameters'),
@@ -867,7 +887,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           max_depth <- 4
           col_sample_rate <- 1
           row_sample_rate <- 1
-          min_data_in_leaf <- 0
+          min_data_in_leaf <- 20
           lambda_l1 <- 0
           lambda_l2 <- 0
         } else {
@@ -955,9 +975,9 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           inputId = ns('BoostaR_min_data_in_leaf'),
           label = 'Min data in leaf',
           min = 0,
-          max = 1000,
+          max = 200,
           value = min_data_in_leaf,
-          step = 100,
+          step = 10,
           ticks = FALSE,
           width = '100%'
         )
@@ -992,9 +1012,9 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         inputId = ns('BoostaR_min_data_in_leaf'),
         label = 'Min data in leaf',
         min = 0,
-        max = 1000,
+        max = 200,
         value = 0,
-        step = 100,
+        step = 10,
         ticks = FALSE,
         width = '100%'
       )
@@ -1582,7 +1602,7 @@ get_main_params_combos <- function(input){
   max_depth <- seq(max_depth[1], max_depth[2], 1)
   feature_fraction <- seq(feature_fraction[1], feature_fraction[2], 0.05)
   bagging_fraction <- seq(bagging_fraction[1], bagging_fraction[2], 0.05)
-  min_data_in_leaf <- seq(min_data_in_leaf[1], min_data_in_leaf[2], 100)
+  min_data_in_leaf <- seq(min_data_in_leaf[1], min_data_in_leaf[2], 10)
   lambda_l1 <- seq(lambda_l1[1], lambda_l1[2], 100)
   lambda_l2 <- seq(lambda_l2[1], lambda_l2[2], 100)
   combos <-
@@ -1707,6 +1727,7 @@ evaluation_plot <- function(BoostaR_model, view){
 update_GBM_parameters <- function(session, output, BoostaR_model){
   if(!is.null(BoostaR_model)){
     ns <- session$ns
+    updateCheckboxInput(session, inputId = 'ebm_mode', value = BoostaR_model$ebm_mode)
     updateTextInput(session, inputId = 'BoostaR_num_rounds', value = BoostaR_model$params$num_iterations)
     updateTextInput(session, inputId = 'BoostaR_early_stopping', value = BoostaR_model$params$early_stopping_round)
     updateTextInput(session, inputId = 'BoostaR_tweedie_variance_power', value = BoostaR_model$params$tweedie_variance_power)
@@ -1778,7 +1799,7 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
         inputId = ns('BoostaR_min_data_in_leaf'),
         label = 'Min data in leaf',
         min = 0,
-        max = 1000,
+        max = 200,
         value = BoostaR_model$params$min_data_in_leaf,
         step = 10,
         ticks = FALSE,

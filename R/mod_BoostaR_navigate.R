@@ -308,6 +308,7 @@ BoostaR_model_summary_row <- function(BoostaR_model){
                     best_iter = BoostaR_model$evaluation_log$best_iteration,
                     method = BoostaR_model$params$boosting,
                     lr = BoostaR_model$params$learning_rate,
+                    ebm = BoostaR_model$ebm_mode,
                     leaves = BoostaR_model$params$num_leaves,
                     depth = BoostaR_model$params$max_depth,
                     `row%` = BoostaR_model$params$bagging_fraction,
