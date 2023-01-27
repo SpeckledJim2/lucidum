@@ -895,6 +895,7 @@ uncentered_terms_new <- function(object, newdata, terms, na.action = na.pass, ..
   offset_term <- ifelse(length(grep('offset(', terms, fixed = TRUE))>0,T,F)
   if(offset_term){
     # evaluate the offset directly
+    # QUESTION - need to split out offset terms
     begin <- min(unlist(gregexpr('(', terms, fixed = TRUE))) + 1
     end <- max(unlist(gregexpr(')', terms, fixed = TRUE))) - 1
     form <- substr(terms,begin,end)
