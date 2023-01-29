@@ -460,7 +460,6 @@ SHAP_heatmap <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
   }
   d_summary <- d_cols[, list(SHAP = mean(SHAP)), by = c('banded_1', 'banded_2')]
   d_summary <- dcast(d_summary, stats::as.formula('banded_1 ~ banded_2'), value.var = 'SHAP')
-  
   p <- plotly::plot_ly(
     x = names(d_summary)[-1],
     y = d_summary[[1]],
@@ -474,8 +473,8 @@ SHAP_heatmap <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
     #   showarrow = FALSE) %>%
     layout(plot_bgcolor='rgb(200, 200, 200)',
            font = list(family = 'Helvetica Neue')) |>
-    layout(xaxis = list(autotick = FALSE, showgrid = FALSE, title = feature_2, tickfont = list(size = min(14,max(6,500/ncol(d_summary))))),
-           yaxis = list(autotick = FALSE, showgrid = FALSE, title = feature_1, tickfont = list(size = min(14,max(6,500/nrow(d_summary)))))
+    layout(xaxis = list(autotick = FALSE, dtick = banding_2, showgrid = FALSE, title = feature_2, tickfont = list(size = min(14,max(6,500/ncol(d_summary))))),
+           yaxis = list(autotick = FALSE, dtick = banding_1, showgrid = FALSE, title = feature_1, tickfont = list(size = min(14,max(6,500/nrow(d_summary)))))
            )
   return(p)
 }
