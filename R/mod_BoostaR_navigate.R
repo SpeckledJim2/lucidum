@@ -302,9 +302,22 @@ BoostaR_model_summary_row <- function(BoostaR_model){
     num_ICs <- ifelse(is.null(BoostaR_model$params$interaction_constraints),
                       0,
                       length(BoostaR_model$params$interaction_constraints)-1)
+    # format train and test errors
+    test_err <- BoostaR_model$evaluation_log$test_err
+    train_err <- BoostaR_model$evaluation_log$train_err
+    if(!is.null(test_err)){
+      test_err <- signif(test_err, 6)
+    } else {
+      test_err <- NA
+    }
+    if(!is.null(train_err)){
+      train_err <- signif(train_err, 6)
+    } else {
+      train_err <- NA
+    }
     x <- data.table(name = BoostaR_model$name,
-                    test = signif(BoostaR_model$evaluation_log$test_err, 6),
-                    train = signif(BoostaR_model$evaluation_log$train_err, 6),
+                    test = test_err,
+                    train = train_err,
                     best_iter = BoostaR_model$evaluation_log$best_iteration,
                     method = BoostaR_model$params$boosting,
                     lr = BoostaR_model$params$learning_rate,

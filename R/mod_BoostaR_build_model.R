@@ -913,8 +913,8 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         col_sample_rate <- c(0.5,1.0)
         row_sample_rate <- c(0.5,1.0)
         min_data_in_leaf <- c(0,200)
-        lambda_l1 <- c(0,1000)
-        lambda_l2 <- c(0,1000)
+        lambda_l1 <- c(0,200)
+        lambda_l2 <- c(0,200)
       }
       output$BoostaR_learning_rate_UI <- renderUI({
         sliderInput(
@@ -993,9 +993,9 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           inputId = ns('BoostaR_lambda_l1'),
           label = 'L1 normalisation',
           min = 0,
-          max = 1000,
+          max = 200,
           value = lambda_l1,
-          step = 100,
+          step = 10,
           ticks = FALSE,
           width = '100%'
         )
@@ -1005,9 +1005,9 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           inputId = ns('BoostaR_lambda_l2'),
           label = 'L2 normalisation',
           min = 0,
-          max = 1000,
+          max = 200,
           value = lambda_l2,
-          step = 100,
+          step = 10,
           ticks = FALSE,
           width = '100%'
         )
@@ -1030,9 +1030,9 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         inputId = ns('BoostaR_lambda_l1'),
         label = 'L1 normalisation',
         min = 0,
-        max = 1000,
+        max = 200,
         value = 0,
-        step = 100,
+        step = 10,
         ticks = FALSE,
         width = '100%'
       )
@@ -1042,9 +1042,9 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         inputId = ns('BoostaR_lambda_l2'),
         label = 'L2 normalisation',
         min = 0,
-        max = 1000,
+        max = 200,
         value = 0,
-        step = 100,
+        step = 10,
         ticks = FALSE,
         width = '100%'
       )
@@ -1617,8 +1617,8 @@ get_main_params_combos <- function(input){
   feature_fraction <- seq(feature_fraction[1], feature_fraction[2], 0.05)
   bagging_fraction <- seq(bagging_fraction[1], bagging_fraction[2], 0.05)
   min_data_in_leaf <- seq(min_data_in_leaf[1], min_data_in_leaf[2], 10)
-  lambda_l1 <- seq(lambda_l1[1], lambda_l1[2], 100)
-  lambda_l2 <- seq(lambda_l2[1], lambda_l2[2], 100)
+  lambda_l1 <- seq(lambda_l1[1], lambda_l1[2], 10)
+  lambda_l2 <- seq(lambda_l2[1], lambda_l2[2], 10)
   combos <-
     length(learning_rate) *
     length(max_depth) *
@@ -1630,13 +1630,14 @@ get_main_params_combos <- function(input){
   if(combos > 1000){
     # sample down to avoid params_grid being huge
     learning_rate <- sample(learning_rate, size = num_combos, replace = TRUE)
-    num_leaves <- sample(num_leaves, size = num_combos, replace = TRUE)
+    #num_leaves <- sample(num_leaves, size = num_combos, replace = TRUE)
+    num_leaves <- sample_down(num_leaves, num_combos)
     max_depth <- sample(max_depth, size = num_combos, replace = TRUE)
     feature_fraction <- sample(feature_fraction, size = num_combos, replace = TRUE)
     bagging_fraction <- sample(bagging_fraction, size = num_combos, replace = TRUE)
-    min_data_in_leaf <- sample(min_data_in_leaf, size = num_combos, replace = TRUE)
-    lambda_l1 <- sample(lambda_l1, size = num_combos, replace = TRUE)
-    lambda_l2 <- sample(lambda_l2, size = num_combos, replace = TRUE)
+    min_data_in_leaf <- sample_down(min_data_in_leaf, num_combos)
+    lambda_l1 <- sample_down(lambda_l1, num_combos)
+    lambda_l2 <- sample_down(lambda_l2, num_combos)
     params_grid <- data.table(
       objective = input$BoostaR_objective,
       boosting = boosting,
@@ -1825,7 +1826,7 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
         inputId = ns('BoostaR_lambda_l1'),
         label = 'L1 normalisation',
         min = 0,
-        max = 1000,
+        max = 200,
         value = BoostaR_model$params$lambda_l1,
         step = 10,
         ticks = FALSE,
@@ -1837,7 +1838,7 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
         inputId = ns('BoostaR_lambda_l2'),
         label = 'L2 normalisation',
         min = 0,
-        max = 1000,
+        max = 200,
         value = BoostaR_model$params$lambda_l2,
         step = 10,
         ticks = FALSE,
@@ -2073,4 +2074,12 @@ add.cb <- function(cb_list, cb) {
 # Extract callback names from the list of callbacks
 callback.names <- function(cb_list) {
   return(unlist(lapply(cb_list, attr, "name")))
+}
+
+sample_down <- function(x,n){
+  if(length(x)==1){
+    x
+  } else {
+    sample(x, size = n, replace = TRUE)
+  }
 }
