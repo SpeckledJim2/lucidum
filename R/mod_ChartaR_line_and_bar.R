@@ -246,7 +246,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               if(weight %in% c('N','no weights')){
                 d_summary <- d[rows_idx, .(weight = .N), group_by_col]
               } else {
-                d_summary <- d[rows_idx, .(weight = lapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = weight]
+                d_summary <- d[rows_idx, .(weight = sapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = weight]
               }
               if(group_low_exposure=='1%'){
                 min_exposure <- 0.01 * sum(d_summary[,2])
