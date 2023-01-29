@@ -122,7 +122,7 @@ mod_DevelopaR_ui <- function(id){
                                  ),
                                  actionButton(
                                    ns('shinyAce_evaluate'),
-                                   label = 'Evaluate',
+                                   label = 'Evaluate selected code',
                                    icon = icon("chevron-right"),
                                    style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
                                  )
@@ -130,30 +130,35 @@ mod_DevelopaR_ui <- function(id){
                              ),
                              aceEditor(
                                ns('shinyAce_code'),
+                               showPrintMargin = FALSE,
                                mode = "r",
                                fontSize = 14,
                                wordWrap = FALSE,
                                height = 'calc(40vh)',
                                autoScrollEditorIntoView = TRUE,
+                               selectionId = 'selection',
+                               debounce = 100,
                                value =
-"# evaluate glm tabulation error
-# d()[, sd(glm_prediction/glm_tabulated_prediction, na.rm=TRUE)]
+"# 01 evaluate glm tabulation error
+d()[, sd(glm_prediction/glm_tabulated_prediction, na.rm=TRUE)]
 
-# calculate the ratio of GBM to GLM prediction
-# d()[, model_ratio := lgbm_prediction/glm_prediction]
-# d()[, sd(model_ratio), by = train_test]
+# 02 calculate the ratio of GBM to GLM prediction
+d()[, model_ratio := lgbm_prediction/glm_prediction]
+d()[, sd(model_ratio), by = train_test]
 
-# copy all GLM prediction to dataset
-# for(g in GlimmaR_models()){d()[, (g$name):=g$predictions]}
+# 03 copy all GLM prediction to dataset
+for(g in GlimmaR_models()){d()[, (g$name):=g$predictions]}
 
-# copy all GBM prediction to dataset
-# for(b in BoostaR_models()){d()[, (b$name):=b$predictions]}
+# 04 copy all GBM prediction to dataset
+for(b in BoostaR_models()){d()[, (b$name):=b$predictions]}
 
-# create quantiles for numeric feature
-# target_col <- 'col_name'; q <- 10
-# qtile <- function(x, n){cut(x, quantile(x, probs=0:n/n), include.lowest=TRUE, labels=FALSE)}
-# col <- paste0(target_col,'_quantile', '_', q)
-# d()[, (col) := lapply(.SD, qtile, q), .SDcols = target_col]
+# 05 create quantiles for numeric feature
+target_col <- 'price'
+q <- 10
+qtile <- function(x,n){cut(x, quantile(x,probs=0:n/n),include.lowest=T,labels=F)}
+col <- paste0(target_col,'_quantile','_',q)
+d()[, (col) := lapply(.SD, qtile, q), .SDcols = target_col]
+
 
 "
                              )
@@ -187,7 +192,7 @@ mod_DevelopaR_server <- function(id, d, dt_update, kpi_spec, filter_spec, featur
     ns <- session$ns
     shinyAce_text_size <- reactiveVal(14)
     observeEvent(input$shinyAce_evaluate, {
-      result <- tryCatch({eval(parse(text = input$shinyAce_code))}, error = function(e){e})
+      result <- tryCatch({eval(parse(text = input$shinyAce_code_selection))}, error = function(e){e})
       if(class(result)[1]=='simpleError'){
         # something went wrong
         confirmSweetAlert(session = session,
