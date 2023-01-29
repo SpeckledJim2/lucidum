@@ -18,7 +18,7 @@ glucidum::glucidum(
   show_DevelopaR = T,
   show_MappaR = T,
   starting_response = 'price',
-  starting_tab = 'ChartaR',
+  starting_tab = 'DataR',
   kpi_spec = kpi_spec,
   feature_spec = feature_spec,
   filter_spec = filter_spec,

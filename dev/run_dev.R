@@ -18,7 +18,7 @@ glucidum(
   BoostaR_models = NULL,
   GlimmaR_models = NULL,
   starting_response = 'price',
-  starting_tab = 'ChartaR',
+  starting_tab = 'DataR',
   show_DevelopaR = T,
   show_DataR = T,
   show_ChartaR = T,
