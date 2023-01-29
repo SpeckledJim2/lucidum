@@ -55,7 +55,7 @@ mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
           radioGroupButtons(
             inputId = ns('banding'),
             label = b_display,
-            choices = c('<','Day','Week','Mnth','Qtr','Year','>',`<i class='fa fa-lock'></i>` = 'lock'),
+            choices = c('<','Day','Week','Mnth','Qtr','Year','>'),
             individual = FALSE,
             selected = character(0),
             size = 'xs')
@@ -65,7 +65,7 @@ mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
           radioGroupButtons(
             inputId = ns('banding'),
             label = b_display,
-            choices = c('<','0.01','0.1','1','5','10','100','>',`<i class='fa fa-lock'></i>` = 'lock'),
+            choices = c('<','0.01','0.1','1','5','10','100','>'),
             individual = FALSE,
             selected = character(0),
             size = 'xs')
