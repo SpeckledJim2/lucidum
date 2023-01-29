@@ -382,9 +382,13 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
             break
           }
         }
+        # forces update when last_clicked hasn't changed
+        val <- crosstab_selector()$val
+        if(is.null(val)) val <- 1 else val <- val + 1
         info_list <- list(
           originator = 'GlimmaR coefficient table',
-          last_clicked = feature
+          last_clicked = feature,
+          val = val
         )
         crosstab_selector(info_list)
       }
