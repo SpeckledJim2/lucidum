@@ -17,125 +17,28 @@ mod_BoostaR_build_model_ui <- function(id){
         width = 6,
         fluidRow(
           column(
-            width = 9,
-            h3('Features & interaction constraints')
-          ),
-          column(
-            width = 3,
-            style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
-            align = 'right',
-            tippy_this(
-              ns('BoostaR_fics_dropdown'),
-              delay = 2000,
-              placement = 'bottom',
-              tooltip = tippy_text(
-                '<b>Define custom feature interaction constraints</b><br/>
-                    Specify which interactions can be included in the GBM',
-                12
-              )
-            ),
-            dropdownButton(
-              inputId = ns('BoostaR_fics_dropdown'),
-              right = TRUE,
-              up = FALSE,
-              circle = FALSE,
-              label = 'Custom',
-              margin = "20px",
-              inline = TRUE,
-              checkboxInput(inputId = ns('BoostaR_use_custom_interaction_constraints'),label = "Apply custom feature interaction constraints", value = FALSE),
-              fluidRow(
-                column(
-                  width = 8,
-                  sliderInput(
-                    inputId = ns('top_n_interactions'),
-                    label = 'Select top n interactions from current GBM',
-                    min = 1,
-                    max = 20,
-                    value = 10,
-                    step = 1,
-                    ticks = FALSE,
-                    width = '100%'
-                  )
-                ),
-                column(
-                  width = 4,
-                  actionButton(
-                    inputId = ns('copy_top_n_interactions'),
-                    label = 'Copy'
-                  )
-                )
-              ),
-              textAreaInput(
-                inputId = ns('BoostaR_custom_interaction_constraints'),
-                value =
-                  '# separate features with "x"
-# any features selected for the model
-# not included in an interaction constraint
-# will be fitted with no interaction terms',
-                label = 'Specify interactions',
-                width = '520px',
-                height = '500px',
-                resize = 'vertical'
-              )
-            )
-          )
-        ),
-        fluidRow(
-          column(
-            width = 6,
-            selectInput(
-              ns('BoostaR_feature_specification'),
-              label = 'Feature specification',
-              size = 10,
-              selectize = FALSE,
-              choices = c(''),
-              width = '100%'
-            ),
-            tippy_this(
-              ns('BoostaR_feature_specification'),
-              delay = 2000,
-              placement = 'bottom',
-              tooltip = tippy_text(
-                '<b>Feature specification</b><br/>
-                    Select a feature specification<br/>
-                    to update the feature table below',
-                12
-              )
-            ),
-          ),
-          column(
-            width = 6,
-            selectInput(
-              inputId = ns('BoostaR_interaction_contraints'),
-              label = 'Feature interaction constraints',
-              size = 10,
-              multiple = TRUE,
-              selectize = FALSE,
-              choices = NULL,
-              width = '100%'
-            ),
-            tippy_this(
-              ns('BoostaR_interaction_contraints'),
-              delay = 2000,
-              placement = 'bottom',
-              tooltip = tippy_text(
-                '<b>Feature interaction constraints (FICS)</b><br/>
-                    Applies FICS to the selected interaction grouping<br/>
-                    Hold down Ctrl or Command to select multiple rows',
-                12
-              )
-            ),
-          )
-        ),
-        fluidRow(
-          column(
-            width = 5,
+            width = 4,
             htmlOutput(ns('BoostaR_num_features'))
-          ),
+            ),
           column(
-            width = 7,
+            width = 8,
             align = 'right',
             style='margin-top:16px; padding-bottom:0px',
+            actionButton(
+              inputId = ns("BoostaR_goto_ChartaR"),
+              label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
+              style = 'padding:3px 5px 3px 5px'
+            ),
+            tippy_this(
+              ns('BoostaR_goto_ChartaR'),
+              delay = 2000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Go to ChartaR one-way line and bar </b><br/>
+                with the highlighted feature as the x-axis feature',
+                12
+              )
+            ),
             actionButton(
               inputId = ns("BoostaR_add_features"),
               label = 'all',
@@ -166,37 +69,130 @@ mod_BoostaR_build_model_ui <- function(id){
                 12
               )
             ),
-            actionButton(
-              inputId = ns("BoostaR_clear_interaction_groups"),
-              label = 'int groups',
-              icon = icon("minus-circle")
+            tags$head(tags$style(HTML("#BoostaR-buildBoostaR-feature_scenarios {padding: 3px 5px 3px 5px;}"))),
+            dropdownButton(inputId = ns('feature_scenarios'),
+                           width = 300,
+                           up = FALSE,
+                           circle = FALSE,
+                           inline = TRUE,
+                           size = 'default',
+                           label = tags$img(src='www/features.png', height="26px", width="26px"),
+                           right = FALSE,
+                           margin = '10px',
+                           selectInput(
+                             ns('BoostaR_feature_specification'),
+                             label = 'Choose a feature specification',
+                             size = 10,
+                             selectize = FALSE,
+                             choices = c(''),
+                             width = '100%'
+                           ),
+                           tippy_this(
+                             ns('BoostaR_feature_specification'),
+                             delay = 2000,
+                             placement = 'bottom',
+                             tooltip = tippy_text(
+                               '<b>Feature specification</b><br/>
+                    Select a feature specification<br/>
+                    to update the feature table below',
+                               12
+                             )
+                           )
+                           
             ),
+            # QUESTION - how should I be doing this with a ns?
+            tags$head(tags$style(HTML("#BoostaR-buildBoostaR-BoostaR_fics_dropdown {padding: 3px 3px 3px 3px;}"))),
             tippy_this(
-              ns('BoostaR_clear_interaction_groups'),
+              ns('BoostaR_fics_dropdown'),
               delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
-                '<b>Deselect interaction group features</b><br/>
-                Only features from highlighted interaction groups are removed',
+                '<b>Define custom feature interaction constraints</b><br/>
+                    Specify which interactions can be included in the GBM',
                 12
               )
             ),
-            actionButton(
-              inputId = ns("BoostaR_goto_ChartaR"),
-              label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
-              style = 'padding:3px 5px 3px 5px'
-            ),
-            tippy_this(
-              ns('BoostaR_goto_ChartaR'),
-              delay = 2000,
-              placement = 'bottom',
-              tooltip = tippy_text(
-                '<b>Go to ChartaR one-way line and bar </b><br/>
-                with the highlighted feature as the x-axis feature',
-                12
+            dropdownButton(
+              inputId = ns('BoostaR_fics_dropdown'),
+              right = FALSE,
+              up = FALSE,
+              circle = FALSE,
+              label = tags$img(src='www/fics.png', height="26px", width="26px"),
+              margin = "20px",
+              inline = TRUE,
+              selectInput(
+                inputId = ns('BoostaR_interaction_contraints'),
+                label = 'Apply feature interaction constraints',
+                size = 10,
+                multiple = TRUE,
+                selectize = FALSE,
+                choices = NULL,
+                width = '100%'
+              ),
+              tippy_this(
+                ns('BoostaR_interaction_contraints'),
+                delay = 2000,
+                placement = 'bottom',
+                tooltip = tippy_text(
+                  '<b>Feature interaction constraints (FICS)</b><br/>
+                    Applies FICS to the selected interaction grouping<br/>
+                    Hold down Ctrl or Command to select multiple rows',
+                  12
+                )
+              ),
+              checkboxInput(inputId = ns('BoostaR_use_custom_interaction_constraints'),label = "Apply custom feature interaction constraints", value = FALSE),
+              fluidRow(
+                column(
+                  width = 8,
+                  sliderInput(
+                    inputId = ns('top_n_interactions'),
+                    label = 'Select top n terms by gain from current GBM',
+                    min = 1,
+                    max = 100,
+                    value = 10,
+                    step = 1,
+                    ticks = FALSE,
+                    width = '100%'
+                  )
+                ),
+                column(
+                  width = 4,
+                  actionButton(
+                    inputId = ns('copy_top_n_interactions'),
+                    label = 'Copy'
+                  )
+                )
+              ),
+              textAreaInput(
+                inputId = ns('BoostaR_custom_interaction_constraints'),
+                value =
+                  '# separate features with "x"
+# any features selected for the model
+# not included in an interaction constraint
+# will be fitted with no interaction terms',
+                label = 'Specify interactions',
+                width = '520px',
+                height = '300px',
+                resize = 'vertical'
               )
-            ),          )
-        ),
+            )
+            # actionButton(
+            #   inputId = ns("BoostaR_clear_interaction_groups"),
+            #   label = 'int groups',
+            #   icon = icon("minus-circle")
+            # ),
+            # tippy_this(
+            #   ns('BoostaR_clear_interaction_groups'),
+            #   delay = 2000,
+            #   placement = 'bottom',
+            #   tooltip = tippy_text(
+            #     '<b>Deselect interaction group features</b><br/>
+            #     Only features from highlighted interaction groups are removed',
+            #     12
+            #   )
+            # ),
+            )
+          ),
         div(rHandsontableOutput(ns("BoostaR_features")), style = 'font-size: 12px')
       ),
       column(
@@ -207,15 +203,23 @@ mod_BoostaR_build_model_ui <- function(id){
             h3('Parameters')
           ),
           column(
-            width = 3,
+            width = 5,
             align = 'right',
             div(
-              id = ns('ebm_mode_wrapper'),
-              style = 'margin-top: 22px',
-              checkboxInput(inputId = ns('ebm_mode'),label = "EBM", value = FALSE),
+              style = 'margin-top:16px',
+              radioGroupButtons(
+                inputId = ns('ebm_mode'),
+                label = NULL,
+                choiceValues = c('Normal','EBM mode'),
+                choiceNames = c(
+                  tagList(tags$img(src='www/normal.png', height="15px", width="26px",'Normal')),
+                  tagList(tags$img(src='www/ebm_mode.png', height="15px", width="26px",'EBM mode'))
+                  ),
+                selected = 'Normal',
+              )
             ),
             tippy_this(
-              ns('ebm_mode_wrapper'),
+              ns('ebm_mode'),
               delay = 2000,
               placement = 'bottom',
               tooltip = tippy_text(
@@ -228,9 +232,10 @@ mod_BoostaR_build_model_ui <- function(id){
             )
           ),
           column(
-            width = 6,
+            width = 4,
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
+
             tippy_this(
               ns('BoostaR_additional_options'),
               delay = 2000,
@@ -241,12 +246,13 @@ mod_BoostaR_build_model_ui <- function(id){
                 12
               )
             ),
+            tags$head(tags$style(HTML("#BoostaR-buildBoostaR-BoostaR_additional_options {padding: 6px 3px 5px 3px;}"))),
             dropdownButton(
               inputId = ns('BoostaR_additional_options'),
               right = TRUE,
               up = FALSE,
               circle = FALSE,
-              label = 'LGBM params',
+              label = tags$img(src='www/parameters.png', height="20px", width="26px"),
               margin = "20px",
               inline = TRUE,
               br(),
@@ -342,7 +348,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 textInput(
                   ns('BoostaR_num_rounds'),
                   'Max trees',
-                  value = 100),
+                  value = 1000),
                 tippy_this(ns('BoostaR_num_rounds'),
                            delay = 2000,
                            placement = 'bottom',
@@ -358,7 +364,7 @@ mod_BoostaR_build_model_ui <- function(id){
                 textInput(
                   ns('BoostaR_early_stopping'),
                   'Stopping',
-                  value = 20),
+                  value = 50),
                 tippy_this(ns('BoostaR_early_stopping'),
                            delay = 2000,
                            placement = 'bottom',
@@ -684,7 +690,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
     })
     observeEvent(d(), {
       output$BoostaR_features <- renderRHandsontable({
-        rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec()), dimensions()[2] - 500)
+        rhandsontable_formatted(make_BoostaR_feature_grid(d(), feature_spec()), dimensions()[2] - 200)
         })
     })
     observeEvent(c(d(), dt_update()), {
@@ -714,7 +720,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         B <- BoostaR_models()[[BoostaR_idx()]]
         if(!is.null(B)){
           update_GBM_parameters(session, output, B)
-          output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, dimensions()[2] - 500)})
+          output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, dimensions()[2] - 200)})
         }
       }
     })
@@ -738,7 +744,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         features <- NULL
       }
       dt <- populate_BoostaR_feature_grid(names(d()), features, fs, BoostaR_feature_table())
-      output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
+      output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 200)})
     })
     observeEvent(input$BoostaR_features, {
       
@@ -764,7 +770,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       if(!is.null(BoostaR_feature_table())){
         dt <- BoostaR_feature_table()
         dt[, include := FALSE]
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 200)})
         updateSelectInput(session, inputId = 'BoostaR_feature_specification', selected = character(0))
       }
     })
@@ -773,7 +779,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         dt <- BoostaR_feature_table()
         dt[, include := TRUE]
         dt[feature==response(), include := FALSE]
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 200)})
         updateSelectInput(session, inputId = 'BoostaR_feature_specification', selected = character(0))
       }
     })
@@ -785,7 +791,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           interaction_grouping <- NULL
           dt[interaction_grouping %in% groups, include := FALSE]
         }
-        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 500)})
+        output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(dt, dimensions()[2] - 200)})
       }
     })
     observeEvent(input$BoostaR_build_model, {
@@ -1046,12 +1052,20 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
     observeEvent(input$BoostaR_goto_ChartaR, {
       # get the selected row in the table
       r <- input$BoostaR_features_select$select$rAll
+      last_clicked <- ''
       if(!is.null(r)){
-        last_clicked <- input$BoostaR_features$data[[r]][[1]]
+        if(length(r)==1){
+          # only proceed if one row is selected
+          last_clicked <- input$BoostaR_features$data[[r]][[1]]
+        }
       }
+      # forces update when last_clicked hasn't changed
+      val <- crosstab_selector()$val
+      if(is.null(val)) val <- 1 else val <- val + 1
       info_list <- list(
         originator = 'BoostaR feature table',
-        last_clicked = last_clicked
+        last_clicked = last_clicked,
+        val = val
       )
       crosstab_selector(info_list)
     })
@@ -1350,7 +1364,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
   
   # callbacks
   callbacks <- list(cb.print.period(params$num_threads, params$num_iterations))
-  if(ebm_mode){
+  if(ebm_mode=='EBM mode'){
     es <- params$early_stopping_round
     max_leaves <- params$num_leaves
     lr <- params$learning_rate
@@ -1380,7 +1394,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
     error = function(e){e}
   )
   run_time <- Sys.time() - start_time
-  if(ebm_mode){
+  if(ebm_mode=='EBM mode'){
     # reinstate the original values
     params$early_stopping_round <- es
     params$num_leaves <- max_leaves
@@ -1727,7 +1741,7 @@ evaluation_plot <- function(BoostaR_model, view){
 update_GBM_parameters <- function(session, output, BoostaR_model){
   if(!is.null(BoostaR_model)){
     ns <- session$ns
-    updateCheckboxInput(session, inputId = 'ebm_mode', value = BoostaR_model$ebm_mode)
+    updateRadioGroupButtons(session, inputId = 'ebm_mode', selected = BoostaR_model$ebm_mode)
     updateTextInput(session, inputId = 'BoostaR_num_rounds', value = BoostaR_model$params$num_iterations)
     updateTextInput(session, inputId = 'BoostaR_early_stopping', value = BoostaR_model$params$early_stopping_round)
     updateTextInput(session, inputId = 'BoostaR_tweedie_variance_power', value = BoostaR_model$params$tweedie_variance_power)
