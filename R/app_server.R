@@ -73,19 +73,23 @@ app_server <- function(input, output, session) {
       c <- crosstab_selector()
       if(c$originator=='BoostaR feature table'){
         # navigate to ChartaR one way line and bar with pre-selected inputs
-        if(c$last_clicked %in% names(d()) & 'lgbm_prediction' %in% names(d())){
+        if(c$last_clicked %in% names(d())){
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
-          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
+          if('lgbm_prediction' %in% names(d())){
+            updateRadioGroupButtons(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectChooser', selected = 'lucidum')
+            updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
+            updateRadioGroupButtons(session, inputId = 'ChartaR-line_and_bar-show_partial_dependencies', selected = 'GBM-')
+          }
           updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
           updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
         }
       } else if(c$originator=='BoostaR gain summary'){
         # navigate to ChartaR SHAP plot with pre-selected inputs
         if(c$int_order==1){
-          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-_x_axis_feature-selectInput', selected = c$f1)
-          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'lgbm_prediction')
+          updateSelectInput(session, inputId = 'ChartaR-SHAP-feature_1', selected = c$f1)
+          updateSelectInput(session, inputId = 'ChartaR-SHAP-feature_2', selected = 'none')
           updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
-          updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
+          updateNavbarPage(session, inputId = "ChartaR-tabsetPanel", selected = "SHAP")
         } else if(c$int_order==2){
           updateSelectInput(session, inputId = 'ChartaR-SHAP-feature_1', selected = c$f1)
           updateSelectInput(session, inputId = 'ChartaR-SHAP-feature_2', selected = c$f2)
@@ -97,6 +101,7 @@ app_server <- function(input, output, session) {
         if(c$last_clicked %in% names(d()) & 'glm_prediction' %in% names(d())){
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
           updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'glm_prediction')
+          updateRadioGroupButtons(session, inputId = 'ChartaR-line_and_bar-show_partial_dependencies', selected = 'GLM')
           updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
           updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
         }
