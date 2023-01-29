@@ -135,27 +135,13 @@ mod_GlimmaR_build_model_ui <- function(id){
             align = 'right',
             style = 'padding-left: 0px;',
             br(),
-            shinyFilesButton(
-              id = ns('formula_load'),
-              label = '',
-              filetype=list(txt="txt"),
-              icon = icon('download'),
-              title = 'Choose formula',
-              style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-              multiple = FALSE
+            actionButton(
+              inputId = ns('build_GLM'),
+              label = "Build",
+              icon = icon("chevron-right"),
+              style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
             ),
-            tippy_this(ns('formula_load'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Load GLM formula from .txt file',12)),
-            shinySaveButton(
-              id = ns('formula_save'),
-              label = '',
-              title = 'Choose location to save formula',
-              filename = "",
-              filetype=list(txt="txt"),
-              icon = icon('upload'),
-              style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-              viewtype = "detail"
-            ),
-            tippy_this(ns('formula_save'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Save GLM formula to .txt file',12))
+            tippy_this(ns('build_GLM'), delay = 1000, placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
           )
         ),
         # QUESTION - need to move
@@ -210,13 +196,27 @@ mod_GlimmaR_build_model_ui <- function(id){
           column(
             width = 3,
             align = 'right',
-            actionButton(
-              inputId = ns('build_GLM'),
-              label = "Build",
-              icon = icon("chevron-right"),
-              style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
+            shinyFilesButton(
+              id = ns('formula_load'),
+              label = '',
+              filetype=list(txt="txt"),
+              icon = icon('download'),
+              title = 'Choose formula',
+              #style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
+              multiple = FALSE
             ),
-            tippy_this(ns('build_GLM'), delay = 1000, placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
+            tippy_this(ns('formula_load'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Load GLM formula from .txt file',12)),
+            shinySaveButton(
+              id = ns('formula_save'),
+              label = '',
+              title = 'Choose location to save formula',
+              filename = "",
+              filetype=list(txt="txt"),
+              icon = icon('upload'),
+              #style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
+              viewtype = "detail"
+            ),
+            tippy_this(ns('formula_save'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Save GLM formula to .txt file',12))
           )
         )
       ),
