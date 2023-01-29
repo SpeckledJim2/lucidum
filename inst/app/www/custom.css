@@ -3,6 +3,11 @@ h1, h2, h3, h4 {font-family: 'Helvetica Neue', Helvetica; font-weight: 400;}
 body {overflow-y: hidden;}
 input {autocorrect: "off"; spellcheck: "false";}
 
+.btn-dropdownbutton{
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 /* Put shiny notifications front and center */
 #shiny-notification-panel {
   top: 52px;
