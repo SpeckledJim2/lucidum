@@ -289,7 +289,7 @@ make_BoostaR_model_summary <- function(Bs){
   if(!is.null(Bs)){
     if(length(Bs)>0){
       rows <- lapply(Bs, BoostaR_model_summary_row)
-      rbindlist(rows)
+      rbindlist(rows, fill = TRUE)
     } else {
       NULL
     }
