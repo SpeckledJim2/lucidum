@@ -144,21 +144,6 @@ mod_GlimmaR_build_model_ui <- function(id){
             tippy_this(ns('build_GLM'), delay = 1000, placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
           )
         ),
-        # QUESTION - need to move
-        tags$style(".form-group.shiny-input-container { width: 100%; }"),
-        # QUESTION - better way re namespace?
-        tags$script("
-                         Shiny.addCustomMessageHandler('GlimmaR-buildGlimmaR-formula_text_size', function(size) {
-                          var box = document.getElementById('GlimmaR-buildGlimmaR-glm_formula');
-                          box.style.fontSize = size;
-                         });"),
-        textAreaInput(
-          inputId = ns('glm_formula'),
-          value = 'Edit the GLM formula...',
-          label = NULL,
-          height = 'calc(75vh - 50px)',
-          resize = 'none'
-        ),
         fluidRow(
           column(
             width = 4,
@@ -218,6 +203,21 @@ mod_GlimmaR_build_model_ui <- function(id){
             ),
             tippy_this(ns('formula_save'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Save GLM formula to .txt file',12))
           )
+        ),
+        # QUESTION - need to move
+        tags$style(".form-group.shiny-input-container { width: 100%; }"),
+        # QUESTION - better way re namespace?
+        tags$script("
+                         Shiny.addCustomMessageHandler('GlimmaR-buildGlimmaR-formula_text_size', function(size) {
+                          var box = document.getElementById('GlimmaR-buildGlimmaR-glm_formula');
+                          box.style.fontSize = size;
+                         });"),
+        textAreaInput(
+          inputId = ns('glm_formula'),
+          value = 'Edit the GLM formula...',
+          label = NULL,
+          height = 'calc(75vh - 50px)',
+          resize = 'none'
         )
       ),
       column(
