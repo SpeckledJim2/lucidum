@@ -109,10 +109,10 @@ mod_MappaR_ui <- function(id){
                       fluidRow(
                         column(width = 4,
                                spectrumInput(
-                                 inputId = ns('colour1'),
-                                 label = 'Low',
+                                 inputId = ns('colour3'),
+                                 label = 'High',
                                  choices = NULL,
-                                 selected = 'green',
+                                 selected = 'red',
                                  flat = TRUE,
                                  options = list(flat = 'false'),
                                  update_on = c('dragstop'),
@@ -133,10 +133,10 @@ mod_MappaR_ui <- function(id){
                         ),
                         column(width = 4,
                                spectrumInput(
-                                 inputId = ns('colour3'),
-                                 label = 'High',
+                                 inputId = ns('colour1'),
+                                 label = 'Low',
                                  choices = NULL,
-                                 selected = 'red',
+                                 selected = 'green',
                                  flat = TRUE,
                                  options = list(flat = 'false'),
                                  update_on = c('dragstop'),
@@ -153,7 +153,12 @@ mod_MappaR_ui <- function(id){
                             label = NULL,
                             justified = TRUE,
                             size = 'xs',
-                            choices = c('Divergent','Spectral','Viridis'),
+                            choiceValues = c('Divergent','Spectral','Viridis'),
+                            choiceNames = c(
+                              tagList(tags$img(src='www/divergent.png', height="15px", width="15px",' Divergent')),
+                              tagList(tags$img(src='www/spectral.png', height="15px", width="15px",' Spectral')),
+                              tagList(tags$img(src='www/viridis.png', height="15px", width="15px",' Viridis'))
+                            ),
                             selected = 'Divergent'
                           )
                         )

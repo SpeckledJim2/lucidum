@@ -26,7 +26,13 @@ mod_BoostaR_tree_viewer_ui <- function(id){
               radioGroupButtons(
                 inputId = ns('BoostaR_tree_colours'),
                 label = NULL,
-                choices = c('Plain','Divergent','Spectral','Viridis'),
+                choiceValues = c('Plain','Divergent','Spectral','Viridis'),
+                choiceNames = c(
+                  'Plain',
+                  tagList(tags$img(src='www/divergent.png', height="16px", width="16px",' Divergent')),
+                  tagList(tags$img(src='www/spectral.png', height="16px", width="16px",' Spectral')),
+                  tagList(tags$img(src='www/viridis.png', height="16px", width="16px",' Viridis'))
+                ),
                 selected = 'Plain'
               )
             )
