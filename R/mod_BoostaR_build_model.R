@@ -20,11 +20,9 @@ mod_BoostaR_build_model_ui <- function(id){
             width = 4,
             htmlOutput(ns('BoostaR_num_features'))
             ),
-          column(
-            width = 8,
-            align = 'right',
-            style='margin-top:16px; padding-bottom:0px',
-            actionButton(
+          column(width = 2,
+                 style='margin-top:16px; padding-bottom:0px',
+                             actionButton(
               inputId = ns("BoostaR_goto_ChartaR"),
               label = tagList(tags$img(src='www/one_way_line_bar.png', height="26px", width="26px")),
               style = 'padding:3px 5px 3px 5px'
@@ -37,8 +35,13 @@ mod_BoostaR_build_model_ui <- function(id){
                 '<b>Go to ChartaR one-way line and bar </b><br/>
                 with the highlighted feature as the x-axis feature',
                 12
+                )
               )
             ),
+          column(
+            width = 6,
+            align = 'right',
+            style='margin-top:16px; padding-bottom:0px',
             actionButton(
               inputId = ns("BoostaR_add_features"),
               label = 'all',
