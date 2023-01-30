@@ -212,8 +212,8 @@ mod_BoostaR_build_model_ui <- function(id){
                 label = NULL,
                 choiceValues = c('Normal','EBM mode'),
                 choiceNames = c(
-                  tagList(tags$img(src='www/normal.png', height="15px", width="26px",'Normal')),
-                  tagList(tags$img(src='www/ebm_mode.png', height="15px", width="26px",'EBM mode'))
+                  tagList(tags$img(src='www/normal.png', height="20px", width="26px",'Normal')),
+                  tagList(tags$img(src='www/ebm_mode.png', height="20px", width="26px",'EBM'))
                   ),
                 selected = 'Normal',
               )
