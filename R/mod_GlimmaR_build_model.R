@@ -350,7 +350,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       }
     })
     observeEvent(input$formula_save, {
-      volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
       shinyFileSave(input, "formula_save", roots=volumes, session=session)
       fileinfo <- parseSavePath(volumes, input$formula_save)
       if (nrow(fileinfo) > 0) {
@@ -360,7 +360,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       }
     })
     observeEvent(input$formula_load, {
-      volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
       shinyFileChoose(input, "formula_load", roots=volumes, session=session)
       fileinfo <- parseFilePaths(volumes, input$formula_load)
       if (nrow(fileinfo) > 0) {
