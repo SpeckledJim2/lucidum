@@ -115,6 +115,7 @@ mod_BoostaR_navigate_ui <- function(id){
 #' @importFrom DiagrammeR renderGrViz render_graph
 #' @importFrom DT formatRound formatPercentage formatStyle
 #' @importFrom stringr str_count
+#' @importFrom lightgbm lgb.save
 #' 
 #' 
 mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crosstab_selector){
@@ -205,7 +206,7 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
             }
           }
           # limit number of rows
-          n_rows <- pmin(1000, nrow(gain_summary))
+          n_rows <- pmin(2000, nrow(gain_summary))
           # display how many rows
           col_text <- paste0('tree_features (',n_rows,' of ',original_n_rows,')')
           names(gain_summary)[1] <- col_text
@@ -280,6 +281,32 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
         crosstab_selector(info_list)
       }
     })
+    observe({
+      model_index <- isolate(BoostaR_idx())
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
+      shinyFileSave(input, 'BoostaR_save_model', roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$BoostaR_save_model)
+      isolate({
+        if (nrow(fileinfo) > 0) {
+          if(!is.null(model_index)){
+            lgb.save(BoostaR_models()[[model_index]]$lgbm, fileinfo$datapath)
+            confirmSweetAlert(session = session,
+                              type = 'success',
+                              inputId = "temp",
+                              title = 'LightGBM saved',
+                              btn_labels = c('OK')
+            )
+          } else {
+            confirmSweetAlert(session = session,
+                              type = 'error',
+                              inputId = "temp",
+                              title = 'No model selected',
+                              btn_labels = c('OK')
+            )
+          }
+        }
+      })
+    })
   })
 }
 
@@ -329,8 +356,7 @@ BoostaR_model_summary_row <- function(BoostaR_model){
                     min_wt = BoostaR_model$params$min_data_in_leaf,
                     L1 = BoostaR_model$params$lambda_l1,
                     L2 = BoostaR_model$params$lambda_l2,
-                    n_feat = length(BoostaR_model$features),
-                    time = round(as.numeric(BoostaR_model$run_time), 1)
+                    n_feat = length(BoostaR_model$features)
     )
   }
   return(x)
@@ -349,13 +375,12 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
     } else {
       num_monotone_constraints <- sum(abs(BoostaR_model$params$monotone_constraints)>0)
     }
-    
     x <- data.table(name = BoostaR_model$name,
                     response = BoostaR_model$response,
                     weight = BoostaR_model$weight,
                     objective = BoostaR_model$params$objective,
                     metric = BoostaR_model$params$metric,
-                    tweedie_variance_power = BoostaR_model$params$tweedie_variance_power,
+                    tweedie_var_power = BoostaR_model$params$tweedie_variance_power,
                     boosting_method = BoostaR_model$params$boosting,
                     offset = BoostaR_model$init_score,
                     test = signif(BoostaR_model$evaluation_log$test_err, 6),
@@ -363,11 +388,12 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
                     number_of_features = length(BoostaR_model$features),
                     interaction_constraints = num_interaction_constraints,
                     monotone_constraints = num_monotone_constraints,
-                    model_build_time = round(as.numeric(BoostaR_model$run_time), 1),
-                    SHAP_build_time = round(as.numeric(BoostaR_model$SHAP_run_time), 1),
+                    model_build_time = round(as.numeric(BoostaR_model$run_time, units = 'secs'), 1),
+                    SHAP_build_time = round(as.numeric(BoostaR_model$SHAP_run_time, units = 'secs'), 1),
                     num_iterations = BoostaR_model$params$num_iterations,
-                    early_stopping_round = BoostaR_model$params$early_stopping_round,
+                    early_stopping = BoostaR_model$params$early_stopping_round,
                     best_iter = BoostaR_model$evaluation_log$best_iteration,
+                    ebm_mode = BoostaR_model$ebm_mode,
                     lr = BoostaR_model$params$learning_rate,
                     leaves = BoostaR_model$params$num_leaves,
                     depth = BoostaR_model$params$max_depth,
