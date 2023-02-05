@@ -95,24 +95,14 @@ mod_GlimmaR_navigate_ui <- function(id){
     ),
     fluidRow(
       column(
-        width = 6,
-        fluidRow(
-          column(
-            width = 12,
-            h3('Model details'),
-          )
-        ),
-        DTOutput(ns('detailed_model_summary'))
-      ),
-      column(
-        width = 6,
+        width = 12,
         fluidRow(
           column(
             width = 5,
             h3('Importances')
           ),
           column(
-            width = 5,
+            width = 7,
             align = 'right',
             div(
               style = 'margin-top:16px; margin-bottom:-16px',
@@ -122,19 +112,6 @@ mod_GlimmaR_navigate_ui <- function(id){
                 choices = c('Features','Terms'),
                 selected = 'Features'
               )
-            )
-          ),
-          column(
-            width = 2,
-            align = 'right',
-            div(
-              style = 'margin-top:16px; margin-bottom:-16px',
-              actionButton(
-                inputId = ns('GlimmaR_gain_table_goto_ChartaR'),
-                label = tags$img(src='www/SHAP.png', height='26px', width='26px'),
-                style = 'padding:3px 5px 3px 5px'
-              ),
-              tippy_this(ns('GlimmaR_gain_table_goto_ChartaR'), placement = 'bottom', tooltip = tippy_text('Show selected feature(s) in ChartaR SHAP plot',12))
             )
           )
         ),
@@ -274,27 +251,16 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
               temp[[model_name]][['tabulated_predictions']] <- predictions
               temp[[model_name]][['tabulated_error']] <- sd_error
               GlimmaR_models(temp)
-              # save into list - THIS WILL GO AWAY
+              # save into list
               temp <- tabulated_models()
               temp[[g$name]] <- tabulated_model
               tabulated_models(temp)
-            #})
-            showNotification(
-              paste0(model_name,' tabulated with ', length(tabulations), ' tables'), duration = 5, type = 'message'
-            )
-            # confirmSweetAlert(session = session,
-            #                   type = 'success',
-            #                   inputId = ns('sweet_alert'),
-            #                   title = "GLM tabulated",
-            #                   text = paste0(length(tabulated_model), ' tables created'),
-            #                   btn_labels = c('OK')
-            #                   )
           }
         }
       }
     })
     observe({
-      volumes <- c('Home' = path_home(), getVolumes()())
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
       shinyFileSave(input, 'save_model', roots=volumes, session=session)
       fileinfo <- parseSavePath(volumes, input$save_model)
       isolate({
@@ -1170,24 +1136,34 @@ predict_tabulations <- function(dt, tabulations, feature_spec){
   predictions[,1] <- tabulations[[1]][['base']]
   if(length(tabulations)>1){
     # loop over the remaining tables
-    for(i in 2:length(tabulations)){
-      vars <- unlist(strsplit(names(tabulations)[[i]], '|', fixed = TRUE))
-      dt_var_cols <- dt[, ..vars]
-      # band numerical columns
-      for(v in vars){
-        x_banded <- band_var_with_feature_spec(dt_var_cols[[v]],v,feature_spec)
-        dt_var_cols[, (v):= x_banded]
+    withProgress(message = 'GlimmaR', detail = 'tabulating', {
+      for(i in 2:length(tabulations)){
+        setProgress(
+          value = i/length(tabulations),
+          detail = paste0('tabulating ',
+                          names(tabulations)[[i]], # name of the table
+                          ' (',
+                          prod(dim(tabulations[[i]])), # number of cells in the table
+                          ' cells)')
+        )
+        vars <- unlist(strsplit(names(tabulations)[[i]], '|', fixed = TRUE))
+        dt_var_cols <- dt[, ..vars]
+        # band numerical columns
+        for(v in vars){
+          x_banded <- band_var_with_feature_spec(dt_var_cols[[v]],v,feature_spec)
+          dt_var_cols[, (v):= x_banded]
+        }
+        # create index col so can reorder after merge
+        dt_var_cols[, row_idx_temp := 1:.N]
+        # now values are banded, we can
+        # merge tabulation onto dt_var_cols
+        setkeyv(dt_var_cols, vars)
+        setkeyv(tabulations[[i]], vars)
+        merged <- tabulations[[i]][dt_var_cols]
+        setorder(merged, 'row_idx_temp')
+        predictions[,i] <- merged$total
       }
-      # create index col so can reorder after merge
-      dt_var_cols[, row_idx_temp := 1:.N]
-      # now values are banded, we can
-      # merge tabulation onto dt_var_cols
-      setkeyv(dt_var_cols, vars)
-      setkeyv(tabulations[[i]], vars)
-      merged <- tabulations[[i]][dt_var_cols]
-      setorder(merged, 'row_idx_temp')
-      predictions[,i] <- merged$total
-    }
+    })
   }
   predictions_dt <- data.table(predictions)
   setnames(predictions_dt, names(tabulations))
