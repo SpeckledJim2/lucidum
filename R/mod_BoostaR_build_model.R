@@ -1545,13 +1545,13 @@ create_gain_summary_from_tree_summary <- function(trees, best_iter){
   # bind columns together
   summary <- cbind(features, gain = gain[[2]])
   # summarise by feature combinations, sorted by decreasing gain
-  summary <- summary[, list(gain = sum(gain)), by = split_features]
+  summary <- summary[, list(trees = .N, gain = sum(gain)), by = split_features]
   summary[, int_order := 1 + str_count(split_features, ',')]
   summary[, gain_proportion := gain/total_gain]
   summary[, split_features := gsub(', ',' x ', split_features)]
   setorder(summary, -gain)
-  setcolorder(summary, c(1,3,2,4))
-  names(summary) <- c('tree_features','dim','gain','%')
+  setcolorder(summary, c(1,4,2,3,5))
+  names(summary) <- c('tree_features','dim','trees','gain','%')
   return(summary)
 }
 metric_from_objective <- function(x){
