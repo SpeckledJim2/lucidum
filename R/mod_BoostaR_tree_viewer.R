@@ -117,13 +117,12 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
               DT::datatable(rownames= FALSE,
                             selection=list(mode="multiple", target="row"),
                             options = list(pageLength = nrow(dt),
-                                           initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                            dom = 'rt',
                                            scrollX = T,
                                            searchHighlight=TRUE
                             )
               ) |>
-              DT::formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '12px')
+              DT::formatStyle(columns = colnames(dt), lineHeight='0%')
           }
         }
       })
@@ -241,12 +240,6 @@ BoostaR_render_tree_graph <- function(dt, colours, rules = NULL){
       shape     = dt$shape,
       data      = dt$Feature,
       fontcolor = "black")
-    
-    # format the edge labels
-    #browser()
-    #numeric_idx <- !is.na(as.numeric(dt[['Split']]))
-    #numeric_idx <- !is.na(dt[['Split']])
-    #dt[numeric_idx, Split := round(as.numeric(Split),4)]
     
     # get rid of 1e-35's, i.e zeroes
     if(inherits(dt[['Split']], 'character')){
