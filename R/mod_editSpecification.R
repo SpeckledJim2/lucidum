@@ -69,7 +69,7 @@ mod_editSpecification_server <- function(id, input_spec, type, dimensions) {
     })
     # handles loading a new specification
     observe({
-      volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
       shinyFileChoose(input, "load_specification", roots=volumes, session=session)
       fileinfo <- parseFilePaths(volumes, input$load_specification)
       isolate({
@@ -99,6 +99,7 @@ mod_editSpecification_server <- function(id, input_spec, type, dimensions) {
                               title = paste0(type, ' specification loaded'),
                               btn_labels = c('OK')
             )
+            output_spec(dt)
           } else {
             confirmSweetAlert(session = session, type = 'error', inputId = "spec_load_error",
                               title = paste0('Error loading ',type, ' specification'),
@@ -111,12 +112,13 @@ mod_editSpecification_server <- function(id, input_spec, type, dimensions) {
     })
     # handles saving the specification
     observe({
-      volumes <- c('Home' = fs::path_home(), shinyFiles::getVolumes()())
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
       shinyFileSave(input, "save_specification", roots=volumes, session=session)
       fileinfo <- parseSavePath(volumes, input$save_specification)
       if(nrow(fileinfo)>0){
         dt <- setDT(rhandsontable::hot_to_r(isolate({input$specification})))
         fwrite(dt, fileinfo$datapath)
+        output_spec(dt)
       }
     })
     # handles returning the specification
