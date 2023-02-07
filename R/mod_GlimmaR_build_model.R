@@ -206,18 +206,18 @@ mod_GlimmaR_build_model_ui <- function(id){
         ),
         # QUESTION - need to move
         tags$style(".form-group.shiny-input-container { width: 100%; }"),
-        # QUESTION - better way re namespace?
-        tags$script("
-                         Shiny.addCustomMessageHandler('GlimmaR-buildGlimmaR-formula_text_size', function(size) {
-                          var box = document.getElementById('GlimmaR-buildGlimmaR-glm_formula');
-                          box.style.fontSize = size;
-                         });"),
-        textAreaInput(
-          inputId = ns('glm_formula'),
-          value = 'Edit the GLM formula...',
-          label = NULL,
-          height = 'calc(75vh - 50px)',
-          resize = 'none'
+        aceEditor(
+          ns('glm_formula'),
+          showPrintMargin = FALSE,
+          mode = "r",
+          fontSize = 12,
+          wordWrap = FALSE,
+          height = 'calc(80vh - 100px)',
+          autoScrollEditorIntoView = TRUE,
+          autoComplete = 'live',
+          selectionId = 'selection',
+          debounce = 10,
+          value = ''
         )
       ),
       column(
@@ -274,9 +274,9 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         fpath <- system.file("glm_formula.csv", package="glucidum")
         txt <- read_file(file = fpath)
       }
-      updateTextAreaInput(session = session, inputId = 'glm_formula', label = NULL, value = txt)
+      updateAceEditor(session, editorId = 'glm_formula', value = txt)
     })
-    text_size <- reactiveVal(14)
+    text_size <- reactiveVal(12)
     observeEvent(input$build_GLM, {
       GlimmaR_model <- GlimmaR_build_GLM(
         session,
@@ -301,15 +301,15 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       }
     })
     observeEvent(input$clear_formula, {
-      updateTextAreaInput(session, inputId = 'glm_formula', value = '')
+      updateAceEditor(session, editorId = 'glm_formula', value = '')
     })
     observeEvent(input$textsize_minus, {
       text_size(pmax(8,text_size()-1))
-      session$sendCustomMessage('GlimmaR-buildGlimmaR-formula_text_size', paste(sep = '', text_size(), 'px'))
+      updateAceEditor(session, editorId = 'glm_formula', fontSize = text_size())
     })
     observeEvent(input$textsize_plus, {
       text_size(pmin(30,text_size()+1))
-      session$sendCustomMessage('GlimmaR-buildGlimmaR-formula_text_size', paste(sep = '', text_size(), 'px'))
+      updateAceEditor(session, editorId = 'glm_formula', fontSize = text_size())
     })
     observeEvent(GlimmaR_idx(), {
       # update the coefficient table
@@ -320,7 +320,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
           GlimmaR_coefficient_DT(g$coefficients)
           })
         # update the formula
-        updateTextAreaInput(session, inputId = 'glm_formula', value = g$formula)
+        updateAceEditor(session, editorId = 'glm_formula', value = g$formula)
         # update the objective
         updateSelectInput(session, inputId = 'objective', selected = g$objective)
         # update the model dispersion
@@ -349,6 +349,17 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         })
       }
     })
+    observeEvent(c(d(), dt_update()), {
+      # define the autocomplete options for shinyAce glm_formula editor
+      comps <- list()
+      if(!is.null(golem::get_golem_options('dataset_name'))){
+        group_name <- golem::get_golem_options('dataset_name')
+      } else {
+        group_name <- 'columns'
+      }
+      comps[[group_name]] <- names(d())
+      updateAceEditor(session, 'glm_formula', autoCompleteList = comps, autoCompleters = c('static'))
+    })
     observeEvent(input$formula_save, {
       volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
       shinyFileSave(input, "formula_save", roots=volumes, session=session)
@@ -365,7 +376,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       fileinfo <- parseFilePaths(volumes, input$formula_load)
       if (nrow(fileinfo) > 0) {
         glm_formula <- readr::read_file(file = fileinfo$datapath)
-        updateTextAreaInput(session = session, inputId = 'glm_formula', label = NULL, value = glm_formula)
+        updateAceEditor(session, editorId = 'glm_formula', value = glm_formula)
       }
     })
     observeEvent(input$goto_ChartaR, {
@@ -817,8 +828,8 @@ GlimmaR_coefficient_DT <- function(coefficients_dt){
     setDT(coefficients_dt)
     num_rows <- nrow(coefficients_dt)
     # shorten very long terms for display
-    long_terms <- nchar(coefficients_dt$term)>62
-    coefficients_dt[long_terms, term := paste0(substr(term,1,62), '...')]
+    long_terms <- nchar(coefficients_dt$term)>55
+    coefficients_dt[long_terms, term := paste0(substr(term,1,55), '...')]
     coefficients_dt %>%
       DT::datatable(rownames= TRUE,
                     extensions = 'Buttons',
@@ -840,7 +851,7 @@ GlimmaR_coefficient_DT <- function(coefficients_dt){
                                    )
                                    
                     )) %>%
-      DT::formatStyle(columns = 0:4, fontSize = '85%', lineHeight='70%') %>%
+      DT::formatStyle(columns = 0:4, fontSize = '85%', lineHeight='10%') %>%
       DT::formatPercentage(c("p.value"), 1) %>%
       DT::formatSignif(c("estimate","std.error"), 4) %>%
       DT::formatStyle('p.value',
