@@ -1,47 +1,47 @@
-#### example GLM formula
-#### use hashes to make comments in the formula file
+# insurance dataset GLM formula
+# Response = price
+# Weight = N (equal weights per row)
+# Use Gamma or Quasipoisson objective
 
-# NCD
+# NCD - "No Claims Discount"
 ifelse(NCD==0,1,0) +
 pmax(1, pmin(4, NCD)) +
 pmax(4, pmin(8, NCD)) +
 ifelse(NCD>=9,1,0) +
 
-# experience
+# experience - "complete years held a driving licence"
 ifelse(experience==0,1,0) + 
 pmin(10, experience) +
 pmax(10, pmin(20, experience)) +
 pmax(20, pmin(30, experience)) +
 
-# customer licence
+# licence - "type of driving licence, Full or Provisional"
 ifelse(licence=='Provisional',1,0) +
 
-# customer age
-ifelse(licence=='Provisional', pmin(age-25, 0),0) +
+# customer age in complete years at policy start
 pmin(25, age) +
 pmax(25, pmin(65, age)) +
 poly(pmax(65, pmin(90, age)), 2) +
 
-# how long has the customer owned their car
+# how long has the customer owned their car in years
+ifelse(ownership==0,1,0) +
 pmin(10, ownership) +
 
+# vehicle_age in years
+ns(vehicle_age, 2) +
+ifelse(vehicle_age==20,1,0) +
+
 # vehicle engine capacity in cubic centimeters
-ns(EngineCC, 3) +
+log(pmax(1000, pmin(3000, EngineCC))) + 
 
 # vehicle value
 # interactions with age and vehicle_kept
 pmin(2000, value) + 
 pmax(2000, value) +
-ifelse(age<25, pmax(0, value-2000),0) +
-ifelse(vehicle_kept=='Garage', pmax(0, value-2000), 0) +
 
-# vehicle age with ownership interaction
-poly(vehicle_age, 2) * ifelse(ownership==0, 1,0) +
-
-# mileage with age interaction
+# annual mileage
 pmin(4000, mileage) + 
 pmax(4000, mileage) +
-ifelse(mileage<=4000, pmin(20, pmax(0, 60-age)),0) +
 
 # number of motor claims made in the last three years
 claims +
@@ -54,14 +54,16 @@ ifelse(use=='Business',1,0) +
 vehicle_kept +
 
 # fuel
-ifelse(fuel=='D',1,0) +
+ifelse(fuel %in% c('D','E'),1,0) +
 
-# make
-ifelse(make %in% c('BMW','LEXUS'),1,0) + 
-ifelse(make %in% c('AUDI','HONDA','MERCEDES-BENZ'),1,0) +
-ifelse(make %in% c('FIAT','MINI','SKODA'),1,0) +
+# make - 5 groups
+ifelse(make %in% c('MINI'),1,0) + 
+ifelse(make %in% c('FIAT','CITROEN','JEEP','MAZDA','MITSUBISHI', 'SKODA','SUZUKI'),1,0) + 
+ifelse(make %in% c('HONDA','TOYOTA','VAUXHALL'),1,0) + 
+ifelse(make %in% c('AUDI','BMW','JAGUAR', 'LANDROVER'),1,0) + 
+ifelse(make %in% c('BMW','LEXUS','MERCEDES-BENZ','PORSCHE'),1,0) + 
 
-# PostcodeArea
+# PostcodeArea - 9 groups
 ifelse(PostcodeArea %in% c('HS','IV','KW','PH'),1,0) +
 ifelse(PostcodeArea %in% c('CA','GU','HR','LA','LL','LN','OX','PA','RH','SN','WR','YO','ZE'),1,0) +
 ifelse(PostcodeArea %in% c('BH','BN','BS','CO','DL','DN','HG','HU','ML','PE','PO','SA','SG','SO','TN'),1,0) +
@@ -72,3 +74,9 @@ ifelse(PostcodeArea %in% c('EC','EN','HD','HX','LS','LU','RM','SK','SL','WA','WC
 ifelse(PostcodeArea %in% c('B','BL','CR','HA','SE','SW','TW','W'),1,0) +
 ifelse(PostcodeArea %in% c('BB','BD','E','IG','L','M','N','NW','OL','UB'),1,0)
 
+#### INTERACTION TERMS
+# uncomment terms to include in the model
+# and remember to include a plus sign on the last term above
+# ifelse(licence=='Provisional', pmax(0, 25-age),0) +
+# ifelse(licence=='Provisional', pmax(25, pmin(65, age)) ,0) +
+# ifelse(ownership==0, vehicle_age, 0)
