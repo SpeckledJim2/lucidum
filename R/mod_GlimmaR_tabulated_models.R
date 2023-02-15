@@ -15,25 +15,8 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
         width = 3,
         fluidRow(
           column(
-            width = 6,
+            width = 12,
             h3('Tabulations')
-          ),
-          column(
-            width = 6,
-            align = 'right',
-            div(
-              style = 'margin-top:20px',
-              shinySaveButton(
-                id = ns('export_tables'),
-                label = 'Excel',
-                title = 'Choose location to save tables',
-                filename = "",
-                filetype=list(txt="xlsx"),
-                icon = icon('upload'),
-                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-                viewtype = "detail"
-              )
-            )
           )
         ),
         selectInput(inputId = ns('model_chooser'), label = 'Select tabulated model', choices = NULL, size = 10, selectize = FALSE),
@@ -43,35 +26,78 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
         width = 9,
         fluidRow(
           column(
-            width = 3,
+            width = 2,
             h3('Tables')
           ),
           column(
-            width = 3,
-            
-          ),
-          column(
-            width = 3,
+            width = 2,
             div(
               style = 'margin-top:20px',
               radioGroupButtons(
                 inputId = ns('transform'),
                 choices = c('-','exp'),
-                selected = '-'
+                selected = '-',
+                size = 'sm'
+              )
+            )
+          ),
+          column(
+            width = 2,
+            style = 'padding-left:0px; margin-left:0px; padding-right:0px, margin-right:0px',
+            div(
+              style = 'margin-top:20px',
+              radioGroupButtons(
+                inputId = ns('show_terms'),
+                choices = c('-','terms'),
+                selected = '-',
+                size = 'sm'
+              )
+            )
+          ),
+          column(
+            width = 2,
+            div(
+              style = 'margin-top:20px',
+              radioGroupButtons(
+                inputId = ns('colour_table'),
+                choiceValues = c('-','colours'),
+                choiceNames = c(
+                  '-',
+                  tagList(tags$img(src='www/divergent.png', height="18px", width="18px"))
+                ),
+                selected = '-',
+                size = 'sm'
               )
             )
           ),
           column(
             width = 3,
-            align = 'right',
             div(
               style = 'margin-top:20px',
-              checkboxInput(
-                inputId = ns('show_terms'),
-                label = 'Show terms',
-                value = FALSE
+              selectInput(
+                inputId = ns('crosstab'),
+                label = NULL,
+                choices = 'no crosstab',
+                width = '100%'
               )
             )
+          ),
+          column(
+            width = 1,
+            align = 'right',
+            div(
+              style = 'margin-top:18px',
+              shinySaveButton(
+                id = ns('export_tables'),
+                label = NULL,
+                title = 'Choose location to save tables',
+                filename = "",
+                filetype=list(txt="xlsx"),
+                icon = icon('upload'),
+                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
+                viewtype = "detail"
+              )
+            ),
           )
         ),
         br(),
@@ -102,14 +128,8 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
         updateSelectInput(session, inputId = 'model_chooser', choices = tabulated_models, selected = selected)
       }
     })
-    
-    output$tabulated_model <- renderDT({
-      if(!is.null(input$model_chooser)){
-        tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
-        GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms)
-      }
-    })
     observeEvent(input$model_chooser, ignoreInit = TRUE, {
+      # update the table_chooser selectInput
       curr_selection <- input$table_chooser
       choices <- model_table_list(GlimmaR_models()[[input$model_chooser]]$tabulations)
       if(length(curr_selection)==0){
@@ -123,6 +143,39 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
       }
       updateSelectInput(session, inputId = 'table_chooser', choices = choices, selected = selected)
     })
+    observeEvent(input$table_chooser, ignoreInit = TRUE, {
+      # update the crosstab selectInput
+      if(is.null(input$table_chooser)){
+        choices <- c('no crosstab')
+      } else {
+        vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
+        if(length(vars)>1){
+          choices <- c('no crosstab', setdiff(vars, 'base'))
+        } else {
+          choices <- c('no crosstab')
+        }
+      }
+      curr_selection_crosstab <- input$crosstab
+      if(length(curr_selection_crosstab)==0){
+        selected_crosstab <- curr_selection_crosstab
+      } else {
+        if(curr_selection_crosstab %in% choices){
+          selected_crosstab <- curr_selection_crosstab
+        } else {
+          selected_crosstab <- 'no crosstab'
+        }
+      }
+      updateSelectInput(session, inputId = 'crosstab', choices = choices, selected = selected_crosstab)
+    })
+    output$tabulated_model <- renderDT({
+      if(!is.null(input$model_chooser)){
+        vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
+        tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        if(input$crosstab %in% c('no crosstab', vars)){
+          GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table)
+        }
+      }
+    })
   })
 }
     
@@ -132,12 +185,13 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
 ## To be copied in the server
 # mod_tabulatedGlimmaR_server("tabulatedGlimmaR_1")
 
-GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms){
+#' @importFrom DT styleInterval
+GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, crosstab, colour_table){
   if(!is.null(tabulation)){
     # split out the individual vars in the table
     vars <- unlist(strsplit(vars, '|', fixed = TRUE))
     dt <- copy(tabulation)
-    if(show_terms){
+    if(show_terms=='terms'){
       # leave alone
     } else {
       if(vars[1]=='base'){
@@ -150,16 +204,43 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms){
         dt <- dt[, ..keep_cols]
       }
     }
+    if(crosstab!='no crosstab'){
+      # dcast the table
+      lhs_vars <- setdiff(vars, crosstab)
+      dcast_form <- paste0(paste0(lhs_vars, collapse = '+'),'~',crosstab)
+      dt <- dcast(dt, dcast_form, value.var = 'total')
+    } else {
+      lhs_vars <- vars
+    }
+    # value transform
     if(vars[1]=='base'){
       transform_idx <- 1
     } else {
-      transform_idx <- setdiff(1:ncol(dt), 1:length(vars))
+      transform_idx <- setdiff(1:ncol(dt), 1:length(lhs_vars))
     }
     if(transform=='exp'){
       dt[, (transform_idx) := exp(.SD),.SDcols=transform_idx]
     }
-    if(nrow(dt)>1000){
-      dt <- head(dt,1000)
+    pg_length <- min(1000, nrow(dt))
+    # cell colours
+    if(colour_table=='colours'){
+      values <- dt[, .SD, .SDcols=transform_idx]
+      values <- as.matrix(values)
+      if(transform=='-'){
+        max_abs_value <- max(0.1,max(abs(values)))
+        step <- max_abs_value/20
+        brks_down <- seq(-max_abs_value,0,step)
+        brks_up <- seq(step,max_abs_value,step)
+      } else {
+        max_abs_value <- max(abs(log(values)))
+        step <- max_abs_value/20
+        brks_down <- exp(seq(-max_abs_value,0,step))
+        brks_up <- exp(seq(step,max_abs_value,step))
+      }
+      clrs_down <- round(seq(100, 255, length.out = length(brks_down)), 0) %>% {paste0("rgb(",.,",255,", ., ")")}
+      clrs_up <- round(seq(255, 100, length.out = length(brks_up) + 1), 0) %>% {paste0("rgb(255,", ., ",", ., ")")}
+      brks <- c(brks_down, brks_up)
+      clrs <- c(clrs_down, clrs_up)
     }
     if(!is.null(dt)){
       t <- dt |> datatable(
@@ -168,12 +249,16 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms){
                        #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                        dom = 'Bfrti',
                        scrollX = T,
-                       scrollY = 'calc(100vh - 380px)',
+                       scrollY = 'calc(100vh - 400px)',
+                       pageLength = pg_length,
                        columnDefs = list(list(visible = F, targets = 0))
                        )
         ) |>
         formatStyle(columns = 1:ncol(dt), lineHeight='0%', fontSize = '14px') |>
         formatRound(columns = transform_idx, digits = 6)
+      if(vars[1]!='base' & colour_table=='colours'){
+        t <- t |> formatStyle(columns = transform_idx, backgroundColor = styleInterval(brks, clrs))
+      }
     } else {
       t <- data.table(V1 = 'no model tabulated') %>% DT::datatable()
     }
