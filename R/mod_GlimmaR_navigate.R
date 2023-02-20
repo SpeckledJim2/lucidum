@@ -244,7 +244,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
               predictions <- predict_tabulations(d()[g$pred_rows], tabulations_adj, feature_spec())
               predictions <- cbind(predictions, glm_fitted = g$predictions)
               # calculate the sd between glm prediction and tabulated prediction
-              sd_error <- sd(link_function(predictions$total, g$link)-g$predictions)
+              sd_error <- sd(link_function(predictions$tabulated_glm, g$link)-g$predictions)
               # save the tabulations into the GlimmaR model
               temp <- GlimmaR_models()
               temp[[model_name]][['tabulations']] <- tabulations_adj
@@ -267,7 +267,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
         if (nrow(fileinfo) > 0) {
           # leave only part of glm_model object needed for prediction
           # otherwise file will be huge (it retains data used to fit model)
-          stripped_model <- strip_glm(GlimmaR_models[[GlimmaR_idx()]]$glm)
+          stripped_model <- GlimmaR_models()[[GlimmaR_idx()]]$glm
           saveRDS(stripped_model, file = fileinfo$datapath, compress = TRUE)
           confirmSweetAlert(session = session,
                             type = 'success',
@@ -1056,7 +1056,7 @@ predict_on_tabulations <- function(tabulations, glm, var_terms){
         predictions[, `(Intercept)`:=NULL]
       }
       total <- rowSums(predictions)
-      tabulations[[i]] <- cbind(tabulations[[i]], predictions, total)
+      tabulations[[i]] <- cbind(tabulations[[i]], predictions, tabulated_glm = total)
     }
   }
   return(tabulations)
@@ -1085,11 +1085,11 @@ adjust_base_levels <- function(tabulations, feature_spec){
       if(all_present){
         setkeyv(tabulations[[i]], vars)
         setkeyv(base_levels, vars)
-        adjustment <- tabulations[[i]][base_levels]$total
+        adjustment <- tabulations[[i]][base_levels]$tabulated_glm
       } else {
         adjustment <- 0
       }
-      tabulations[[i]][['total']] <- tabulations[[i]][['total']] - adjustment
+      tabulations[[i]][['tabulated_glm']] <- tabulations[[i]][['tabulated_glm']] - adjustment
       cumulative_adjustment <- cumulative_adjustment + adjustment
     }
   }
@@ -1161,13 +1161,13 @@ predict_tabulations <- function(dt, tabulations, feature_spec){
         setkeyv(tabulations[[i]], vars)
         merged <- tabulations[[i]][dt_var_cols]
         setorder(merged, 'row_idx_temp')
-        predictions[,i] <- merged$total
+        predictions[,i] <- merged$tabulated_glm
       }
     })
   }
   predictions_dt <- data.table(predictions)
   setnames(predictions_dt, names(tabulations))
-  predictions_dt[, total := rowSums(predictions_dt)]
+  predictions_dt[, tabulated_glm := rowSums(predictions_dt)]
   return(predictions_dt)
 }
 extract_offsets <- function(glm){

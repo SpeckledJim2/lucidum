@@ -48,7 +48,7 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
           d()[, glm_tabulated_prediction:= NULL]
         }
         if(!is.null(g$tabulated_predictions)){
-          x <- g$tabulated_predictions$total
+          x <- g$tabulated_predictions$tabulated_glm
           x <- link_function(x, g$link)
           d()[rows_idx, glm_tabulated_prediction := x]
         }

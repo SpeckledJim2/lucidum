@@ -20,6 +20,7 @@ Imports:
     htmlwidgets,
     leaflet,
     lightgbm,
+    openxlsx,
     pkgload,
     plotly,
     readr,

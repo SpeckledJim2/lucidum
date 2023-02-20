@@ -47,6 +47,13 @@ globalVariables(
     '.',
     'Value_formatted',
     'tree_features',
-    'term'
+    'term',
+    '..cols',
+    'dimensions',
+    'max_value',
+    'min_value',
+    'num_rows',
+    'tabulated_glm',
+    'index'
     )
   )

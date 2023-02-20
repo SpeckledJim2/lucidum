@@ -167,6 +167,17 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
       }
       updateSelectInput(session, inputId = 'crosstab', choices = choices, selected = selected_crosstab)
     })
+    observeEvent(input$export_tables, {
+      volumes <- c('working directory' = getwd(), 'home' = path_home())
+      shinyFileSave(input, "export_tables", roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$export_tables)
+      if(!is.null(input$model_chooser)){
+        if(length(fileinfo$datapath)>0){
+          write_tables_to_excel(GlimmaR_models()[[input$model_chooser]]$tabulations, input$transform, fileinfo$datapath)
+          showNotification(paste0(fileinfo$datapath, ' created'), duration = 5, type = 'message')
+        }
+      }
+    })
     output$tabulated_model <- renderDT({
       if(!is.null(input$model_chooser)){
         vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
@@ -208,7 +219,7 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, cro
       # dcast the table
       lhs_vars <- setdiff(vars, crosstab)
       dcast_form <- paste0(paste0(lhs_vars, collapse = '+'),'~',crosstab)
-      dt <- dcast(dt, dcast_form, value.var = 'total')
+      dt <- dcast(dt, dcast_form, value.var = 'tabulated_glm')
     } else {
       lhs_vars <- vars
     }
@@ -275,4 +286,100 @@ model_table_list <- function(tabulations){
     names(table_list) <- paste0(1:length(table_list),' - ',table_list)
   }
   return(table_list)
+}
+
+#' @importFrom openxlsx createWorkbook addWorksheet addStyle createStyle writeData saveWorkbook setColWidths
+write_tables_to_excel <- function(tables, transform, filename){
+  # takes a set of exported tables and the model coefficients and writes them to Excel
+  # define a white text on blue background style to use for all header rows
+  headerStyle_center <- createStyle(bgFill = "#222222", fontColour = "#FFFFFF", halign = 'center')
+  headerStyle_left <- createStyle(bgFill = "#222222", fontColour = "#FFFFFF", halign = 'left')
+  # write the coefficients table to Excel
+  wb <- createWorkbook()
+  # format the index table
+  n_tables <- length(tables)
+  index_table <- data.table(index = integer(),
+                            table = character(),
+                            dimensions = integer(),
+                            num_rows = integer(),
+                            min_value = numeric(),
+                            max_value = numeric(),
+                            span =numeric())[1:n_tables]
+  # fill in the base table
+  index_table[1,index := 1]
+  index_table[1,table := 'base']
+  index_table[1,dimensions := 0]
+  index_table[1,num_rows := 1]
+  if(transform=='exp'){
+    index_table[1,min_value := exp(tables[[1]]$base)]
+    index_table[1,max_value := exp(tables[[1]]$base)]
+  } else {
+    index_table[1,min_value := tables[[1]]$base]
+    index_table[1,max_value := tables[[1]]$base]
+  }
+  for (i in 2:n_tables){
+    vars <- unlist(strsplit(names(tables)[i], '|', fixed = TRUE))
+    index_table[i,index := i]
+    index_table[i,table := names(tables)[i]]
+    index_table[i,dimensions := length(vars)]
+    index_table[i,num_rows := nrow(tables[[i]])]
+    index_table[i,min_value := min(tables[[i]][['tabulated_glm']])]
+    index_table[i,max_value := max(tables[[i]][['tabulated_glm']])]
+    if(transform=='exp'){
+      index_table[i,min_value := exp(min_value)]
+      index_table[i,max_value := exp(max_value)]
+      index_table[i,span := max_value/min_value]
+    } else {
+      index_table[i,span := max_value-min_value]
+    }
+  }
+  # write the index worksheet to Excel
+  addWorksheet(wb, "index")
+  writeData(wb, "index", index_table)
+  setColWidths(wb, "index", cols = 1, widths = 10)
+  setColWidths(wb, "index", cols = 2, widths = 40)
+  setColWidths(wb, "index", cols = 3:7, widths = 15)
+  addStyle(wb, sheet = "index", cols = 1:2, rows = 1:200, style = createStyle(halign = 'left'), gridExpand = TRUE)
+  addStyle(wb, sheet = "index", cols = 3:7, rows = 1:200, style = createStyle(halign = 'center'), gridExpand = TRUE)
+  addStyle(wb, sheet = "index", style=headerStyle_left, cols=1:2, rows=1)
+  addStyle(wb, sheet = "index", style=headerStyle_center, cols=3:7, rows=1)
+  # write the tables to Excel
+  for (i in 1:n_tables){
+    vars <- unlist(strsplit(names(tables)[i], '|', fixed = TRUE))
+    if (vars[1]=='base'){
+      # special format for the base level
+      addWorksheet(wb,as.character(i))
+      setColWidths(wb, as.character(i), cols = 1:2, widths = 30)
+      addStyle(wb = wb, sheet = as.character(i), cols = 1L, rows = 1:2, style = createStyle(halign = 'left'))
+      addStyle(wb, sheet = as.character(i), cols = 2, rows = 1:2, style = createStyle(halign = 'center'))
+      addStyle(wb, sheet = as.character(i), style=headerStyle_left, cols=1, rows=1)
+      addStyle(wb, sheet = as.character(i), style=headerStyle_center, cols=2, rows=1)
+      table_to_write <- data.table(base = character(), tabulated_glm = double())[1]
+      table_to_write[1, base := 'base']
+      table_to_write[1, tabulated_glm := tables[[i]]$base]
+      if(transform=='exp'){
+        table_to_write[, tabulated_glm:=exp(tabulated_glm)]
+      }
+      writeData(wb, as.character(i), table_to_write)
+    } else {
+      # add worksheet and format
+      n_var <- length(vars)
+      n_row <- nrow(tables[[i]])
+      addWorksheet(wb,as.character(i))
+      setColWidths(wb, as.character(i), cols = 1:(n_var+1), widths = 30)
+      addStyle(wb = wb, sheet = as.character(i), cols = 1:n_var, rows = 1:(n_row+1), style = createStyle(halign = 'left'), gridExpand = TRUE)
+      addStyle(wb, sheet = as.character(i), cols = n_var+1, rows = 1:(n_row+1), style = createStyle(halign = 'center'), gridExpand = TRUE)
+      addStyle(wb, sheet = as.character(i), style=headerStyle_left, cols=1:n_var, rows=1)
+      addStyle(wb, sheet = as.character(i), style=headerStyle_center, cols=n_var+1, rows=1)
+      # create table in correct format
+      cols <- names(tables[[i]])[c(1:length(vars), ncol(tables[[i]]))] # leaves out the terms
+      table_to_write <- tables[[i]][, ..cols]
+      if(transform=='exp'){
+        table_to_write[, tabulated_glm:=exp(tabulated_glm)]
+      }
+      # write table
+      writeData(wb, as.character(i), table_to_write)
+    }
+  }
+  saveWorkbook(wb, filename, overwrite = TRUE)
 }
