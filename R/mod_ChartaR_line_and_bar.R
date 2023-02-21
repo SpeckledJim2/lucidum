@@ -518,11 +518,11 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
           } else if (sort=='PD'){
             if(show_partial_dependencies %in% c('Both','GBM','GBM-')){
-              # can't sort by both so sort by SHAP
-              if('mean' %in% names(d_summary)){
-                setorderv(d_summary, 'mean')
-              } else if ('LP_mean' %in% names(d_summary)) {
-                setorderv(d_summary, 'LP_mean' -1)
+              # can't sort by both so sort by LP
+              if('LP_mean' %in% names(d_summary)){
+                setorderv(d_summary, 'LP_mean', -1)
+              } else if ('mean' %in% names(d_summary)) {
+                setorderv(d_summary, 'mean', -1)
               } else {
                 setorderv(d_summary, new_colname, -1)
               }
