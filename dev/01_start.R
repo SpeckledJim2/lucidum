@@ -19,7 +19,7 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "glucidum", # The Name of the package containing the App
+  pkg_name = "lucidum", # The Name of the package containing the App
   pkg_title = "A Shiny App to Build and Understand GBMs and GLMs", # The Title of the package containing the App
   pkg_description = "A Shiny App to interactively explore datasets, map UK postcode data and build code-free GBMs and GLMs.", # The Description of the package containing the App
   author_first_name = "Gary", # Your First Name

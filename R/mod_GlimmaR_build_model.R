@@ -271,7 +271,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
     demo <- reactiveVal(TRUE)
     observeEvent(demo(), once = TRUE, {
       if(demo()){
-        fpath <- system.file("glm_formula.csv", package="glucidum")
+        fpath <- system.file("glm_formula.csv", package="lucidum")
         txt <- read_file(file = fpath)
       }
       updateAceEditor(session, editorId = 'glm_formula', value = txt)

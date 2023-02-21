@@ -1,4 +1,4 @@
-#' Launch glucidum
+#' Launch lucidum
 #'
 #' @param data data.frame or data.table to analyse in lucidum.
 #' @param BoostaR_models character, path to .rds file containing BoostaR_models.
@@ -20,7 +20,7 @@
 #' @export
 #' @importFrom shiny shinyApp
 #' @importFrom golem with_golem_options
-glucidum <- function(data=NULL,
+lucidum <- function(data=NULL,
                      BoostaR_models = NULL,
                      GlimmaR_models = NULL,
                      kpi_spec = NULL,

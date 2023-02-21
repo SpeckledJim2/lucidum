@@ -13,18 +13,18 @@ rm(list=ls(all.names = TRUE))
 golem::document_and_reload()
 
 # Run the application
-glucidum(
+lucidum(
   data = insurance,
   BoostaR_models = NULL,
   GlimmaR_models = NULL,
   starting_response = 'price',
   starting_tab = 'DataR',
-  show_DevelopaR = T,
-  show_DataR = T,
-  show_ChartaR = T,
-  show_MappaR = T,
-  show_BoostaR = T,
-  show_GlimmaR = T,
+  show_DevelopaR = TRUE,
+  show_DataR = TRUE,
+  show_ChartaR = TRUE,
+  show_MappaR = TRUE,
+  show_BoostaR = TRUE,
+  show_GlimmaR = TRUE,
   num_threads = -1,
   specification_path = 'inst'
   )

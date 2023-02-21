@@ -64,13 +64,13 @@ app_ui <- function(request) {
 golem_add_external_resources <- function(){
   
   addResourcePath(
-    'www', system.file('app/www', package = "glucidum")
+    'www', system.file('app/www', package = "lucidum")
   )
   
   tags$head(
     golem::activate_js(),
     golem::favicon(),
-    tags$title("glucidum"),
+    tags$title("lucidum"),
     # Add here all the external resources
     # If you have a custom.css in the inst/app/www
     # Or for example, you can add shinyalert::useShinyalert() here

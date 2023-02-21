@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(glucidum)
+library(lucidum)
 
-test_check("glucidum")
+test_check("lucidum")

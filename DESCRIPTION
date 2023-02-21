@@ -1,4 +1,4 @@
-Package: glucidum
+Package: lucidum
 Title: A Shiny App to Build and Understand GBMs and GLMs
 Version: 0.0.0.9000
 Authors@R: 
