@@ -7,4 +7,4 @@ inst/doc
 .Rdata
 .httr-oauth
 .DS_Store
-rsconnect/shinyapps
+rsconnect/
