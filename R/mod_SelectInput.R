@@ -178,6 +178,7 @@ selectInput_choices <- function(
         LP_cols <- cols[grep('glm_LP', cols)]
         glm_cols <- setdiff(glm_cols, c(LP_cols, 'glm_prediction','glm_tabulated_prediction'))
         all_cols <- c(current_model_prediction, importance_cols, lgbm_cols, glm_cols, SHAP_cols, LP_cols)
+        remaining_cols <- setdiff(numerical_cols(d), all_cols)
         # replace blanks
         if(length(current_model_prediction)==0) current_model_prediction <- 'none'
         if(length(importance_cols)==0) importance_cols <- 'none'
@@ -192,7 +193,8 @@ selectInput_choices <- function(
             data.table(feature = lgbm_cols, interaction_grouping = 'GBM predictions'),
             data.table(feature = glm_cols, interaction_grouping = 'GLM predictions'),
             data.table(feature = SHAP_cols, interaction_grouping = 'SHAP values'),
-            data.table(feature = LP_cols, interaction_grouping = 'GLM LP values')
+            data.table(feature = LP_cols, interaction_grouping = 'GLM LP values'),
+            data.table(feature = remaining_cols, interaction_grouping = 'Other columns')
             )
           )
         # create the choices list
@@ -209,7 +211,9 @@ selectInput_choices <- function(
     # get search choices
     search_choices <- NULL
     if(!is.null(search) & search!=''){
-      search_choices <- tryCatch({choices[grepl(search, choices)]}, error = function(e){e})
+      choices_temp <- unlist(choices)
+      search_choices <- tryCatch({choices_temp[grepl(search, choices_temp)]}, error = function(e){e})
+      search_choices <- unname(search_choices)
       if(inherits(search_choices,'simpleError')){
         search_choices <- NULL
       } else if (length(search_choices)==0){
@@ -220,7 +224,7 @@ selectInput_choices <- function(
     if(selectChooserGroup=='No groups' & !is.null(search_choices)){
       if(length(search_choices)>0){
         search_choices <- data.table(feature = search_choices, interaction_grouping = '--- matching search ---')
-        choices_dt <- data.table(feature = choices, interaction_grouping = 'features')
+        choices_dt <- data.table(feature = unlist(choices), interaction_grouping = 'features')
         choices_dt <- rbindlist(list(search_choices,choices_dt))
         choices <- split(choices_dt, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
         choices <- lapply(choices, function(d){d[[1]]}) # convert to character list
@@ -259,6 +263,14 @@ selectInput_choices <- function(
             names(choices)[1] <- 'No grouping'
           }
         }
+      }
+    } else if(selectChooserGroup=='Use groups' & selectChooser == 'lucidum') {
+      if(length(search_choices)>0){
+        new_choices <- list(search_choices)
+        if(length(unlist(new_choices))==1){
+          new_choices <- list_if_length_one(new_choices)
+        }
+        choices <- c('--- matching search ---' = new_choices, choices)
       }
     }
   }
