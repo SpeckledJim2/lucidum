@@ -823,6 +823,12 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
         )
       }
     }
+    # chart title
+    if(weight=='N'){
+      chart_title <- response
+    } else {
+      chart_title <- paste(response,'/',weight)
+    }
     # filter text for title
     filter_text <- filters$train_test_filter
     train_test_filter_text <- filters$user_filter
@@ -846,7 +852,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
                      title = list(
                        x = 0.03,
                        y = 0.97,
-                       text = paste0(boldify(yform2$title), filter_text, ' ', train_test_filter_text, ' ', rescale_text), font = list(size = 16)
+                       text = paste0(boldify(chart_title), filter_text, ' ', train_test_filter_text, ' ', rescale_text), font = list(size = 16)
                        )
     ) |>
       layout(legend = list(traceorder = 'normal',
