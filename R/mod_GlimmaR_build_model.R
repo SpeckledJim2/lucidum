@@ -268,11 +268,14 @@ mod_GlimmaR_build_model_ui <- function(id){
 mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    demo <- reactiveVal(TRUE)
+    # if the dataset is called insurance then load up the demo glm
+    demo <- reactiveVal(get_golem_options('dataset_name')=='insurance')
     observeEvent(demo(), once = TRUE, {
       if(demo()){
         fpath <- system.file("glm_formula.csv", package="lucidum")
         txt <- read_file(file = fpath)
+      } else {
+        txt <- '# Enter the glm formula'
       }
       updateAceEditor(session, editorId = 'glm_formula', value = txt)
     })
@@ -444,7 +447,23 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
 GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_formula, glm_objective){
   l <- list()
   if(!(response %in% names(d))){
+    l$message <- 'no response selected'
+    confirmSweetAlert(session = session,
+                      type = 'error',
+                      inputId = "build_error",
+                      title = l$message,
+                      text = '',
+                      btn_labels = c('OK')
+    )
   } else if (!(weight %in% c('N',names(d)))){
+    l$message <- 'no weight selected'
+    confirmSweetAlert(session = session,
+                      type = 'error',
+                      inputId = "build_error",
+                      title = l$message,
+                      text = '',
+                      btn_labels = c('OK')
+    )
   } else if (is.null(d)){
   } else if (data_to_use=='Training' & !('train_test' %in% names(d))){
     # training data selected but no train test column
