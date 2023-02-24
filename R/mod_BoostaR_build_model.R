@@ -1314,7 +1314,7 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
   l_test <- lgb.Dataset.create.valid(l_train, as.matrix(d_test), label = test_response)
   # set the initial score if there is one
   link <- lgbm_objectives[objective==obj][['link']]
-  if(init_score!='none'){
+  if(init_score!='no offset'){
     offset <- d[[init_score]]
   } else if (weight!='N'){
     offset <- d[[weight]]
