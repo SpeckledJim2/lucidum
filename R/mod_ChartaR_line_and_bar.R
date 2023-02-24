@@ -729,7 +729,11 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     # yform
     yform$showgrid <- FALSE
     yform$side <- 'right'
-    yform$title <- boldify(names(dt)[first_line_col-1])
+    if(weight=='N'){
+      yform$title <- boldify('Number of rows')
+    } else {
+      yform$title <- boldify(weight)
+    }
     yform$range <- return_bar_limits(dt[[first_line_col-1]])
     # yform2
     yform2$xaxis_type <- 'category'
@@ -746,7 +750,7 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
       yform2$range <- return_y_axis_limits(as.matrix(dt[, col:ncol(dt)]))
     }
     yform2$showgrid <- TRUE
-    yform2$title <- boldify(names(dt)[first_line_col])
+    yform2$title <- ''
     # plotly won't plot NAs
     # so replace with "NA"
     col <- names(dt)[[1]]
