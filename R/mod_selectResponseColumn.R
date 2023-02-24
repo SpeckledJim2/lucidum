@@ -49,7 +49,7 @@ mod_selectResponseColumn_server <- function(
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(input$col, {
-      new_selection(input$col)
+      #new_selection(input$col)
     })
     observeEvent(c(d(), dt_update(), new_selection()), {
       if(!is.null(d())){
