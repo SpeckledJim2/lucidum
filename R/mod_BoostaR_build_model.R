@@ -1318,6 +1318,8 @@ make_lgb_train_test <- function(d, response, weight, init_score, features, obj){
     offset <- d[[init_score]]
   } else if (weight!='N'){
     offset <- d[[weight]]
+  } else {
+    offset <- NULL
   }
   if(!is.null(offset)){
     if(link=='log'){
