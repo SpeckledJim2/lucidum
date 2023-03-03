@@ -31,6 +31,11 @@ mod_BoostaR_navigate_ui <- function(id){
                label = 'Make active',
                icon = icon("chevron-right")
                ),
+             actionButton(
+               inputId = ns('tabulate'),
+               label = 'Tabulate',
+               icon = icon("table")
+             ),
              # actionButton(
              #   inputId = ns('BoostaR_generate_predictions'),
              #   label = 'Predict',
@@ -38,8 +43,8 @@ mod_BoostaR_navigate_ui <- function(id){
              #   ),
              shinySaveButton(
                id = ns('BoostaR_save_model'),
-               label = 'Save model',
-               title = 'Save model',
+               label = 'Save GBM',
+               title = 'Save GBM',
                filename = "",
                filetype = list(txt="txt"),
                icon = icon('upload'),
@@ -118,7 +123,7 @@ mod_BoostaR_navigate_ui <- function(id){
 #' @importFrom lightgbm lgb.save
 #' 
 #' 
-mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crosstab_selector){
+mod_BoostaR_navigate_server <- function(id, d, BoostaR_models, BoostaR_idx, feature_spec, crosstab_selector, tabulated_models){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(BoostaR_models(), {
@@ -239,6 +244,43 @@ mod_BoostaR_navigate_server <- function(id, BoostaR_models, BoostaR_idx, crossta
         }
       }
       BoostaR_idx(names(BoostaR_models())[rows_selected])
+    })
+    observeEvent(input$tabulate, {
+      rows_selected <- input$BoostaR_model_summary_rows_selected
+      if(!is.null(rows_selected)){
+        if(length(rows_selected)>1){
+          rows_selected <- rows_selected[1]
+        }
+      }
+      if(length(BoostaR_models())>0){
+        model_name <- names(BoostaR_models())[rows_selected]
+        B <- BoostaR_models()[[model_name]]
+        base_risk <- get_base_risk(d(), feature_spec(), B$weight)
+        tabulations <- lgbm.convert.to.tables(d(), B, base_risk, feature_spec())
+        if(inherits(tabulations, 'character')){
+          # return warning message that there are too many rows in one of the tables
+          confirmSweetAlert(session = session,
+                            type = 'error',
+                            inputId = "build_error",
+                            title = 'Error',
+                            text = tabulations,
+                            btn_labels = c('OK'))
+        } else {
+          # include the tabulations in the BoostaR_model list
+          tabulations_adj <- adjust_base_levels_lgbm(tabulations, feature_spec())
+          predictions <- predict_tabulations_lgbm(d()[B$pred_rows], tabulations_adj, feature_spec())
+          predictions <- cbind(predictions, lgbm_fitted = B$predictions)
+          # calculate the sd between glm prediction and tabulated prediction
+          sd_error <- sd(link_function(predictions$tabulated_lgbm, B$link)-B$predictions)
+          # save the tabulations into the BoostaR model
+          temp <- BoostaR_models()
+          temp[[model_name]][['tabulations']] <- tabulations_adj
+          temp[[model_name]][['tabulated_predictions']] <- predictions
+          temp[[model_name]][['tabulated_error']] <- sd_error
+          BoostaR_models(temp)
+        }
+
+      }
     })
     observeEvent(input$BoostaR_gain_table_goto_ChartaR, {
       if(length(BoostaR_models())>0 & !is.null(BoostaR_idx())){
@@ -420,4 +462,171 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
     NULL
   }
 }
-
+lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_specification = NULL){
+  # prepare the tabulations - all combinations of features that appear at least once in the GBM
+  var_terms <- lgbm.extract.feature.combinations(BoostaR_model$tree_table)
+  tabulations <- prepare_lgbm_tabulations(d[BoostaR_model$pred_rows], var_terms$split_features, feature_specification)
+  # check if tabulations is a character - if so then don't go further as this is a warning message
+  if(!inherits(tabulations, 'character')){
+    # predict on the base level
+    cols <- BoostaR_model$features
+    base_risk <- base_risk[,..cols] # we only want to keep the columns used in the model or lgb.predict will error
+    base_risk_converted <- lgb.convert_with_rules(base_risk, rules = BoostaR_model$rules)
+    base_risk_converted <- as.matrix(base_risk_converted$data)
+    base_level <- predict(BoostaR_model$lgbm, base_risk_converted, rawscore = TRUE)
+    tabulations[['base']]$base <- base_level
+    # predict on the tabulations
+    for(i in 2:length(tabulations)){
+      # replace base risk features for this table with the columns in tabulation
+      # convert for format needed for lgbm to predict
+      table_name <- names(tabulations)[[i]]
+      vars <- unlist(strsplit(table_name, '|', fixed = TRUE))
+      dummy_risks <- base_risk[rep(1,each=nrow(tabulations[[i]]))]
+      new_cols <- vars # otherwise will get warning on next line
+      dummy_risks[, (new_cols):=tabulations[[i]][,..vars]]
+      dummy_risks_converted <- lgb.convert_with_rules(dummy_risks, rules = BoostaR_model$rules)
+      dummy_risks_converted <- as.matrix(dummy_risks_converted$data)
+      # get the trees used by this table
+      trees_idx <- var_terms[i-1][['trees']] # as var_terms do not contain the base level need the minus 1
+      trees_idx <- as.numeric(trimws(unlist(strsplit(trees_idx, ",")))) # split into vector, trim leading whitespace
+      # predict on tables
+      predictions <- lgbm.extract.tree.predictions(dummy_risks_converted, BoostaR_model$lgbm, trees_idx)
+      tabulations[[table_name]]$tabulated_lgbm <- predictions
+    }
+  }
+  return(tabulations)
+}
+# functions for new bit
+lgbm.extract.feature.combinations <- function(lgbm_tree_table){
+  # returns a data.table containing all combinations of features that appear
+  # together with the gain from that combination of features
+  setorder(lgbm_tree_table, tree_index, split_feature)
+  tree_summary <- lgbm_tree_table[, .(split_features = toString(na.omit(unique(split_feature))),
+                                      gain = sum(split_gain, na.rm = TRUE)),
+                                  by = list(tree_index)]
+  feature_combination_summary <- tree_summary[, .(trees = toString(na.omit(unique(tree_index))),
+                                                  gain = sum(gain, na.rm = TRUE)),
+                                              by = list(split_features)]
+  feature_combination_summary[, split_features := gsub(', ', '|', split_features)]
+  setorderv(feature_combination_summary, cols = 'gain', order = -1)
+}
+lgbm.extract.tree.predictions <- function(d, model, trees_idx){
+  # d is the data frame you want to predict on
+  # model is the LightGBM BOOSTER? object
+  # tree_idx is vector of integers indicating which trees should be extracted
+  if(length(trees_idx)>0){
+    prediction_matrix <- matrix(data=0, nrow=nrow(d), ncol = length(trees_idx))
+    for (i in 1:length(trees_idx)){
+      idx <- trees_idx[i]
+      prediction_matrix[,i] <- predict(model, d, predcontrib = FALSE, start_iteration = idx, num_iteration = 1, rawscore = TRUE)
+    }
+    # sum rows to get the total prediction from the specified trees
+    rowSums(prediction_matrix)
+  } else {
+    # return column of zeroes - as no trees supplied
+    rep(0, nrow(d))
+  }
+}
+prepare_lgbm_tabulations <- function(dt, var_terms, feature_spec){
+  tabulations <- list()
+  tabulations[['base']] <- data.table(base=0L)
+  if(!is.null(var_terms)){
+    for(i in 1:length(var_terms)){
+      # get the variables in the table
+      vars <- unlist(strsplit(var_terms[[i]], '|', fixed = TRUE))
+      banded_vars <- list()
+      for(j in 1:length(vars)){
+        banded_vars[[vars[j]]] <- feature_banding(dt, vars[j], feature_spec)
+      }
+      # calculate the number of rows
+      combos <- prod(sapply(banded_vars, length))
+      if(combos>100000){
+        tabulations <- paste('More than 100,000 rows in table', var_terms[[i]])
+        break
+      } else {
+        # create data.table with all combinations of banded_vars
+        expanded_vars <- expand.grid(banded_vars)
+        tabulations[[var_terms[i]]] <- setDT(expanded_vars)
+      }
+    }
+  }
+  return(tabulations)
+}
+adjust_base_levels_lgbm <- function(tabulations, feature_spec){
+  cumulative_adjustment <- 0
+  if(length(tabulations)>1){
+    for(i in 2:length(tabulations)){
+      # get the base levels for the table
+      vars <- unlist(strsplit(names(tabulations)[i], '|', fixed = TRUE))
+      base_levels <- tabulations[[i]][1,1:length(vars)]
+      all_present <- TRUE
+      for(j in 1:length(vars)){
+        b <- feature_spec[feature==vars[j], base_level]
+        if(!inherits(tabulations[[i]][[j]], c('character','factor'))){
+          b <- as.numeric(b)
+        }
+        if(shiny::isTruthy(b)){
+          base_levels[[j]][1] <- b
+        } else {
+          base_levels[[j]][1] <- NA
+          all_present <- FALSE
+        }
+      }
+      # identify the base level row in tabulations
+      if(all_present){
+        setkeyv(tabulations[[i]], vars)
+        setkeyv(base_levels, vars)
+        adjustment <- tabulations[[i]][base_levels]$tabulated_lgbm
+      } else {
+        adjustment <- 0
+      }
+      tabulations[[i]][['tabulated_lgbm']] <- tabulations[[i]][['tabulated_lgbm']] - adjustment
+      #cumulative_adjustment <- cumulative_adjustment + adjustment
+    }
+  }
+  # adjust the base level
+  #tabulations[['base']] <- tabulations[['base']] + cumulative_adjustment
+  return(tabulations)
+}
+predict_tabulations_lgbm <- function(dt, tabulations, feature_spec){
+  # matrix to hold the predictions for each table in tablulations
+  # and each row in dt
+  predictions <- matrix(data=NA, nrow=nrow(dt),ncol=length(tabulations))
+  # base level is the same for every row
+  predictions[,1] <- tabulations[[1]][['base']]
+  if(length(tabulations)>1){
+    # loop over the remaining tables
+    withProgress(message = 'BoostaR', detail = 'tabulating', {
+      for(i in 2:length(tabulations)){
+        setProgress(
+          value = i/length(tabulations),
+          detail = paste0('tabulating ',
+                          names(tabulations)[[i]], # name of the table
+                          ' (',
+                          prod(dim(tabulations[[i]])), # number of cells in the table
+                          ' cells)')
+        )
+        vars <- unlist(strsplit(names(tabulations)[[i]], '|', fixed = TRUE))
+        dt_var_cols <- dt[, ..vars]
+        # band numerical columns
+        for(v in vars){
+          x_banded <- band_var_with_feature_spec(dt_var_cols[[v]],v,feature_spec)
+          dt_var_cols[, (v):= x_banded]
+        }
+        # create index col so can reorder after merge
+        dt_var_cols[, row_idx_temp := 1:.N]
+        # now values are banded, we can
+        # merge tabulation onto dt_var_cols
+        setkeyv(dt_var_cols, vars)
+        setkeyv(tabulations[[i]], vars)
+        merged <- tabulations[[i]][dt_var_cols]
+        setorder(merged, 'row_idx_temp')
+        predictions[,i] <- merged$tabulated_lgbm
+      }
+    })
+  }
+  predictions_dt <- data.table(predictions)
+  setnames(predictions_dt, names(tabulations))
+  predictions_dt[, tabulated_lgbm := rowSums(predictions_dt)]
+  return(predictions_dt)
+}

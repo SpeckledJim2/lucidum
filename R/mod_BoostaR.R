@@ -30,10 +30,11 @@ mod_BoostaR_ui <- function(id){
 mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    tabulated_models <- reactiveVal(list())
     mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
-    mod_BoostaR_navigate_server('navigateBoostaR', BoostaR_models, BoostaR_idx, crosstab_selector)
+    mod_BoostaR_navigate_server('navigateBoostaR', d, BoostaR_models, BoostaR_idx, feature_spec, crosstab_selector, tabulated_models)
     mod_BoostaR_tree_viewer_server('treeViewer', BoostaR_models, BoostaR_idx)
-    observeEvent(BoostaR_idx(), {
+    observeEvent(c(BoostaR_models(), BoostaR_idx()), {
       if(!is.null(BoostaR_idx())){
         if(BoostaR_idx()=='No GBMs'){
           # e.g. if user deletes all the GBMs we will arrive here
@@ -49,24 +50,36 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
           }
         } else {
           # copy model predictions to d
-          rows_idx <- BoostaR_models()[[BoostaR_idx()]]$pred_rows
-          preds <- BoostaR_models()[[BoostaR_idx()]]$predictions
+          b <- BoostaR_models()[[BoostaR_idx()]]
+          rows_idx <- b$pred_rows
+          preds <- b$predictions
           if('lgbm_prediction' %in% names(d())){
             d()[, lgbm_prediction:= NULL]
             dt_update(dt_update()+1)
           }
           d()[rows_idx, lgbm_prediction := preds]
           dt_update(dt_update()+1)
+          # if there are tabulated predictions copy those
+          if('lgbm_tabulated_prediction' %in% names(d())){
+            d()[, lgbm_tabulated_prediction:= NULL]
+          }
+          if(!is.null(b$tabulated_predictions)){
+            x <- b$tabulated_predictions$tabulated_lgbm
+            x <- link_function(x, b$link)
+            d()[rows_idx, lgbm_tabulated_prediction := x]
+          }
+          d()[rows_idx, lgbm_prediction := preds]
+          dt_update(dt_update()+1)
           # copy SHAP cols
-          if(!is.null(BoostaR_models()[[BoostaR_idx()]]$SHAP_cols)){
+          if(!is.null(b$SHAP_cols)){
             # copy SHAP values to d
             existing_SHAP_cols <- names(d())[grep('_SHAP_', names(d()))] # get rid of any existing SHAP columns
             if(length(existing_SHAP_cols)>0){
               d()[, (existing_SHAP_cols) := NULL]
               dt_update(dt_update()+1)
             }
-            new_SHAP_idx <- BoostaR_models()[[BoostaR_idx()]]$SHAP_rows
-            new_SHAP_cols <- BoostaR_models()[[BoostaR_idx()]]$SHAP_cols
+            new_SHAP_idx <- b$SHAP_rows
+            new_SHAP_cols <- b$SHAP_cols
             if(!is.null(new_SHAP_cols)){
               SHAP_names <- names(new_SHAP_cols[,2:ncol(new_SHAP_cols)])
               d()[new_SHAP_idx, (SHAP_names) := new_SHAP_cols[,2:ncol(new_SHAP_cols)]]
