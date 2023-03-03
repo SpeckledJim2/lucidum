@@ -51,7 +51,19 @@ mod_selectResponseColumn_server <- function(
     observeEvent(input$col, {
       #new_selection(input$col)
     })
-    observeEvent(c(d(), dt_update(), new_selection()), {
+    observeEvent(c(d(), dt_update()), {
+      if(!is.null(d())){
+        if(nrow(d())>0){
+          choices <- getColumnChoices(d(), numerical_cols)
+          updateSelectInput(
+            inputId = 'col',
+            choices = choices,
+            selected = input$col
+          )
+        }
+      }
+    })
+    observeEvent(new_selection(), {
       if(!is.null(d())){
         if(nrow(d())>0){
           choices <- getColumnChoices(d(), numerical_cols)
@@ -67,7 +79,6 @@ mod_selectResponseColumn_server <- function(
           }
           updateSelectInput(
             inputId = 'col',
-            choices = choices,
             selected = selected
           )
         }
