@@ -110,16 +110,26 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
 #' tabulatedGlimmaR Server Functions
 #'
 #' @noRd 
-mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
+mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_models){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    observeEvent(GlimmaR_models(), {
+    tabulated_glms <- c()
+    tabulated_lgbms <- c()
+    observeEvent(c(GlimmaR_models(), BoostaR_models()), {
       if(length(GlimmaR_models())>0){
         # identify which models have a tabulations slot present and their names
         tabulated <- !sapply(lapply(GlimmaR_models(), '[[','tabulations'), is.null)
-        tabulated_models <- names(GlimmaR_models())[tabulated]
+        tabulated_glms <- names(GlimmaR_models())[tabulated]
+      }
+      if(length(BoostaR_models())>0){
+        # identify which models have a tabulations slot present and their names
+        tabulated <- !sapply(lapply(BoostaR_models(), '[[','tabulations'), is.null)
+        tabulated_lgbms <- names(BoostaR_models())[tabulated]
+      }
+      tabulated_models <- c(tabulated_glms, tabulated_lgbms)
+      # don't change the selection
+      if(length(tabulated_models)>0){
         selected <- tabulated_models[1]
-        # don't change the selection
         if(!is.null(input$model_chooser)){
           if(input$model_chooser %in% tabulated_models){
             selected <- input$model_chooser
@@ -129,9 +139,15 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
       }
     })
     observeEvent(input$model_chooser, ignoreInit = TRUE, {
-      # update the table_chooser selectInput
+      # update the table_chooser selectInput depending on which model is selected
+      # get the selectInput choices
       curr_selection <- input$table_chooser
-      choices <- model_table_list(GlimmaR_models()[[input$model_chooser]]$tabulations)
+      if(input$model_chooser %in% names(GlimmaR_models())){
+        choices <- model_table_list(GlimmaR_models()[[input$model_chooser]]$tabulations)
+      } else if (input$model_chooser %in% names(BoostaR_models())){
+        choices <- model_table_list(BoostaR_models()[[input$model_chooser]]$tabulations)
+      }
+      # decide what is selected
       if(length(curr_selection)==0){
         selected <- choices[1]
       } else {
@@ -181,9 +197,15 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
     output$tabulated_model <- renderDT({
       if(!is.null(input$model_chooser)){
         vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
-        tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        if(input$model_chooser %in% names(GlimmaR_models())){
+          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          type <- 'glm'
+        } else if (input$model_chooser %in% names(BoostaR_models())){
+          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          type <- 'lgbm'
+        }
         if(input$crosstab %in% c('no crosstab', vars)){
-          GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table)
+          GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table, type)
         }
       }
     })
@@ -197,29 +219,35 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models){
 # mod_tabulatedGlimmaR_server("tabulatedGlimmaR_1")
 
 #' @importFrom DT styleInterval
-GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, crosstab, colour_table){
+GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, crosstab, colour_table, type){
   if(!is.null(tabulation)){
     # split out the individual vars in the table
     vars <- unlist(strsplit(vars, '|', fixed = TRUE))
     dt <- copy(tabulation)
-    if(show_terms=='terms'){
-      # leave alone
-    } else {
-      if(vars[1]=='base'){
+    if(type=='glm'){
+      if(show_terms=='terms'){
         # leave alone
       } else {
-        # keep the cols containing vars and the last column
-        # i.e. leave out the terms columns
-        keep_idx <- c(1:length(vars), ncol(dt))
-        keep_cols <- names(dt)[keep_idx]
-        dt <- dt[, ..keep_cols]
+        if(vars[1]=='base'){
+          # leave alone
+        } else {
+          # keep the cols containing vars and the last column
+          # i.e. leave out the terms columns
+          keep_idx <- c(1:length(vars), ncol(dt))
+          keep_cols <- names(dt)[keep_idx]
+          dt <- dt[, ..keep_cols]
+        }
       }
     }
     if(crosstab!='no crosstab'){
       # dcast the table
       lhs_vars <- setdiff(vars, crosstab)
       dcast_form <- paste0(paste0(lhs_vars, collapse = '+'),'~',crosstab)
-      dt <- dcast(dt, dcast_form, value.var = 'tabulated_glm')
+      if(type=='glm'){
+        dt <- dcast(dt, dcast_form, value.var = 'tabulated_glm')
+      } else if (type=='lgbm'){
+        dt <- dcast(dt, dcast_form, value.var = 'tabulated_lgbm')
+      }
     } else {
       lhs_vars <- vars
     }

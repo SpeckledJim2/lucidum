@@ -33,7 +33,7 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     tabulated_models <- reactiveVal(list())
     mod_GlimmaR_build_model_server('buildGlimmaR', d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector)
     mod_GlimmaR_navigate_server('navigateGlimmaR', d, response, weight, feature_spec, GlimmaR_models, GlimmaR_idx, tabulated_models)
-    mod_GlimmaR_tabulated_models_server('tabulateGlimmaR', GlimmaR_models)
+    mod_GlimmaR_tabulated_models_server('tabulateGlimmaR', GlimmaR_models, BoostaR_models)
     observeEvent(c(GlimmaR_models(), GlimmaR_idx()), {
       if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
         # copy model predictions to d
@@ -52,7 +52,6 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
           x <- link_function(x, g$link)
           d()[rows_idx, glm_tabulated_prediction := x]
         }
-        
         d()[rows_idx, glm_prediction := preds]
         dt_update(dt_update()+1)
         # copy LP cols
