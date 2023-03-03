@@ -969,8 +969,8 @@ feature_banding <- function(d, feature_col, feature_spec){
     if(any(length(f_min)==0,length(f_max)==0,length(f_banding)==0)) got_banding <- F
     if(any(is.na(f_min),is.na(f_max),is.na(f_banding))) got_banding <- F
     if(!got_banding){
-      f_min <- min(d[[feature_col]])
-      f_max <- max(d[[feature_col]])
+      f_min <- min(d[[feature_col]], na.rm = TRUE)
+      f_max <- max(d[[feature_col]], na.rm = TRUE)
       f_banding <- banding_guesser(d[[feature_col]])
       f_min <- floor(f_min/f_banding)*f_banding
       f_max <- floor(f_max/f_banding)*f_banding + f_banding
