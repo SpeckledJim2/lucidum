@@ -975,7 +975,7 @@ feature_banding <- function(d, feature_col, feature_spec){
       f_min <- floor(f_min/f_banding)*f_banding
       f_max <- floor(f_max/f_banding)*f_banding + f_banding
     }
-    seq(from = f_min, to = f_max, by = f_banding)
+    round(seq(from = f_min, to = f_max, by = f_banding), 6)
   }
 }
 position <- function(input_attr, test_attr){
@@ -1124,7 +1124,9 @@ band_var_with_feature_spec <- function(x, var_name, feature_spec){
     }
     # band and apply min/max
     x <- floor(x/f_banding)*f_banding
+    # apply same rounding as used in table creation to ensure merge can proceed
     x <- pmax(f_min, pmin(f_max, x))
+    x <- round(x, 6)
   }
   return(x)
 }
