@@ -139,8 +139,9 @@ mod_DevelopaR_ui <- function(id){
                                selectionId = 'selection',
                                debounce = 100,
                                value =
-"# 01 evaluate glm tabulation error
+"# 01 evaluate tabulation error
 d()[, sd(glm_prediction/glm_tabulated_prediction, na.rm=TRUE)]
+d()[, sd(lgbm_prediction/lgbm_tabulated_prediction, na.rm=TRUE)]
 
 # 02 calculate the ratio of GBM to GLM prediction
 d()[, model_ratio := lgbm_prediction/glm_prediction]
