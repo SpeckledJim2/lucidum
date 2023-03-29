@@ -577,7 +577,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
           c[, 2:4] <- signif(c[,2:4])
           # predict on dataset
           incProgress(0.1, detail = 'predicting')
-          fitted_glm <- tryCatch({stats::predict(glm_model, d, type = 'response')}, error = function(e){e})
+          fitted_glm <- tryCatch({stats::predict(glm_model, d[non_zero_weight_rows], type = 'response')}, error = function(e){e})
           if(inherits(fitted_glm,'simpleError')){
             confirmSweetAlert(session = session,
                               type = 'error',
@@ -587,8 +587,8 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                               btn_labels = c('OK'))
           } else {
             # append predictions to main dataset
-            fitted_glm[-non_zero_weight_rows] <- 0 # set predictions to zero for rows not used to build model
-            count_NAs <- sum(is.na(fitted_glm[non_zero_weight_rows])) # in case we supplied a factor with NAs to the model
+            #fitted_glm[-non_zero_weight_rows] <- 0 # set predictions to zero for rows not used to build model
+            count_NAs <- sum(is.na(fitted_glm)) # in case we supplied a factor with NAs to the model
             # calculate linear predictor split by feature
             incProgress(0.1, detail = 'LP terms')
             LP_contributions <- gather_glm_terms(d[non_zero_weight_rows], glm_model)
@@ -596,7 +596,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
             importances <- calc_terms_importances(glm_model)
             # return GlimmaR_model
             l <- list(time = time,
-                      predictions = fitted_glm[non_zero_weight_rows],
+                      predictions = fitted_glm,
                       pred_rows = non_zero_weight_rows,
                       glm = strip_glm(glm_model),
                       training_data = data_to_use,
