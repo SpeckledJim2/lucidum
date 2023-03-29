@@ -164,7 +164,7 @@ selectInput_choices <- function(
     } else if(selectChooser=='lucidum'){
       # get features
       if(length(BoostaR_models)>0 | length(GlimmaR_models)>0){
-        current_model_prediction <- intersect(cols, c('lgbm_prediction','glm_prediction','glm_tabulated_prediction'))
+        current_model_prediction <- intersect(cols, c('glm_prediction','lgbm_prediction','glm_tabulated_prediction','lgbm_tabulated_prediction'))
         importance_cols <- NULL
         if(!is.null(BoostaR_idx)){
           if(BoostaR_idx %in% names(BoostaR_models)){
@@ -173,7 +173,7 @@ selectInput_choices <- function(
         }
         lgbm_cols <- cols[grep('lgbm', cols)]
         SHAP_cols <- cols[grep('lgbm_SHAP', cols)]
-        lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction'))
+        lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction','lgbm_tabulated_prediction'))
         glm_cols <- cols[grep('glm', cols)]
         LP_cols <- cols[grep('glm_LP', cols)]
         glm_cols <- setdiff(glm_cols, c(LP_cols, 'glm_prediction','glm_tabulated_prediction'))
