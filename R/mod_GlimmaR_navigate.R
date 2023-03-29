@@ -954,7 +954,9 @@ uncentered_vars <- function(uncentered_terms, var_terms){
 }
 feature_banding <- function(d, feature_col, feature_spec){
   if(inherits(d[[feature_col]], 'factor')){
-    levels(d[[feature_col]])
+    # drop levels needed if model has been built on subset of data
+    # that does not contain all of the levels of the parent dataset
+    levels(droplevels(d[[feature_col]]))
   } else if (inherits(d[[feature_col]], c('integer','numeric'))){
     f_min <- feature_spec[feature==feature_col,'min'][[1]]
     f_max <- feature_spec[feature==feature_col,'max'][[1]]
