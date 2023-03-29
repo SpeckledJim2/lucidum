@@ -464,7 +464,7 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
 }
 lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_specification = NULL){
   # prepare the tabulations - all combinations of features that appear at least once in the GBM
-  var_terms <- lgbm.extract.feature.combinations(BoostaR_model$tree_table)
+  var_terms <- lgbm.extract.feature.combinations(BoostaR_model$tree_table, BoostaR_model$lgbm$best_iter)
   tabulations <- prepare_lgbm_tabulations(d[BoostaR_model$pred_rows], var_terms$split_features, feature_specification)
   # check if tabulations is a character - if so then don't go further as this is a warning message
   if(!inherits(tabulations, 'character')){
@@ -484,6 +484,10 @@ lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_s
       dummy_risks <- base_risk[rep(1,each=nrow(tabulations[[i]]))]
       new_cols <- vars # otherwise will get warning on next line
       dummy_risks[, (new_cols):=tabulations[[i]][,..vars]]
+      # make factor columns character so that the rules can be correctly applied by lgb.convert_with_rules
+      cols <- names(dummy_risks)[sapply(dummy_risks, inherits, 'factor')]
+      dummy_risks[, (cols) := lapply(.SD, as.character), .SDcols = cols]
+      # convert with rules to lgb dataset
       dummy_risks_converted <- lgb.convert_with_rules(dummy_risks, rules = BoostaR_model$rules)
       dummy_risks_converted <- as.matrix(dummy_risks_converted$data)
       # get the trees used by this table
@@ -497,9 +501,11 @@ lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_s
   return(tabulations)
 }
 # functions for new bit
-lgbm.extract.feature.combinations <- function(lgbm_tree_table){
+lgbm.extract.feature.combinations <- function(lgbm_tree_table, best_iter){
   # returns a data.table containing all combinations of features that appear
   # together with the gain from that combination of features
+  # only retain the trees up to best_iter
+  lgbm_tree_table <- lgbm_tree_table[tree_index<=best_iter]
   setorder(lgbm_tree_table, tree_index, split_feature)
   tree_summary <- lgbm_tree_table[, .(split_features = toString(na.omit(unique(split_feature))),
                                       gain = sum(split_gain, na.rm = TRUE)),
