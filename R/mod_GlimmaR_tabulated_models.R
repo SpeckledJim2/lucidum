@@ -21,6 +21,9 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
         ),
         selectInput(inputId = ns('model_chooser'), label = 'Select tabulated model', choices = NULL, size = 10, selectize = FALSE),
         selectInput(inputId = ns('table_chooser'), label = 'Select table', choices = NULL, size = 25, selectize = FALSE),
+        htmlOutput(ns('table_min')),
+        htmlOutput(ns('table_max')),
+        htmlOutput(ns('table_span'))
       ),
       column(
         width = 9,
@@ -207,6 +210,45 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
         if(input$crosstab %in% c('no crosstab', vars)){
           GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table, type)
         }
+      }
+    })
+    output$table_min <- renderUI({
+      # render the smallest value in the table
+      if(!is.null(input$model_chooser)){
+        if(input$model_chooser %in% names(GlimmaR_models())){
+          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        } else if (input$model_chooser %in% names(BoostaR_models())){
+          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        }
+        value <- table_metric(tabulation, input$transform, 'min')
+        text <- paste0('Table min: ', value)
+        p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
+      }
+    })
+    output$table_max <- renderUI({
+      # render the largest value in the table
+      if(!is.null(input$model_chooser)){
+        if(input$model_chooser %in% names(GlimmaR_models())){
+          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        } else if (input$model_chooser %in% names(BoostaR_models())){
+          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        }
+        value <- table_metric(tabulation, input$transform, 'max')
+        text <- paste0('Table max: ', value)
+        p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
+      }
+    })
+    output$table_span <- renderUI({
+      # render the largest value in the table
+      if(!is.null(input$model_chooser)){
+        if(input$model_chooser %in% names(GlimmaR_models())){
+          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        } else if (input$model_chooser %in% names(BoostaR_models())){
+          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        }
+        value <- table_metric(tabulation, input$transform, 'span')
+        text <- paste0('<b><span style=\"color:black\"><b>Table span: ', value, '</span>')
+        p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
       }
     })
   })
@@ -410,4 +452,19 @@ write_tables_to_excel <- function(tables, transform, filename){
     }
   }
   saveWorkbook(wb, filename, overwrite = TRUE)
+}
+
+table_metric <- function(tabulation, transform, metric){
+  last_col_name <- names(tabulation)[ncol(tabulation)]
+  if(metric=='min'){
+    value <- tabulation[,min(.SD),.SDcols=last_col_name]
+  } else if (metric=='max'){
+    value <- tabulation[,max(.SD),.SDcols=last_col_name]
+  } else if (metric=='span'){
+    value <- tabulation[,max(.SD),.SDcols=last_col_name]-tabulation[,min(.SD),.SDcols=last_col_name]
+  }
+  if(transform=='exp'){
+    value <- exp(value)
+  }
+  signif(value, 6)
 }
