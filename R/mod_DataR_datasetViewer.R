@@ -69,16 +69,6 @@ mod_DataR_datasetViewer_server <- function(id, d, dt_update){
   })
 }
 
-#' Create dataset viewer using DataTable
-#'
-#' @param d data.frame to be displayed
-#' @param transpose boolean, TRUE to transpose the table view
-#' @param columns_to_display character column names to display
-#'
-#' @return DataTable HTML
-#' 
-#' @importFrom utils head
-#' @importFrom DT datatable formatStyle
 create_DT_from_dataframe <- function(d, transpose, columns_to_display){
   if(!is.null(d)){
     max_rows_to_display <- 100

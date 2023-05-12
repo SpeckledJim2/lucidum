@@ -59,3 +59,9 @@ lucidum(
 \description{
 Launch lucidum
 }
+\examples{
+# Launch lucidum with the supplied demo dataset called "insurance"
+
+lucidum(insurance, starting_response = 'price')
+
+}

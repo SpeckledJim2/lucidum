@@ -18,6 +18,12 @@
 #' @param num_threads integer, number of threads for data.table and lightgbm (default -1 means max threads)
 #'
 #' @export
+#'
+#' @examples
+#' # Launch lucidum with the supplied demo dataset called "insurance"
+#' 
+#' lucidum(insurance, starting_response = 'price')
+#' 
 #' @importFrom shiny shinyApp
 #' @importFrom golem with_golem_options
 lucidum <- function(data=NULL,
