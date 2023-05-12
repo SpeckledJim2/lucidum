@@ -1,7 +1,9 @@
 
 # 1. lucidum
 
-lucidum is an open source R Shiny app to help users build and communicate GLMs and GBMs without writing code.  
+lucidum is an open source R Shiny app to help users build and communicate GLMs and GBMs without writing code.
+
+To see lucidum in action visit [ShinyConf 2023 - lucidum app showcase](https://www.youtube.com/watch?v=AryLn4rVeHc).
 
 lucidum works with standard R data.frames and data.tables and is designed to make model building more interactive,  visual and insightful.
 
@@ -20,11 +22,10 @@ lucidum's functionality includes:
   - user-defined banding for continuous features - no "pre-banding" required
   - overlay "single profile" lines for GLMs to understand the underlying model effect
   - overlay SHAP value ribbons for GBMs to understand the underlying model effect
-  - automated "residual error" analysis to identify poorly fitting features  
 
 * **Interactive mapping of data at UK Postcode Area, Sector resolution**  
   - uses the [leaflet](https://github.com/Leaflet/Leaflet) library to draw choropleth maps for Postcode Area and Sector
-  - uses open source shapefiles for Area and Sector, rendered down to a lower resolution to work well in the browser
+  - uses open source shapefiles for Area and Sector
 
 * **Support a GLM build**  
   - "formula helper" to make the job of building an R GLM formula much faster
@@ -37,7 +38,8 @@ lucidum's functionality includes:
   - build GA2M models (1D+2D GBMs) to support interaction detection
   - use feature interaction constraints to build indices for high cardinality features like postcode
   - 1D SHAP plots to interpret the model's main effects
-  - 2D SHAP plots to  interpret interaction effects  
+  - 2D SHAP plots to  interpret interaction effects
+  - convert GBMs to tabular format ("ratebooks") with user-defined bandings and base levels
 
 ## 2. Installation
 
