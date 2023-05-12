@@ -199,8 +199,12 @@ get_spec_filepath <- function(type, dataset_name){
     # use the explicit spec file
     explicit_spec_file
   } else {
-    # search for the spec file in the specification folder supplied as a golem option
-    if(dataset_name!='NULL'){
+    if(dataset_name=='insurance'){
+      # this is the included demo dataset
+        spec_name <- paste0('insurance_',type,'_spec.csv')
+        system.file(spec_name, package="lucidum")
+    } else if(dataset_name!='NULL'){
+      # search for the spec file in the specification folder supplied as a golem option
       paste0(spec_folder, '/', dataset_name, '_', type, '_spec.csv')
     }
   }
