@@ -192,7 +192,15 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
       fileinfo <- parseSavePath(volumes, input$export_tables)
       if(!is.null(input$model_chooser)){
         if(length(fileinfo$datapath)>0){
-          write_tables_to_excel(GlimmaR_models()[[input$model_chooser]]$tabulations, input$transform, fileinfo$datapath)
+          # are we exporting a glm or a gbm
+          if(grepl('glm', input$model_chooser)){
+            tabs_to_export <- GlimmaR_models()[[input$model_chooser]]$tabulations
+            type <- 'glm'
+          } else {
+            tabs_to_export <- BoostaR_models()[[input$model_chooser]]$tabulations
+            type <- 'lgbm'
+          }
+          write_tables_to_excel(tabs_to_export, type, input$transform, fileinfo$datapath)
           showNotification(paste0(fileinfo$datapath, ' created'), duration = 5, type = 'message')
         }
       }
@@ -359,13 +367,19 @@ model_table_list <- function(tabulations){
 }
 
 #' @importFrom openxlsx createWorkbook addWorksheet addStyle createStyle writeData saveWorkbook setColWidths
-write_tables_to_excel <- function(tables, transform, filename){
+write_tables_to_excel <- function(tables, type, transform, filename){
   # takes a set of exported tables and the model coefficients and writes them to Excel
   # define a white text on blue background style to use for all header rows
   headerStyle_center <- createStyle(bgFill = "#222222", fontColour = "#FFFFFF", halign = 'center')
   headerStyle_left <- createStyle(bgFill = "#222222", fontColour = "#FFFFFF", halign = 'left')
   # write the coefficients table to Excel
   wb <- createWorkbook()
+  if(type=='glm'){
+    last_col <- 'tabulated_glm'
+  } else {
+    last_col <- 'tabulated_lgbm'
+  }
+  
   # format the index table
   n_tables <- length(tables)
   index_table <- data.table(index = integer(),
@@ -393,8 +407,8 @@ write_tables_to_excel <- function(tables, transform, filename){
     index_table[i,table := names(tables)[i]]
     index_table[i,dimensions := length(vars)]
     index_table[i,num_rows := nrow(tables[[i]])]
-    index_table[i,min_value := min(tables[[i]][['tabulated_glm']])]
-    index_table[i,max_value := max(tables[[i]][['tabulated_glm']])]
+    index_table[i,min_value := min(tables[[i]][[last_col]])]
+    index_table[i,max_value := max(tables[[i]][[last_col]])]
     if(transform=='exp'){
       index_table[i,min_value := exp(min_value)]
       index_table[i,max_value := exp(max_value)]
@@ -424,11 +438,12 @@ write_tables_to_excel <- function(tables, transform, filename){
       addStyle(wb, sheet = as.character(i), cols = 2, rows = 1:2, style = createStyle(halign = 'center'))
       addStyle(wb, sheet = as.character(i), style=headerStyle_left, cols=1, rows=1)
       addStyle(wb, sheet = as.character(i), style=headerStyle_center, cols=2, rows=1)
-      table_to_write <- data.table(base = character(), tabulated_glm = double())[1]
+      table_to_write <- data.table(base = character(), tabulated = double())[1]
+      setnames(table_to_write, 'tabulated', last_col)
       table_to_write[1, base := 'base']
-      table_to_write[1, tabulated_glm := tables[[i]]$base]
+      table_to_write[1, (last_col) := tables[[i]]$base]
       if(transform=='exp'){
-        table_to_write[, tabulated_glm:=exp(tabulated_glm)]
+        table_to_write[, (last_col):=exp(.SD), .SDcols = last_col]
       }
       writeData(wb, as.character(i), table_to_write)
     } else {
@@ -445,7 +460,7 @@ write_tables_to_excel <- function(tables, transform, filename){
       cols <- names(tables[[i]])[c(1:length(vars), ncol(tables[[i]]))] # leaves out the terms
       table_to_write <- tables[[i]][, ..cols]
       if(transform=='exp'){
-        table_to_write[, tabulated_glm:=exp(tabulated_glm)]
+        table_to_write[, (last_col):=exp(.SD), .SDcols = last_col]
       }
       # write table
       writeData(wb, as.character(i), table_to_write)
