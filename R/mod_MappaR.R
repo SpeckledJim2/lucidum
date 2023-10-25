@@ -564,10 +564,10 @@ base_map <- function(){
   leaflet(options = leafletOptions(preferCanvas = TRUE, zoomControl = FALSE, attributionControl=TRUE)) |>
     addTiles(group = "OSM") |>
     addProviderTiles("Esri.WorldStreetMap", group = 'Esri') |>
-    addProviderTiles(providers$Stamen.TonerLite, group = "Stamen") |>
+    #addProviderTiles(providers$Stamen.TonerLite, group = "Stamen") |>
     addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
     addLayersControl(
-      baseGroups = c('Blank','Esri','OSM','Stamen','Satellite'),
+      baseGroups = c('Blank','Esri','OSM','Satellite'),
       overlayGroups = c('Area','Sector','Unit'),
       options = layersControlOptions(position = "topleft", collapsed = FALSE, autoZIndex = TRUE)) |>
     hideGroup(c('Sector','Unit')) |>
