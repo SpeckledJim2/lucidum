@@ -473,7 +473,7 @@ lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_s
     base_risk <- base_risk[,..cols] # we only want to keep the columns used in the model or lgb.predict will error
     base_risk_converted <- lgb.convert_with_rules(base_risk, rules = BoostaR_model$rules)
     base_risk_converted <- as.matrix(base_risk_converted$data)
-    base_level <- predict(BoostaR_model$lgbm, base_risk_converted, rawscore = TRUE)
+    base_level <- predict(BoostaR_model$lgbm, base_risk_converted, type = 'raw')
     tabulations[['base']]$base <- base_level
     # predict on the tabulations
     for(i in 2:length(tabulations)){
@@ -524,7 +524,7 @@ lgbm.extract.tree.predictions <- function(d, model, trees_idx){
     prediction_matrix <- matrix(data=0, nrow=nrow(d), ncol = length(trees_idx))
     for (i in 1:length(trees_idx)){
       idx <- trees_idx[i]
-      prediction_matrix[,i] <- predict(model, d, predcontrib = FALSE, start_iteration = idx, num_iteration = 1, rawscore = TRUE)
+      prediction_matrix[,i] <- predict(model, d, type='raw', start_iteration = idx, num_iteration = 1)
     }
     # sum rows to get the total prediction from the specified trees
     rowSums(prediction_matrix)

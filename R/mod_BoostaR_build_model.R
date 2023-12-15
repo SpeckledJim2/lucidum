@@ -1420,7 +1420,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
   } else {
     # get predictions (these are pre-offset)
     setProgress(value = 0.9, detail = paste0('best iteration: ', lgbm$best_iter, ', predict...'))
-    predictions <- predict(lgbm, as.matrix(lgb_dat$data), rawscore = TRUE)
+    predictions <- predict(lgbm, as.matrix(lgb_dat$data), type = 'raw')
     # add offset to predictions
     if(!is.null(offset)){
       predictions <- predictions + offset[lgb_dat$rows_include]
@@ -1500,13 +1500,13 @@ BoostaR_extract_SHAP_values <- function(d, lgbm, features, sample, rows_idx){
   } else if (sample=='10k'){
     n_sample <- min(10000,nrow(d))
     idx <- sample(rows_idx, n_sample, replace = FALSE)
-    SHAP_cols <- stats::predict(lgbm, as.matrix(d[idx,]), predcontrib = TRUE, num_iteration = lgbm$best_iter)
+    SHAP_cols <- stats::predict(lgbm, as.matrix(d[idx,]), type='contrib', num_iteration = lgbm$best_iter)
     SHAP_cols <- as.data.table(SHAP_cols)
     names(SHAP_cols) <- paste(sep = '_', 'lgbm_SHAP', c(features, 'base_score'))
     SHAP_cols <- cbind(idx = idx, SHAP_cols)
   } else if (sample=='All') {
     idx <- rows_idx
-    SHAP_cols <- stats::predict(lgbm, as.matrix(d), predcontrib = TRUE, num_iteration = lgbm$best_iter)
+    SHAP_cols <- stats::predict(lgbm, as.matrix(d), type='contrib', num_iteration = lgbm$best_iter)
     SHAP_cols <- as.data.table(SHAP_cols)
     names(SHAP_cols) <- paste(sep = '_', 'lgbm_SHAP', c(features, 'base_score'))
     SHAP_cols <- cbind(idx = idx, SHAP_cols)
