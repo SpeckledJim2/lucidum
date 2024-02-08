@@ -18,7 +18,7 @@ lucidum(
   BoostaR_models = NULL,
   GlimmaR_models = NULL,
   starting_response = 'price',
-  starting_tab = 'DataR',
+  starting_tab = 'ChartaR',
   show_DevelopaR = TRUE,
   show_DataR = TRUE,
   show_ChartaR = TRUE,

@@ -17,14 +17,15 @@ mod_bandingChooser_ui <- function(id){
 #' bandingChooser Server Functions
 #'
 #' @noRd 
-mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
+mod_bandingChooser_server <- function(id, d, x_col_and_banding){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     col_type <- reactiveVal('NULL')
     banding <- reactiveVal()
-    observeEvent(user_col(), {
-      col <- user_col()
+    observeEvent(x_col_and_banding(), {
+      col <- x_col_and_banding()$x_col
       type <- 'NULL'
+      banding(x_col_and_banding()$banding)
       # get type of column
       if(!is.null(col) & !is.null(d())){
         if(col %in% names(d())){
@@ -43,9 +44,9 @@ mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
       # calculate what banding should be chosen initially
       # and what should be shown on the widget
       if(type=='numeric'){
-        b_display <- banding_displayed(initial_banding())
+        b_display <- banding_displayed(x_col_and_banding()$banding)
       } else if(type=='date'){
-        b_display <- banding_displayed_date(initial_banding())
+        b_display <- banding_displayed_date(x_col_and_banding()$banding)
       } else {
         b_display <- 'Factor'
       }
@@ -71,10 +72,9 @@ mod_bandingChooser_server <- function(id, d, user_col, initial_banding){
             size = 'xs')
         })
       }
-      banding(initial_banding())
     })
     observeEvent(input$banding, {
-      b <- banding()
+      b <- x_col_and_banding()$banding
       if(length(input$banding>0)){
         if(col_type()=='date'){
           if(input$banding=='<'){

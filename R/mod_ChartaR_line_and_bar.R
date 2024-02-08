@@ -129,18 +129,16 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     banding <- reactiveVal(NULL)
     x_col <- selectInput_server(id = 'x_axis_feature', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, FALSE)
     add_cols <- selectInput_server(id = 'add_columns', d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, TRUE)
+    x_col_and_banding <- reactiveVal(NULL)
     observeEvent(x_col(), {
       banding_guess <- banding_guesser_numeric_date(d(), x_col())
-      initial_banding(banding_guess)
-      banding(banding_guess)
+      x_col_and_banding(list(x_col=x_col(), banding=banding_guess))
     })
+    banding_new <- mod_bandingChooser_server('x_banding', d, x_col_and_banding)
     observeEvent(banding_new(), {
-      banding(banding_new())
+      x_col_and_banding(list(x_col = x_col_and_banding()$x_col, banding = banding_new()))
     })
-    # QUESTION - this isn't working right
-    banding_new <- mod_bandingChooser_server('x_banding', d, x_col, initial_banding)
-    observeEvent(c(dt_update(), response(), weight(), x_col(), add_cols(), banding(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
-      # QUESTION - how to stop this triggering twice on first call
+    observeEvent(c(dt_update(), response(), weight(), x_col_and_banding(), add_cols(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
       if(!is.null(BoostaR_idx())){
         gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
       }
@@ -152,9 +150,9 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
           d(),
           response(),
           weight(),
-          x_col(),
+          x_col_and_banding()$x_col,
           add_cols(),
-          banding(),
+          x_col_and_banding()$banding,
           input$group_low_exposure,
           input$sort,
           input$show_partial_dependencies,
@@ -195,7 +193,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
          weight %in% c('N',d_cols)){
         g <- d[[group_by_col]]
         if(!(is.numeric(g) & banding=='0')){
-          rows_idx <- which(d[['total_filter']]==1)
+          rows_idx <- which(d[['total_filter']]==1L)
           # band the variable if numeric or date
           if(is.numeric(g) & banding!='0'){
             # band the numerical variable for plotting

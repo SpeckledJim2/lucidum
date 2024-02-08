@@ -108,25 +108,23 @@ mod_ChartaR_SHAP_ui <- function(id){
 mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, BoostaR_idx, feature_spec, filters){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    initial_banding_1 <- reactiveVal(NULL)
-    initial_banding_2 <- reactiveVal(NULL)
-    banding_1 <- reactiveVal(1)
-    banding_2 <- reactiveVal(1)
+    x_col_and_banding_1 <- reactiveVal(NULL)
+    x_col_and_banding_2 <- reactiveVal(NULL)
     observeEvent(input$feature_1, {
       banding_guess <- banding_guesser_numeric_date(d(), input$feature_1)
-      initial_banding_1(banding_guess)
+      x_col_and_banding_1(list(x_col = input$feature_1, banding = banding_guess))
     })
     observeEvent(input$feature_2, {
       banding_guess <- banding_guesser_numeric_date(d(), input$feature_2)
-      initial_banding_2(banding_guess)
+      x_col_and_banding_2(list(x_col = input$feature_2, banding = banding_guess))
     })
-    banding_1_new <- mod_bandingChooser_server('feature_1_banding', d, reactive({input$feature_1}), initial_banding_1)
-    banding_2_new <- mod_bandingChooser_server('feature_2_banding', d, reactive({input$feature_2}), initial_banding_2)
+    banding_1_new <- mod_bandingChooser_server('feature_1_banding', d, x_col_and_banding_1)
+    banding_2_new <- mod_bandingChooser_server('feature_2_banding', d, x_col_and_banding_2)
     observeEvent(banding_1_new(), {
-      banding_1(banding_1_new())
+      x_col_and_banding_1(list(x_col = x_col_and_banding_1()$x_col, banding = banding_1_new()))
     })
     observeEvent(banding_2_new(), {
-      banding_2(banding_2_new())
+      x_col_and_banding_2(list(x_col = x_col_and_banding_2()$x_col, banding = banding_2_new()))
     })
     observeEvent(c(BoostaR_models(), BoostaR_idx()), {
       if(!is.null(BoostaR_models()) & !is.null(BoostaR_idx())){
@@ -151,10 +149,8 @@ mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, Bo
       c(
         d(),
         dt_update(),
-        banding_1(),
-        banding_2(),
-        input$feature_1,
-        input$feature_2,
+        x_col_and_banding_1(),
+        x_col_and_banding_2(),
         input$feature_1_factor,
         input$feature_2_factor,
         input$quantile,
@@ -167,10 +163,10 @@ mod_ChartaR_SHAP_server <- function(id, d, dt_update, weight, BoostaR_models, Bo
           viz_SHAP_chart(
             d = d(),
             weight = weight(),
-            feature_1 = input$feature_1,
-            feature_2 = input$feature_2,
-            banding_1 = banding_1(),
-            banding_2 = banding_2(),
+            feature_1 = x_col_and_banding_1()$x_col,
+            feature_2 = x_col_and_banding_2()$x_col,
+            banding_1 = x_col_and_banding_1()$banding,
+            banding_2 = x_col_and_banding_2()$banding,
             factor_1 = input$feature_1_factor,
             factor_2 = input$feature_2_factor,
             SHAP_quantile = input$quantile,
