@@ -847,8 +847,8 @@ GlimmaR_coefficient_DT <- function(coefficients_dt){
     setDT(coefficients_dt)
     num_rows <- nrow(coefficients_dt)
     # shorten very long terms for display
-    long_terms <- nchar(coefficients_dt$term)>55
-    coefficients_dt[long_terms, term := paste0(substr(term,1,55), '...')]
+    long_terms <- nchar(coefficients_dt$term)>100
+    coefficients_dt[long_terms, term := paste0(substr(term,1,100), '...')]
     coefficients_dt %>%
       DT::datatable(rownames= TRUE,
                     extensions = 'Buttons',
