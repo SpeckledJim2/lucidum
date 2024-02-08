@@ -174,19 +174,19 @@ apply_filter <- function(d, filter, train_test_filter){
     if(nrow(d)>0){
       if(is.null(filter)){
         # no filter
-        d[, user_filter := 1]
+        d[, user_filter := 1L]
         message <- 'no filter'
       } else {
         if(filter[[1]] %in% c('','no filter')){
           # no filter
-          d[, user_filter := 1]
+          d[, user_filter := 1L]
           message <- 'no filter'
         } else {
           f <- tryCatch({d[, eval(parse(text=filter))]}, error = function(e){e})
           if('logical' %in% class(f)){
-            d[, user_filter := as.numeric(f)]
+            d[, user_filter := as.integer(f)]
           } else {
-            d[, user_filter := 1]
+            d[, user_filter := 1L]
           }
           if('error' %in% class(f)){
             message <- f$message
@@ -243,33 +243,33 @@ filter_idx <- function(d, train_test){
   if(nrow(d)>0){
     if(is.null(train_test)){
       if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1, which = TRUE]
+        idx <- d[user_filter==1L, which = TRUE]
       } else {
         idx <- 1:nrow(d)
       }
     } else if (!('train_test' %in% names(d))){
       if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1, which = TRUE]
+        idx <- d[user_filter==1L, which = TRUE]
       } else {
         idx <- 1:nrow(d)
       }
     } else if (train_test == 'All'){
       if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1, which = TRUE]
+        idx <- d[user_filter==1L, which = TRUE]
       } else {
         idx <- 1:nrow(d)
       }
     } else if (train_test == 'Train'){
       if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1 & train_test==0, which = TRUE]
+        idx <- d[user_filter==1L & train_test==0L, which = TRUE]
       } else {
-        idx <- d[train_test==0, which = TRUE]
+        idx <- d[train_test==0L, which = TRUE]
       }
     } else if (train_test == 'Test'){
       if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1 & train_test==1, which = TRUE]
+        idx <- d[user_filter==1L & train_test==1L, which = TRUE]
       } else {
-        idx <- d[train_test==1, which = TRUE]
+        idx <- d[train_test==1L, which = TRUE]
       }
     }
     idx
