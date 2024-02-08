@@ -1,6 +1,7 @@
-# QUESTION - these are all caused by data.table
-# and the way it works by reference
-# does it matter at all?
+# these are all columns
+# created inside a data.table
+# R check doesn't pick this up
+# so need to put them here to stop CRAN check error
 globalVariables(
   c('PostcodeArea',
     'PostcodeArea_name',
@@ -54,6 +55,13 @@ globalVariables(
     'min_value',
     'num_rows',
     'tabulated_glm',
-    'index'
+    'index',
+    'split_feature',
+    'split_features',
+    'lgbm_tabulated_prediction',
+    'PostcodeUnit',
+    'lat',
+    'long',
+    'tabulated_lgbm'
     )
   )
