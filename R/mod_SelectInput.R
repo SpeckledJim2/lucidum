@@ -83,14 +83,14 @@ selectInput_ui <- function(id, label = 'your_label', height_divisor, height_adj,
       inputId = ns("selectInput"),
       width = '100%',
       label = NULL,
-      choices=c('none'),
+      choices=c('start_up_XXX'), # used below on startup
       size = 20,
       multiple = multiple,
       selectize = FALSE
       )
     )
 }
-selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, numeric_only, initial_selected) {
+selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, numeric_only) {
   moduleServer(id, function(input, output, session) {
     # QUESTION - when something depends on so many things it feels odd
     # is this a case where a plan observe would be neater?
@@ -108,15 +108,11 @@ selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, B
           input$search,
           numeric_only
           )
-        # choose what should be selected
         selected <- character(0) # default
-        if(length(choices)>0){ # override
-          if(choices[1] %not_in% c('none','No lucidum columns')){
-            selected <- choices[1]
-          }
-        } # override
         if(!is.null(input$selectInput)){
-          if(all(input$selectInput %in% unlist(choices, use.names = FALSE))){
+          if(input$selectInput[1]=='start_up_XXX'){
+            selected <- choices[1]
+          } else if (all(input$selectInput %in% unlist(choices, use.names = FALSE))){
             selected <- input$selectInput
           }
         }
