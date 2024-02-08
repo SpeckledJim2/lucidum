@@ -52,6 +52,7 @@ mod_MappaR_ui <- function(id){
                              inputId = ns('postcode'),
                              label = NULL,
                              placeholder = "enter postcode area",
+                             btnReset = icon("xmark"),
                              btnSearch = icon("magnifying-glass")
                            )
                     )
@@ -204,7 +205,7 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     plot_postcode_area <- reactiveVal()
-    trigger_update <- reactiveVal(TRUE)
+    trigger_update <- reactiveVal(FALSE)
     output$map <- leaflet::renderLeaflet({base_map()})
     outputOptions(output, "map", suspendWhenHidden = FALSE) # ensures base map is drawn even when not visible
     # map options from input
@@ -226,7 +227,7 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
           colour1 = input$colour1,
           colour2 = input$colour2,
           colour3 = input$colour3,
-          sectors = input$sectors,
+          sectors = ifelse(is.null(input$sectors), FALSE, input$sectors),
           label_size = input$label_size
         )
       )
@@ -330,7 +331,7 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
 #' 
 #' @import sf
 #' @importFrom leaflet leafletProxy clearShapes clearMarkers clearControls addMapPane colorBin
-#' @importFrom leaflet addPolygons labelOptions highlightOptions pathOptions addLabelOnlyMarkers
+#' @importFrom leaflet addPolygons labelOptions highlightOptions pathOptions addLabelOnlyMarkers addCircles
 #' @importFrom grDevices colorRamp rgb
 #' @importFrom stats quantile
 #'
@@ -346,6 +347,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
     # summarise data by PostcodeArea and merge onto area shapefile
     area_summary <- NULL
     sector_summary <- NULL
+    unit_summary <- NULL
     if('PostcodeArea' %in% names(d)){
       area_summary <- postcode_summary(d, response, weight, 'PostcodeArea')
       if(!is.null(area_summary)){
@@ -370,6 +372,17 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
           sector_summary$sector_plot <- sector_summary[,3]/sector_summary[,2]
         }
         sectors_sf <- merge(x=uk_sectors, y=sector_summary, by = 'PostcodeSector', all.x = TRUE)
+      }
+    }
+    # summarise data by PostcodeUnit if lat and long present
+    if(map_options$sectors & 'PostcodeUnit' %in% names(d) & 'lat' %in% names(d) & 'long' %in% names(d)){
+      unit_summary <- postcode_summary(d, response, weight, 'PostcodeUnit')
+      if(!is.null(unit_summary)){
+        if(weight=='no weights'){
+          unit_summary$unit_plot <- unit_summary[,3]
+        } else {
+          unit_summary$unit_plot <- unit_summary[,3]/unit_summary[,2]
+        }
       }
     }
     # clear the map
@@ -404,6 +417,15 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
       sector_labels <- apply_kpi_format(sectors_sf$sector_plot, response, weight, kpi_spec)
       opacity_sector_modifier <- hot_spotted_opacity(sectors_sf$sector_plot, map_options$hotspots)
     }
+    # unit bins, labels and opacity
+    if(!is.null(unit_summary)){
+      bins_unit <- unique(stats::quantile(round(unit_summary$unit_plot,6), na.rm = TRUE, probs = 0:20/20))
+      bins_unit[1] <- bins_unit[1] - 0.000001
+      bins_unit[length(bins_unit)] <- bins_unit[length(bins_unit)] + 0.000001
+      pal_unit <- leaflet::colorBin(palette = grDevices::colorRamp(c(map_options$colour1,map_options$colour2,map_options$colour3), interpolate="linear"), domain = NULL, bins = bins_unit)
+      if(length(bins_unit)>1){unit_fillColor <- pal_unit(unit_summary$unit_plot)} else {unit_fillColor <- 0}
+      unit_labels <- apply_kpi_format(unit_summary$unit_plot, response, weight, kpi_spec)
+    }
     # add on sectors if available - sectors before areas to get polygon order correct
     label_style <- list('box-shadow' = '3px 3px rgba(0,0,0,0.25)','font-size' = '16px','border-color' = 'rgba(0,0,0,0.5)')
     if(!is.null(sector_summary)){
@@ -425,6 +447,27 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
                              labelOptions = labelOptions(textOnly = FALSE, style=label_style),
                              highlightOptions = highlightOptions(color='white', weight = 2*map_options$line_thickness, bringToFront = TRUE, sendToBack = TRUE),
                              options = pathOptions(pane = "sector_polygons")
+        )
+    }
+    # add on units if available
+    if(!is.null(unit_summary)){
+      m %>%
+        addMapPane('points', zIndex = 420) %>%
+        addCircles(data = unit_summary,
+                   layerId = unit_summary$PostcodeUnit,
+                   lng=unit_summary$long,
+                   lat=unit_summary$lat,
+                   label = postcode_hover_labels(unit_summary, unit_labels, response, weight),
+                   labelOptions = labelOptions(textOnly = FALSE,style=label_style),
+                   radius = 50 * map_options$line_thickness^2,
+                   weight = 0,
+                   stroke = FALSE,
+                   fill = TRUE,
+                   fillColor = unit_fillColor,
+                   fillOpacity = ifelse(is.na(unit_summary$unit_plot),0.5,1.0),
+                   highlightOptions = highlightOptions(color='white', opacity = 1, weight = 1, fillOpacity = 1, bringToFront = TRUE, sendToBack = TRUE),
+                   group = "Unit",
+                   options = pathOptions(pane = "points")
         )
     }
     # add on the area polygons
@@ -487,7 +530,7 @@ postcode_hover_labels <- function(postcode_summary, labels, response, weight){
         "<span style='font-size:16px; font-weight:400; color: grey'>",
         weight,
         ': ',
-        weights,
+        if(weight=='N'){format(weights, digits = 1, big.mark = ',')} else {format(weights, nsmall = 2, big.mark = ',')},
         "</span>"
       ),
       HTML
@@ -517,15 +560,43 @@ postcode_hover_labels <- function(postcode_summary, labels, response, weight){
         "<span style='font-size:16px; font-weight:400; color: grey'>",
         weight,
         ': ',
-        weights,
+        if(weight=='N'){format(weights, digits = 1, big.mark = ',')} else {format(weights, nsmall = 2, big.mark = ',')},
         "</span>"
       ),
       HTML
     )
   } else if (resolution=='PostcodeUnit'){
-    # not done yet
+    postcode_summary[, PostcodeArea := substr(PostcodeUnit,1,regexpr('[0-9]', PostcodeUnit)-1)]
+    postcode_summary <- merge(postcode_summary, postcode_area_name_mapping, by = 'PostcodeArea', all.x = TRUE)
+    setorder(postcode_summary, 'PostcodeUnit')
+    lapply(
+      paste(
+        sep = "",
+        "<span style='font-size:48px; font-weight:200'>",
+        postcode_summary$PostcodeUnit,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400; color: rgb(60,141,188)'>",
+        postcode_summary$PostcodeArea_name,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400'>",
+        response,
+        ': ',
+        "</span>",
+        "<span style='font-size:16px; font-weight:400'>",
+        labels,
+        "</span>",
+        '<br/>',
+        "<span style='font-size:16px; font-weight:400; color: grey'>",
+        weight,
+        ': ',
+        if(weight=='N'){format(weights, digits = 1, big.mark = ',')} else {format(weights, nsmall = 2, big.mark = ',')},
+        "</span>"
+      ),
+      HTML
+    )
   }
-
 }
 
 #' Summarise dataset columns by postcode
@@ -539,35 +610,45 @@ postcode_hover_labels <- function(postcode_summary, labels, response, weight){
 #' @noRd
 #'
 postcode_summary <- function(d, response, weight, resolution){
-  rows_to_summarise <- d[total_filter==1,which=TRUE]
-  if(length(rows_to_summarise)==nrow(d)){
-    if(weight %in% c('N','no weights')){
-      d_cols <- d[, .SD, .SDcols = c(resolution, response)]
-      d_cols[, weight := 1]
-    } else {
-      d_cols <- d[, .SD, .SDcols = c(resolution, response, weight)]
-    }
-  } else {
-    if(weight %in% c('N','no weights')){
-      d_cols <- d[rows_to_summarise, .SD, .SDcols = c(resolution, response)]
-      d_cols[, weight := 1]
-    } else {
-      d_cols <- d[rows_to_summarise, .SD, .SDcols = c(resolution, response, weight)]
-    }
+  # extract the columns we need to make the summary
+  if(resolution %in% c('PostcodeArea','PostcodeSector')){
+    cols <- c(resolution, response)
+  } else if (resolution=='PostcodeUnit'){
+    cols <- c(resolution, 'lat', 'long', response)
   }
-  setnames(d_cols, c('resolution','response','weight'))
-  summary <- d_cols[, list(V1 = sum(weight, na.rm = TRUE), V2 = sum(response, na.rm = TRUE)), by = 'resolution']
-  setnames(summary, c(resolution, weight, response))
+  cols_w <- c(cols, weight)
+  if(weight %in% c('N','no weights')){
+    d_cols <- d[total_filter==1L, .SD, .SDcols = cols]
+    d_cols[, weight := 1]
+  } else {
+    d_cols <- d[total_filter==1L, .SD, .SDcols = cols_w]
+  }
+  # summarise columns
+  if(resolution %in% c('PostcodeArea','PostcodeSector')){
+    setnames(d_cols, c('resolution','response','weight'))
+    summary <- d_cols[, list(V1 = sum(weight, na.rm = TRUE), V2 = sum(response, na.rm = TRUE)), by = 'resolution']
+    setnames(summary, c(resolution, weight, response))
+  } else if (resolution=='PostcodeUnit'){
+    setnames(d_cols, c('resolution','lat','long','response','weight'))
+    summary <- d_cols[, list(
+      V1 = sum(weight, na.rm = TRUE),
+      V2 = sum(response, na.rm = TRUE),
+      lat = mean(lat, na.rm = TRUE),
+      long = mean(long, na.rm = TRUE)
+      ), by = 'resolution']
+    setnames(summary, c(resolution, weight, response, 'lat', 'long'))
+    setorder(summary, 'PostcodeUnit')
+  }
   return(summary)
 }
 base_map <- function(){
   leaflet(options = leafletOptions(preferCanvas = TRUE, zoomControl = FALSE, attributionControl=TRUE)) |>
     addTiles(group = "OSM") |>
     addProviderTiles("Esri.WorldStreetMap", group = 'Esri') |>
-    #addProviderTiles(providers$Stamen.TonerLite, group = "Stamen") |>
+    addProviderTiles('Esri.WorldGrayCanvas', group = "Grey") |>
     addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
     addLayersControl(
-      baseGroups = c('Blank','Esri','OSM','Satellite'),
+      baseGroups = c('Blank','Esri','Grey','OSM','Satellite'),
       overlayGroups = c('Area','Sector','Unit'),
       options = layersControlOptions(position = "topleft", collapsed = FALSE, autoZIndex = TRUE)) |>
     hideGroup(c('Sector','Unit')) |>
