@@ -53,8 +53,8 @@ app_server <- function(input, output, session) {
   # only when d is assigned to a new value (e.g. selecting a new dataset)
   observeEvent(d(), {
     if(!is.null(d())){
-      d()[, user_filter := 1]
-      d()[, total_filter := 1]
+      d()[, user_filter := 1L]
+      d()[, total_filter := 1L]
       # load specification files
       kpi_spec_path <- get_spec_filepath('kpi', dataset_name())
       filter_spec_path <- get_spec_filepath('filter', dataset_name())
@@ -98,12 +98,14 @@ app_server <- function(input, output, session) {
         }
       } else if(c$originator=='GlimmaR coefficient table'){
         # navigate to ChartaR one way line and bar with pre-selected inputs
-        if(c$last_clicked %in% names(d()) & 'glm_prediction' %in% names(d())){
-          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
-          updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'glm_prediction')
-          updateRadioGroupButtons(session, inputId = 'ChartaR-line_and_bar-show_partial_dependencies', selected = 'GLM')
-          updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
-          updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
+        if(!is.null(c$last_clicked)){
+          if(c$last_clicked %in% names(d()) & 'glm_prediction' %in% names(d())){
+            updateSelectInput(session, inputId = 'ChartaR-line_and_bar-x_axis_feature-selectInput', selected = c$last_clicked)
+            updateSelectInput(session, inputId = 'ChartaR-line_and_bar-add_columns-selectInput', selected = 'glm_prediction')
+            updateRadioGroupButtons(session, inputId = 'ChartaR-line_and_bar-show_partial_dependencies', selected = 'GLM')
+            updateTabItems(session, inputId = 'tabs', selected = 'ChartaR')
+            updateNavbarPage(session = session, inputId = "ChartaR-tabsetPanel", selected = "1-way line and bar")
+          }
         }
       }
     }
@@ -149,7 +151,9 @@ app_server <- function(input, output, session) {
   
   # tab servers
   mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions)
-  mod_DataR_server('DataR', d, dt_update)
+  if(golem::get_golem_options('show_DataR')){
+    mod_DataR_server('DataR', d, dt_update)
+  }
   mod_ChartaR_server('ChartaR', d, dt_update, response, weight, kpi_spec, feature_spec, BoostaR_models, BoostaR_idx, GlimmaR_models, GlimmaR_idx, filters)
   mod_MappaR_server('MappaR', d, dt_update, response, weight, kpi_spec, selected_tab, golem::get_golem_options('show_MappaR'), filters)
   mod_BoostaR_server('BoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
