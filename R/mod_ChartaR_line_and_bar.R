@@ -165,19 +165,29 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
         )
     })
     observeEvent(data_summary(), {
-      output$one_way_table <- DT::renderDT({format_table_DT(data_summary(), response(), weight(), kpi_spec(), feature_spec(), input$response_transform)})
+      output$one_way_table <- DT::renderDT({
+        format_table_DT(
+          data_summary(),
+          response(),
+          weight(),
+          kpi_spec(),
+          feature_spec(),
+          input$response_transform
+        )}
+      )
       output$chart <- renderPlotly({
-        format_plotly(data_summary(),
-                      response(),
-                      weight(),
-                      input$show_labels,
-                      input$show_response,
-                      input$sigma_bars,
-                      kpi_spec(),
-                      feature_spec(),
-                      input$response_transform,
-                      filters()
-                      )
+        format_plotly(
+          data_summary(),
+          response(),
+          weight(),
+          input$show_labels,
+          input$show_response,
+          input$sigma_bars,
+          kpi_spec(),
+          feature_spec(),
+          input$response_transform,
+          filters()
+          )
         })
     })
   })
@@ -598,7 +608,7 @@ format_table_DT <- function(dt, response, weight, kpi_spec, feature_spec, respon
     # get the variable name
     col <- names(dt)[1]
     if(substr(col,nchar(col)-6,nchar(col))=='_banded'){
-      # strip of the suffix _banded if it is present
+      # strip off the suffix _banded if it is present
       col <- substr(col,1,nchar(col)-7)
     }
     # get the base level and row
@@ -642,7 +652,6 @@ format_table_DT <- function(dt, response, weight, kpi_spec, feature_spec, respon
       "  }",
       "}"  
     )
-    
     DT <- datatable(
       dt,
       rownames= FALSE,
