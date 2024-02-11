@@ -191,8 +191,17 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
     })
     observeEvent(input$delete_model, {
       rows_selected <- input$model_summary_rows_selected
-      new_list <- GlimmaR_models()[-rows_selected]
-      GlimmaR_models(new_list)
+      if(!is.null(rows_selected)){
+        new_list <- GlimmaR_models()[-rows_selected]
+        GlimmaR_models(new_list)
+      } else {
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'No GLMs selected',
+                          btn_labels = c('OK')
+        )
+      }
     })
     observeEvent(input$make_active, {
       rows_selected <- input$model_summary_rows_selected
@@ -200,8 +209,15 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
         if(length(rows_selected)>1){
           rows_selected <- rows_selected[1]
         }
+        GlimmaR_idx(names(GlimmaR_models())[rows_selected])
+      } else {
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'No GLMs selected',
+                          btn_labels = c('OK')
+        )
       }
-      GlimmaR_idx(names(GlimmaR_models())[rows_selected])
     })
     observeEvent(input$tabulate, {
       rows_selected <- input$model_summary_rows_selected
@@ -216,22 +232,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
           g <- GlimmaR_models()[[model_name]]
           if(!is.null(g)){
             base_risk <- get_base_risk(d(), feature_spec(), g$weight)
-            #withProgress(message = 'GlimmaR', detail = 'tabulate', value = 0.5, {
-              # OLD WAY
-              # tabulated_model <- export_model(d()[g$pred_rows],
-              #                                 g$glm,
-              #                                 base_risk,
-              #                                 FALSE,
-              #                                 input$tabulate_scale,
-              #                                 feature_spec(),
-              #                                 input$tabulate_format,
-              #                                 weight(),
-              #                                 response(),
-              #                                 g$predictions,
-              #                                 model_name = g$name
-              # )
               tabulated_model <- NULL
-              # NEW LINES
               glm_term_summary <- summarise_glm_vars(g$glm)
               if(!is.null(glm_term_summary)){
                 var_terms <- split(glm_term_summary, by ='vars', keep.by = FALSE)
