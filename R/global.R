@@ -62,6 +62,8 @@ globalVariables(
     'PostcodeUnit',
     'lat',
     'long',
-    'tabulated_lgbm'
+    'tabulated_lgbm',
+    'col%',
+    'row%'
     )
   )

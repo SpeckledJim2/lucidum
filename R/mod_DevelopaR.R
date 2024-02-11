@@ -160,6 +160,17 @@ qtile <- function(x,n){cut(x, quantile(x,probs=0:n/n),include.lowest=T,labels=F)
 col <- paste0(target_col,'_quantile','_',q)
 d()[, (col) := lapply(.SD, qtile, q), .SDcols = target_col]
 
+# 06 abs and span SHAP values
+# remove the constant base score
+SHAP_cols <- setdiff(grep('lgbm_SHAP', names(d()), value = TRUE), 'lgbm_SHAP_base_score')
+SHAP_summary <- data.table(
+    feature = SHAP_cols,
+    abs_SHAP = t(d()[, lapply(.SD, function(x){round(mean(abs(x)), 4)}), .SDcols = SHAP_cols]),
+    span_SHAP = t(d()[, lapply(.SD, function(x){round(max(x)-min(x), 4)}), .SDcols = SHAP_cols])
+)
+setorderv(SHAP_summary, 'abs_SHAP.V1', order = -1)
+SHAP_summary[, feature := gsub('lgbm_SHAP_', '', feature)]
+print(SHAP_summary)
 
 "
                              )
