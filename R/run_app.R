@@ -35,11 +35,11 @@ lucidum <- function(data=NULL,
                      specification_path = NULL,
                      show_DataR = T,
                      show_ChartaR = T,
-                     show_MappaR = F,
+                     show_MappaR = T,
                      show_BoostaR = T,
                      show_GlimmaR = T,
                      show_DevelopaR = T,
-                     starting_tab = 'DataR',
+                     starting_tab = 'ChartaR',
                      starting_response = NULL,
                      num_threads = -1
                      ) {
