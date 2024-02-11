@@ -48,6 +48,17 @@ app_server <- function(input, output, session) {
   feature_spec <- reactiveVal()
   filter_spec <- reactiveVal()
   
+  #
+  demo <- reactiveVal(get_golem_options('dataset_name')=='insurance')
+  starting_response <- reactiveVal()
+  observeEvent(demo(), once = TRUE, {
+    if(demo() & is.null(golem::get_golem_options('starting_response'))){
+      starting_response('price')
+    } else {
+      starting_response(golem::get_golem_options('starting_response'))
+    }
+  })
+  
   # d() contains a data.table
   # when columns in d are updated by reference, this does not trigger any reactivity
   # only when d is assigned to a new value (e.g. selecting a new dataset)
@@ -143,7 +154,7 @@ app_server <- function(input, output, session) {
   # sidebar servers
   weight <- mod_selectWeightColumn_server('weight', d, dt_update, TRUE, NULL, 'N', kpi, kpi_spec, new_weight)
   response <- mod_selectResponseColumn_server('response', d, dt_update, TRUE, NULL, NULL, kpi, kpi_spec,
-    weight, reactive({golem::get_golem_options('starting_response')}), new_response)
+    weight, starting_response, new_response)
   nav_options <- mod_navigator_server('navigator', kpi_spec, GlimmaR_models, BoostaR_models, GlimmaR_idx, BoostaR_idx)
   
   # filter server
