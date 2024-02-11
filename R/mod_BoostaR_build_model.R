@@ -868,8 +868,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, input$ebm_mode, BoostaR_feature_table())
             BoostaR_model$name <- model_name
             BoostaR_model$additional_params <- additional_params
-            if(!is.null(BoostaR_model$lgbm)=='ok'){
-              # QUESTION - feels inefficient (copying large object), is there a better way?
+            if(!is.null(BoostaR_model$lgbm)){
               new_list <- BoostaR_models()
               new_list[[model_name]] <- BoostaR_model
               BoostaR_models(new_list)
@@ -1387,7 +1386,6 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
       )
     )
   }
-  
   lgbm <- tryCatch({
     lgb.train(
       params = params,
@@ -1406,7 +1404,7 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
     #params$learning_rate <- lr
   }
   if(inherits(lgbm,'simpleError')){
-    message <- lgbm$error
+    message <- lgbm$message
     lgbm <- NULL
     new_feature_table <- NULL
     importances <- NULL
@@ -1634,12 +1632,12 @@ get_main_params_combos <- function(input){
     length(lambda_l2)
   if(combos > 1000){
     # sample down to avoid params_grid being huge
-    learning_rate <- sample(learning_rate, size = num_combos, replace = TRUE)
+    learning_rate <- sample_interval(learning_rate, num_combos)
     #num_leaves <- sample(num_leaves, size = num_combos, replace = TRUE)
     num_leaves <- sample_down(num_leaves, num_combos)
-    max_depth <- sample(max_depth, size = num_combos, replace = TRUE)
-    feature_fraction <- sample(feature_fraction, size = num_combos, replace = TRUE)
-    bagging_fraction <- sample(bagging_fraction, size = num_combos, replace = TRUE)
+    max_depth <- sample_interval(max_depth, num_combos)
+    feature_fraction <- sample_interval(feature_fraction, num_combos)
+    bagging_fraction <- sample_interval(bagging_fraction, num_combos)
     min_data_in_leaf <- sample_down(min_data_in_leaf, num_combos)
     lambda_l1 <- sample_down(lambda_l1, num_combos)
     lambda_l2 <- sample_down(lambda_l2, num_combos)
@@ -2084,6 +2082,14 @@ callback.names <- function(cb_list) {
 sample_down <- function(x,n){
   if(length(x)==1){
     x
+  } else {
+    sample(x, size = n, replace = TRUE)
+  }
+}
+
+sample_interval <- function(x,n){
+  if(length(x)==1){
+    rep(x,n)
   } else {
     sample(x, size = n, replace = TRUE)
   }
