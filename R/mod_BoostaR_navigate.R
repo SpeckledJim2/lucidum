@@ -233,8 +233,17 @@ mod_BoostaR_navigate_server <- function(id, d, BoostaR_models, BoostaR_idx, feat
     })
     observeEvent(input$BoostaR_delete_model, {
       rows_selected <- input$BoostaR_model_summary_rows_selected
-      new_list <- BoostaR_models()[-rows_selected]
-      BoostaR_models(new_list)
+      if(!is.null(rows_selected)){
+        new_list <- BoostaR_models()[-rows_selected]
+        BoostaR_models(new_list)
+      } else {
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'No GBMs selected',
+                          btn_labels = c('OK')
+        )
+      }
     })
     observeEvent(input$BoostaR_make_active, {
       rows_selected <- input$BoostaR_model_summary_rows_selected
@@ -242,8 +251,16 @@ mod_BoostaR_navigate_server <- function(id, d, BoostaR_models, BoostaR_idx, feat
         if(length(rows_selected)>1){
           rows_selected <- rows_selected[1]
         }
+        BoostaR_idx(names(BoostaR_models())[rows_selected])
+      } else {
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'No GBM selected',
+                          btn_labels = c('OK')
+        )
       }
-      BoostaR_idx(names(BoostaR_models())[rows_selected])
+
     })
     observeEvent(input$tabulate, {
       rows_selected <- input$BoostaR_model_summary_rows_selected
@@ -358,7 +375,10 @@ make_BoostaR_model_summary <- function(Bs){
   if(!is.null(Bs)){
     if(length(Bs)>0){
       rows <- lapply(Bs, BoostaR_model_summary_row)
-      rbindlist(rows, fill = TRUE)
+      summary <- rbindlist(rows, fill = TRUE)
+      summary[, `row%` := round(`row%`,2)]
+      summary[, `col%` := round(`col%`,2)]
+      summary
     } else {
       NULL
     }
