@@ -23,7 +23,7 @@ lucidum's functionality includes:
   - overlay "single profile" lines for GLMs to understand the underlying model effect
   - overlay SHAP value ribbons for GBMs to understand the underlying model effect
 
-* **Interactive mapping of data at UK Postcode Area, Sector resolution**  
+* **Interactive mapping of data at UK Postcode Area, Sector and Unit resolution**  
   - uses the [leaflet](https://github.com/Leaflet/Leaflet) library to draw choropleth maps for Postcode Area and Sector
   - uses open source shapefiles for Area and Sector
 
@@ -61,7 +61,7 @@ To load the demo dataset into lucidum use:
 
 ``` r
 library(lucidum)
-lucidum(insurance, starting_response = 'price')
+lucidum(insurance)
 ```
 
 ## 4. Training and test rows
