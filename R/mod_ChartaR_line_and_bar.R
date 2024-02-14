@@ -1006,7 +1006,7 @@ get_sd_estimate_by_group <- function(d, rows_idx, response, weight, fitted, add_
     }
     # calculate the sd for each group
     d_summary[, difference:= d_summary[[first_col]] - d_summary[[first_col+1]] ]
-    sigma <- d_summary[, sd(difference), by = 'group_by_col']
+    sigma <- d_summary[, sd(difference, na.rm = TRUE), by = 'group_by_col']
     setorder(sigma, 'group_by_col')
     if(!exists('sigmas')){
       sigmas <- matrix(0,nrow=nrow(sigma),ncol=n_samples)
