@@ -154,7 +154,7 @@ mod_GlimmaR_build_model_ui <- function(id){
               justified =  TRUE,
               label = NULL,
               choices = c('All', 'Training'),
-              selected = 'Training'
+              selected = 'All'
             ),
             tippy_this(ns('data_to_use'), delay = 1000, placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
           ),
@@ -322,6 +322,8 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         output$glm_coefficients <- DT::renderDataTable({
           GlimmaR_coefficient_DT(g$coefficients)
           })
+        # update whether All/Training used
+        updateRadioGroupButtons(session, inputId = 'data_to_use', selected = g$training_data)
         # update the formula
         updateAceEditor(session, editorId = 'glm_formula', value = g$formula)
         # update the objective
