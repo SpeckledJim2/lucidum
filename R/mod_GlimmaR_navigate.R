@@ -136,8 +136,15 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
       # or by creating output$model_summary does it remain "reactive" once created?
       output$model_summary <- renderDT({
         # model summary table
-        dt <- GlimmaR_model_summary(GlimmaR_models())
-        dt |>
+        if(length(GlimmaR_models())==0){
+          model_summary <- NULL
+        } else {
+          model_summary <- GlimmaR_model_summary(GlimmaR_models())
+        }
+        if(is.null(model_summary)){
+          model_summary <- data.table(name='No GLMs built')
+        }
+          model_summary |>
           DT::datatable(rownames= FALSE,
                         extensions = 'Buttons',
                         selection=list(mode="multiple", target="row"),
@@ -157,14 +164,14 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                          )
                         )
           ) |>
-          formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '14px') |>
+          formatStyle(columns = colnames(model_summary), lineHeight='0%', fontSize = '14px') |>
           formatStyle(columns = 'name', target='row', backgroundColor = styleEqual(GlimmaR_idx(), rgb(100/255,180/255,220/255)))
       })
     })
     observeEvent(c(GlimmaR_models(), GlimmaR_idx()), {
       output$importance_summary <- renderDT({
         # model summary table
-        if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
+        if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx()) & length(GlimmaR_models())>0){
           if(input$importance_type=='Terms'){
             dt <- GlimmaR_models()[[GlimmaR_idx()]]$importances[[1]]
           } else {
@@ -173,7 +180,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
         } else {
           dt <- data.table('V1'='No GLMs')
         }
-        dt |>
+        imp_table <- dt |>
           DT::datatable(rownames= FALSE,
                         extensions = 'Buttons',
                         selection='single',
@@ -185,8 +192,10 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                                        searchHighlight=TRUE
                                        )
           ) |>
-          formatRound('importance', 4) |>
           formatStyle(columns = colnames(dt), lineHeight='0%', fontSize = '14px')
+        if(length(GlimmaR_models())>0){
+          imp_table <- imp_table |> formatRound('importance', 4)
+        }
       })
     })
     observeEvent(input$delete_model, {
