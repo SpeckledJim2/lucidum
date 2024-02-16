@@ -162,9 +162,15 @@ selectInput_choices <- function(
       if(length(BoostaR_models)>0 | length(GlimmaR_models)>0){
         current_model_prediction <- intersect(cols, c('glm_prediction','lgbm_prediction','glm_tabulated_prediction','lgbm_tabulated_prediction'))
         importance_cols <- NULL
+        importance_cols_glm <- NULL
         if(!is.null(BoostaR_idx)){
           if(BoostaR_idx %in% names(BoostaR_models)){
             importance_cols <- intersect(BoostaR_models[[BoostaR_idx]]$importances$Feature, cols)
+          }
+        }
+        if(!is.null(GlimmaR_idx)){
+          if(GlimmaR_idx %in% names(GlimmaR_models)){
+            importance_cols_glm <- intersect(GlimmaR_models[[GlimmaR_idx]]$importances$vars$names, cols)
           }
         }
         lgbm_cols <- cols[grep('lgbm', cols)]
@@ -173,11 +179,12 @@ selectInput_choices <- function(
         glm_cols <- cols[grep('glm', cols)]
         LP_cols <- cols[grep('glm_LP', cols)]
         glm_cols <- setdiff(glm_cols, c(LP_cols, 'glm_prediction','glm_tabulated_prediction'))
-        all_cols <- c(current_model_prediction, importance_cols, lgbm_cols, glm_cols, SHAP_cols, LP_cols)
+        all_cols <- c(current_model_prediction, importance_cols, importance_cols_glm, lgbm_cols, glm_cols, SHAP_cols, LP_cols)
         remaining_cols <- setdiff(numerical_cols(d), all_cols)
         # replace blanks
         if(length(current_model_prediction)==0) current_model_prediction <- 'none'
         if(length(importance_cols)==0) importance_cols <- 'none'
+        if(length(importance_cols_glm)==0) importance_cols_glm <- 'none'
         if(length(lgbm_cols)==0) lgbm_cols <- 'none'
         if(length(glm_cols)==0) glm_cols <- 'none'
         if(length(SHAP_cols)==0) SHAP_cols <- 'none'
@@ -186,15 +193,20 @@ selectInput_choices <- function(
           list(
             data.table(feature = current_model_prediction, interaction_grouping = 'Current model'),
             data.table(feature = importance_cols, interaction_grouping = 'GBM feature importance'),
+            data.table(feature = importance_cols_glm, interaction_grouping = 'GLM feature importance'),
             data.table(feature = lgbm_cols, interaction_grouping = 'GBM predictions'),
             data.table(feature = glm_cols, interaction_grouping = 'GLM predictions'),
-            data.table(feature = SHAP_cols, interaction_grouping = 'SHAP values'),
+            data.table(feature = SHAP_cols, interaction_grouping = 'GBM SHAP values'),
             data.table(feature = LP_cols, interaction_grouping = 'GLM LP values'),
             data.table(feature = remaining_cols, interaction_grouping = 'Other columns')
             )
           )
         # create the choices list
-        lucidum_choices <- split(lucidum_choices, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
+        if (selectChooser %in% c('Original','A-Z')){
+          lucidum_choices <- split(lucidum_choices, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
+        } else if (selectChooser=='lucidum'){
+          lucidum_choices <- split(lucidum_choices, by = 'interaction_grouping', sorted = FALSE, keep.by = FALSE)
+        }
         lucidum_choices <- lapply(lucidum_choices, function(d){d[[1]]}) # convert to character list
         if(selectChooser=='A-Z'){
           lucidum_choices <- lapply(lucidum_choices, sort)
