@@ -224,9 +224,12 @@ get_spec_filepath <- function(type, dataset_name){
     }
   }
 }
+
+#' @importFrom lightgbm setLGBMthreads
 set_threads <- function(){
   n_threads <- golem::get_golem_options('num_threads')
   if(n_threads>0){
     setDTthreads(n_threads)
+    setLGBMthreads(n_threads)
   } 
 }
