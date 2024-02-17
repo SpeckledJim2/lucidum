@@ -44,9 +44,19 @@ mod_BoostaR_navigate_ui <- function(id){
              shinySaveButton(
                id = ns('BoostaR_save_model'),
                label = 'Save GBM',
-               title = 'Save GBM',
+               title = 'Save GBM model as .txt',
                filename = "",
                filetype = list(txt="txt"),
+               icon = icon('upload'),
+               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
+               viewtype = "detail"
+               ),
+             shinySaveButton(
+               id = ns('BoostaR_save_BoostaR_models'),
+               label = 'Save all BoostaR models',
+               title = 'Save all BoostaR models as .rds',
+               filename = "",
+               filetype = list(txt="rds"),
                icon = icon('upload'),
                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
                viewtype = "detail"
@@ -360,6 +370,33 @@ mod_BoostaR_navigate_server <- function(id, d, BoostaR_models, BoostaR_idx, feat
                               type = 'error',
                               inputId = "temp",
                               title = 'No model selected',
+                              btn_labels = c('OK')
+            )
+          }
+        }
+      })
+    })
+    observe({
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
+      shinyFileSave(input, 'BoostaR_save_BoostaR_models', roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$BoostaR_save_BoostaR_models)
+      isolate({
+        if (nrow(fileinfo) > 0) {
+          # leave only part of glm_model object needed for prediction
+          # otherwise file will be huge (it retains data used to fit model)
+          if(length(BoostaR_models())>0){
+            saveRDS(BoostaR_models(), file = fileinfo$datapath, compress = TRUE)
+            confirmSweetAlert(session = session,
+                              type = 'success',
+                              inputId = "temp",
+                              title = 'BoostaR models saved',
+                              btn_labels = c('OK')
+            )
+          } else {
+            confirmSweetAlert(session = session,
+                              type = 'error',
+                              inputId = "temp",
+                              title = 'No GBMs built',
                               btn_labels = c('OK')
             )
           }

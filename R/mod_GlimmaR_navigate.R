@@ -16,40 +16,6 @@ mod_GlimmaR_navigate_ui <- function(id){
         width = 4,
         h3('GlimmaR model summary')
       ),
-      # column(width = 3,
-      #        fluidRow(
-      #          column(
-      #            width = 6,
-      #            style = 'margin-right:0px; padding-right:0px',
-      #            div(
-      #              style = 'margin-bottom:-15px; margin-top:10px',
-      #              radioGroupButtons(
-      #                inputId = ns('tabulate_format'),
-      #                label = NULL,
-      #                choices = c('solo','long'),
-      #                selected = 'solo',
-      #                size = 'xs',
-      #                justified = TRUE,
-      #                )
-      #              ),
-      #            div(
-      #              style = 'margin-bottom:0px; margin-top:0px',
-      #              radioGroupButtons(
-      #                inputId = ns('tabulate_scale'),
-      #                label = NULL,
-      #                choices = c('link','response'),
-      #                selected = 'response',
-      #                size = 'xs',
-      #                justified = TRUE
-      #                )
-      #              )
-      #            ),
-      #          column(
-      #            width = 6,
-      # 
-      #            )
-      #          )
-      #        ),
       column(width = 8,
              align = 'right',
              style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
@@ -69,17 +35,22 @@ mod_GlimmaR_navigate_ui <- function(id){
                label = 'Tabulate',
                icon = icon("table")
              ),
-             # actionButton(
-             #   inputId = ns('generate_predictions'),
-             #   label = 'Predict',
-             #   icon = icon("chevron-right")
-             # ),
              shinySaveButton(
                id = ns('save_model'),
                label = 'Save GLM',
-               title = 'Save GLM model as .RDS',
+               title = 'Save GLM model as .rds',
                filename = "",
-               filetype = list(txt="RDS"),
+               filetype = list(txt="rds"),
+               icon = icon('upload'),
+               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
+               viewtype = "detail"
+             ),
+             shinySaveButton(
+               id = ns('save_GlimmaR_models'),
+               label = 'Save all GlimmaR models',
+               title = 'Save all GlimmaR models as .rds',
+               filename = "",
+               filetype = list(txt="rds"),
                icon = icon('upload'),
                style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
                viewtype = "detail"
@@ -130,10 +101,6 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     observeEvent(GlimmaR_models(), {
-      # QUESTION - this still triggers when GlimmaR_idx() is changed
-      # which is what I want to happen
-      # but why? We are inside an observeEvent
-      # or by creating output$model_summary does it remain "reactive" once created?
       output$model_summary <- renderDT({
         # model summary table
         if(length(GlimmaR_models())==0){
@@ -285,6 +252,33 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
                             title = 'GLM saved',
                             btn_labels = c('OK')
           )
+        }
+      })
+    })
+    observe({
+      volumes <- c('working directory' = getwd(), 'home' = fs::path_home())
+      shinyFileSave(input, 'save_GlimmaR_models', roots=volumes, session=session)
+      fileinfo <- parseSavePath(volumes, input$save_GlimmaR_models)
+      isolate({
+        if (nrow(fileinfo) > 0) {
+          # leave only part of glm_model object needed for prediction
+          # otherwise file will be huge (it retains data used to fit model)
+          if(length(GlimmaR_models())>0){
+            saveRDS(GlimmaR_models(), file = fileinfo$datapath, compress = TRUE)
+            confirmSweetAlert(session = session,
+                              type = 'success',
+                              inputId = "temp",
+                              title = 'GlimmaR models saved',
+                              btn_labels = c('OK')
+            )
+          } else {
+            confirmSweetAlert(session = session,
+                              type = 'error',
+                              inputId = "temp",
+                              title = 'No GLMs built',
+                              btn_labels = c('OK')
+            )
+          }
         }
       })
     })
