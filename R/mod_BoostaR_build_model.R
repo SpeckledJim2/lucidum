@@ -1486,12 +1486,21 @@ cb.print.period <- function(num_threads, n) {
   callback <- function(env = parent.frame()) {
     incProgress(0.9/n) # leave a bit for incProgresses below
     i <- env$iteration
-    setProgress(detail = paste0(detail_message, ', tree ', env$iteration))
+    setProgress(
+      detail = paste0(
+        detail_message,
+        ', tree ',
+        env$iteration,
+        ', test metric ',
+        round(env$model$eval_valid()[[1]]$value, 6)
+        )
+      )
   }
   attr(callback, 'call') <- match.call()
   attr(callback, 'name') <- 'cb.print.period'
   callback
 }
+
 BoostaR_extract_SHAP_values <- function(d, lgbm, features, sample, rows_idx){
   if(sample=='No'){
     SHAP_cols <- NULL

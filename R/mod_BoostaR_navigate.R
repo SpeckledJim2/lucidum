@@ -413,8 +413,9 @@ make_BoostaR_model_summary <- function(Bs){
     if(length(Bs)>0){
       rows <- lapply(Bs, BoostaR_model_summary_row)
       summary <- rbindlist(rows, fill = TRUE)
-      summary[, `row%` := round(`row%`,2)]
-      summary[, `col%` := round(`col%`,2)]
+      summary[, `row%` := format(round(`row%`,2), nsmall = 2)]
+      summary[, `col%` := format(round(`col%`,2), nsmall = 2)]
+      summary[, `lr` := format(round(lr,2), nsmall = 2)]
       summary
     } else {
       NULL

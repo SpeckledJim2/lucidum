@@ -97,7 +97,3 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     
 ## To be copied in the server
 # mod_BoostaR_server("BoostaR_1")
-
-add_col <- function(d, dt_update){
-  
-}
