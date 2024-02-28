@@ -6,6 +6,8 @@ uk_sf_area <- sf::st_read('data-raw/areas_MappaR.gpkg', quiet = TRUE)
 uk_sf_area$area <- as.numeric(sf::st_area(uk_sf_area))/1000000 # km^2
 area_coords <- as.data.frame(sf::st_coordinates(sf::st_centroid(uk_sf_area$geom)))
 uk_areas <- cbind(uk_sf_area, area_coords)
+uk_areas$neighbours <- sf::st_touches(uk_sf_area)
+uk_areas$neighbours <- lapply(uk_areas$neighbours, as.integer)
 uk_areas$population <- NULL; uk_areas$area <- NULL
 
 ## code to prepare `uk_sectors` dataset goes here

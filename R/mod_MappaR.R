@@ -204,7 +204,7 @@ mod_MappaR_ui <- function(id){
 mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, selected_tab, show_MappaR, filters){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    plot_postcode_area <- reactiveVal()
+    plot_postcode_area <- reactiveVal('PO')
     trigger_update <- reactiveVal(FALSE)
     output$map <- leaflet::renderLeaflet({base_map()})
     outputOptions(output, "map", suspendWhenHidden = FALSE) # ensures base map is drawn even when not visible
@@ -246,14 +246,14 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
         }
       }
     })
-    observeEvent(c(dt_update(), d(), response(), weight(), kpi_spec(), map_options()), {
+    observeEvent(c(dt_update(), d(), response(), weight(), kpi_spec(), map_options(), plot_postcode_area()), {
       trigger_update(TRUE)
     })
     observeEvent(c(trigger_update(), selected_tab()), {
       if(trigger_update()){
         # only update when MappaR tab is selected (as otherwise will redraw in background and slow up app)
         if(show_MappaR & selected_tab()=='MappaR'){
-          viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options())
+          viz_create_map(leafletProxy('map'), d(), response(), weight(), kpi_spec(), map_options(), plot_postcode_area())
           trigger_update(FALSE)
         }
       }
@@ -303,9 +303,6 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
         }
       }
     })
-    observeEvent(c(response(), weight()), {
-      
-    })
     observeEvent(filters(), {
       # filter text
       train_test_filter <- filters()$train_test_filter
@@ -335,7 +332,7 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
 #' @importFrom grDevices colorRamp rgb
 #' @importFrom stats quantile
 #'
-viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
+viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot_postcode_area){
   # check inputs are valid
   if(!is.null(d) &
      !is.null(response) &
@@ -384,6 +381,14 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
           unit_summary$unit_plot <- unit_summary[,3]/unit_summary[,2]
         }
       }
+      # filter if too many rows
+      if(nrow(unit_summary)>50000){
+        areas_to_plot <- uk_areas$PostcodeArea[unlist(uk_areas$neighbours[uk_areas$PostcodeArea==plot_postcode_area])]
+        areas_to_plot <- c(plot_postcode_area, areas_to_plot)
+        unit_summary[, PostcodeArea := substr(PostcodeUnit,1,regexpr('[0-9]', PostcodeUnit)-1)]
+        unit_summary <- unit_summary[PostcodeArea %in% areas_to_plot]
+        unit_summary[, PostcodeArea := NULL]
+      }
     }
     # clear the map
     m <- map |>
@@ -429,8 +434,13 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options){
     # add on sectors if available - sectors before areas to get polygon order correct
     label_style <- list('box-shadow' = '3px 3px rgba(0,0,0,0.25)','font-size' = '16px','border-color' = 'rgba(0,0,0,0.5)')
     if(!is.null(sector_summary)){
+      if(!is.null(unit_summary)){
+        notification_message <- paste0('Redrawing map (', format(nrow(unit_summary), big.mark = ','), ' postcode units)...')
+      } else {
+        notification_message <- 'Redrawing postcode sectors...'
+      }
       showNotification(
-        paste0('Redrawing map...'), duration = 8, type = 'warning'
+        notification_message, duration = 10, type = 'warning'
       )
       m |>
         leaflet::addMapPane('sector_polygons', zIndex = 405) %>%
