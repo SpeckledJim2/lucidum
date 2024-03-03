@@ -250,6 +250,7 @@ mod_BoostaR_build_model_ui <- function(id){
               )
             ),
             tags$head(tags$style(HTML("#BoostaR-buildBoostaR-BoostaR_additional_options {padding: 6px 3px 5px 3px;}"))),
+            tags$head(tags$style(HTML("#BoostaR-buildBoostaR-BoostaR_additional_parameters {width: 400px;}"))),
             dropdownButton(
               inputId = ns('BoostaR_additional_options'),
               right = TRUE,
@@ -258,10 +259,20 @@ mod_BoostaR_build_model_ui <- function(id){
               label = tags$img(src='www/parameters.png', height="20px", width="26px"),
               margin = "20px",
               inline = TRUE,
-              br(),
-              textAreaInput(
-                inputId = ns('BoostaR_additional_parameters'),
-                value =
+              h4('LightGBM additional parameters'),
+              aceEditor(
+                ns('BoostaR_additional_parameters'),
+                showPrintMargin = FALSE,
+                mode = "r",
+                fontSize = 14,
+                wordWrap = FALSE,
+                showLineNumbers = FALSE,
+                height = 'calc(80vh - 100px)',
+                autoScrollEditorIntoView = TRUE,
+                autoComplete = 'disabled',
+                selectionId = 'selection',
+                debounce = 10,
+                value = 
 '#poisson_max_delta_step: 0.7
 #boost_from_average: TRUE
 #min_sum_hessian_in_leaf: 0.001
@@ -326,12 +337,80 @@ mod_BoostaR_build_model_ui <- function(id){
 #reg_sqrt: FALSE
 #alpha: 0.9
 #fair_c: 1'
-                ,
-                label = 'LightGBM all parameters',
-                width = '560px',
-                height = '600px',
-                resize = 'vertical'
               )
+#               textAreaInput(
+#                 inputId = ns('BoostaR_additional_parameters'),
+#                 value =
+# '#poisson_max_delta_step: 0.7
+# #boost_from_average: TRUE
+# #min_sum_hessian_in_leaf: 0.001
+# #max_cat_threshold: 32
+# #cat_l2: 0
+# #cat_smooth: 10
+# #max_cat_to_onehot: 4
+# #objective: gamma
+# #metric: gamma
+# #deterministic: FALSE
+# #force_col_wise: FALSE
+# #force_row_wise: FALSE
+# #histogram_pool_size: -1
+# #bagging_freq: 1
+# #bagging_seed: 3
+# #feature_fraction: 1
+# #feature_fraction_bynode: 1
+# #feature_fraction_seed: 2
+# #extra_trees: FALSE
+# #extra_seed: 6
+# #early_stopping_round: 100
+# #first_metric_only: FALSE
+# #max_delta_step: 0
+# #linear_lambda: 0
+# #min_gain_to_split: 0
+# #drop_rate: 0.1
+# #max_drop: 50
+# #skip_drop: 0.5
+# #xgboost_dart_mode: FALSE
+# #uniform_drop: FALSE
+# #drop_seed: 4
+# #top_rate: 0.2
+# #other_rate: 0.1
+# #min_data_per_group: 1
+# #top_k: 20
+# #monotone_penalty: 0
+# #refit_decay_rate: 0.9
+# #cegb_tradeoff: 1
+# #cegb_penalty_split: 0
+# #cegb_penalty_feature_lazy:
+# #cegb_penalty_feature_coupled:
+# #path_smooth: 0
+# #saved_feature_importance_type: 0
+# #max_bin: 255
+# #max_bin_by_feature:
+# #min_data_in_bin: 3
+# #bin_construct_sample_cnt: 200000
+# #data_random_seed: 1
+# #is_enable_sparse: TRUE
+# #enable_bundle: TRUE
+# #use_missing: TRUE
+# #zero_as_missing: FALSE
+# #feature_pre_filter: FALSE
+# #pre_partition: FALSE
+# #two_round: FALSE
+# #header: FALSE
+# #objective_seed: 5
+# #num_class: 1
+# #is_unbalance: FALSE
+# #scale_pos_weight: 1
+# #sigmoid: 1
+# #reg_sqrt: FALSE
+# #alpha: 0.9
+# #fair_c: 1'
+#                 ,
+#                 label = 'LightGBM all parameters',
+#                 width = '560px',
+#                 height = '600px',
+#                 resize = 'vertical'
+#               )
             ),
             actionButton(
               inputId = ns("BoostaR_build_model"),
@@ -724,6 +803,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         if(!is.null(B)){
           update_GBM_parameters(session, output, B)
           output$BoostaR_features <- renderRHandsontable({rhandsontable_formatted(B$feature_table, dimensions()[2] - 200)})
+          updateAceEditor(session, editorId = 'BoostaR_additional_parameters', value = B$additional_params_ace)
         }
       }
     })
@@ -813,18 +893,17 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
       } else {
         # no error so good to build model
         # assemble constraints
-        features <- BoostaR_feature_table()[include==TRUE, feature]
-        monotonicity_constraints <- make_monotonicity_constraints(BoostaR_feature_table(), input$BoostaR_objective)
-        #feature_interaction_constraints <- make_fics(BoostaR_feature_table(), input$BoostaR_interaction_contraints)
-        
-        # NEW BIT
+        feature_table <- copy(BoostaR_feature_table())
+        setorder(feature_table, feature)
+        features <- feature_table[include==TRUE, feature]
+        monotonicity_constraints <- make_monotonicity_constraints(feature_table, input$BoostaR_objective)
         if(input$BoostaR_use_custom_interaction_constraints==TRUE){
           # extract the fics from the textAreaInput BoostaR_custom_interaction_constraints
           feature_interaction_constraints <- make_custom_fics(input$BoostaR_custom_interaction_constraints, features)
         } else {
           groups_to_constrain <- input$BoostaR_interaction_contraints
           if(!is.null(groups_to_constrain)){
-            feature_interaction_constraints <- make_fics(BoostaR_feature_table(), input$BoostaR_interaction_contraints)
+            feature_interaction_constraints <- make_fics(feature_table, input$BoostaR_interaction_contraints)
           } else {
             feature_interaction_constraints <- NULL
           }
@@ -868,6 +947,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, input$ebm_mode, BoostaR_feature_table())
             BoostaR_model$name <- model_name
             BoostaR_model$additional_params <- additional_params
+            BoostaR_model$additional_params_ace <- input$BoostaR_additional_parameters
             if(!is.null(BoostaR_model$lgbm)){
               new_list <- BoostaR_models()
               new_list[[model_name]] <- BoostaR_model

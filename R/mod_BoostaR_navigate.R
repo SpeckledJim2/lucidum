@@ -511,7 +511,7 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
       add_params$interaction_constraints <- NULL
       add_params$monotone_constraints <- NULL
       if(length(add_params)>0){
-        extra_rows <- data.table(name = names(add_params), value = add_params)
+        extra_rows <- data.table(parameter = names(add_params), value = add_params)
         x <- rbindlist(list(x, extra_rows))
       }
     }
