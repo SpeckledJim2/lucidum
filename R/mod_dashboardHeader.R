@@ -18,6 +18,12 @@ mod_dashboardHeader_ui <- function(id){
       titleWidth = 250,
       # controls placed in the header
       # Specs
+      insertDashboardHeader(
+        div(style="margin-left: 0px; margin-right: 20px; margin-top:16px; margin-bottom:-20px",
+            htmlOutput(ns('ram_used'))
+            ),
+        TRUE
+        ),
       dashboardButton(ns, 'GoTo_kpi_spec', 'kpi', 'KPI specification', 'show_DevelopaR', bs, pd),
       dashboardButton(ns, 'GoTo_feature_spec', 'features', 'Feature specification', 'show_DevelopaR', bs, pd),
       dashboardButton(ns, 'GoTo_filter_spec', 'filter', 'Filter specification', 'show_DevelopaR', bs, pd),
@@ -55,9 +61,18 @@ mod_dashboardHeader_ui <- function(id){
 #' dashboardHeader Server Functions
 #'
 #' @noRd 
-mod_dashboardHeader_server <- function(id, parent){
+mod_dashboardHeader_server <- function(id, parent, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    # RAM
+    observeEvent(dt_update(),{
+      output$ram_used <- renderUI({
+        ram_used <- gc()
+        formatted_ram <- paste('RAM used: ', sum(ram_used[,2]),'Mb')
+        p(HTML(formatted_ram), style = 'color: white')
+        })
+    })
+    
     # DevelopaR
     observeEvent(input$GoTo_kpi_spec, {
       updateTabItems(session = parent, inputId = 'tabs', selected = 'Specs')

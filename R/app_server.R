@@ -137,7 +137,7 @@ app_server <- function(input, output, session) {
   updateTabItems(session, 'tabs', golem::get_golem_options('starting_tab'))
   
   # header server
-  mod_dashboardHeader_server('header_nav_buttons', session)
+  mod_dashboardHeader_server('header_nav_buttons', session, dt_update)
   observeEvent(input$dataset, ignoreInit = TRUE, {
     if(input$dataset %not_in% c('loaded from .csv file', 'choose dataset','user supplied dataset')){
       d(setDT(get(input$dataset)))
@@ -161,7 +161,7 @@ app_server <- function(input, output, session) {
   filters <- mod_defineFilter_server("filter", d, dt_update, filter_spec)
   
   # tab servers
-  mod_DevelopaR_server('DevelopaR', d, dt_update, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions)
+  mod_DevelopaR_server('DevelopaR', d, dt_update, response, weight, kpi_spec, filter_spec, feature_spec, BoostaR_models, GlimmaR_models, BoostaR_idx, GlimmaR_idx, dimensions)
   if(golem::get_golem_options('show_DataR')){
     mod_DataR_server('DataR', d, dt_update)
   }

@@ -64,6 +64,7 @@ globalVariables(
     'long',
     'tabulated_lgbm',
     'col%',
-    'row%'
+    'row%',
+    'lr'
     )
   )
