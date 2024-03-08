@@ -32,7 +32,7 @@ mod_MappaR_ui <- function(id){
                   class = 'panel panel-default',
                   top = '25%',
                   right = '2%',
-                  width = 260,
+                  width = 250,
                   fixed=TRUE,
                   draggable = TRUE,
                   height = "auto",
@@ -75,7 +75,7 @@ mod_MappaR_ui <- function(id){
                              min = 0,
                              max = 1,
                              value = 1.00,
-                             step = 0.1,
+                             step = 0.2,
                              ticks = FALSE,
                              width = '100%'
                            ),
@@ -84,10 +84,10 @@ mod_MappaR_ui <- function(id){
                            sliderInput(
                              inputId = ns('hotspots'),
                              label = 'Hot/not-spots',
-                             min = -10,
-                             max = 10,
+                             min = -20,
+                             max = 20,
                              value = 0,
-                             step = 1,
+                             step = 5,
                              ticks = FALSE,
                              width = '100%'
                            ),
@@ -105,85 +105,64 @@ mod_MappaR_ui <- function(id){
                   ),
                   fluidRow(
                     column(
-                      width = 12,
+                      width = 5,
                       align = 'left',
-                      fluidRow(
-                        column(width = 4,
-                               spectrumInput(
-                                 inputId = ns('colour3'),
-                                 label = 'High',
-                                 choices = NULL,
-                                 selected = 'red',
-                                 flat = TRUE,
-                                 options = list(flat = 'false'),
-                                 update_on = c('dragstop'),
-                                 width = '100%'
-                               )
-                        ),
-                        column(width = 4,
-                               spectrumInput(
-                                 inputId = ns('colour2'),
-                                 label = 'Middle',
-                                 choices = NULL,
-                                 selected = 'white',
-                                 flat = TRUE,
-                                 options = list(flat = 'false'),
-                                 update_on = c('dragstop'),
-                                 width = '100%'
-                               )
-                        ),
-                        column(width = 4,
-                               spectrumInput(
-                                 inputId = ns('colour1'),
-                                 label = 'Low',
-                                 choices = NULL,
-                                 selected = 'green',
-                                 flat = TRUE,
-                                 options = list(flat = 'false'),
-                                 update_on = c('dragstop'),
-                                 width = '100%'
-                               )
+                      radioGroupButtons(
+                        inputId = ns('palettes'),
+                        label = NULL,
+                        justified = TRUE,
+                        size = 'xs',
+                        choiceValues = c('Divergent','Spectral','Viridis'),
+                        choiceNames = c(
+                          tagList(tags$img(src='www/divergent.png', height="18px", width="18px",'')),
+                          tagList(tags$img(src='www/spectral.png', height="18px", width="18px",'')),
+                          tagList(tags$img(src='www/viridis.png', height="18px", width="18px",''))
+                          ),
+                        selected = 'Divergent'
                         )
                       ),
+                    column(
+                      width = 7,
+                      align = 'right',
+                      radioGroupButtons(
+                        inputId = ns('resolution'),
+                        label = NULL,
+                        justified = TRUE,
+                        size = 'xs',
+                        choices = c('Area','Sector','Unit'),
+                        selected = 'Area'
+                        )
+                      )
+                    ),
                       fluidRow(
-                        style = 'margin-top: -10px; padding-top: -10px; margin-bottom: -10px; padding-bottom: -10px',
                         column(
-                          width = 12,
+                          width = 5,
+                          align = 'left',
                           radioGroupButtons(
-                            inputId = ns('palettes'),
+                            inputId = ns('dark_mode'),
                             label = NULL,
                             justified = TRUE,
                             size = 'xs',
-                            choiceValues = c('Divergent','Spectral','Viridis'),
-                            choiceNames = c(
-                              tagList(tags$img(src='www/divergent.png', height="15px", width="15px",' Divergent')),
-                              tagList(tags$img(src='www/spectral.png', height="15px", width="15px",' Spectral')),
-                              tagList(tags$img(src='www/viridis.png', height="15px", width="15px",' Viridis'))
-                            ),
-                            selected = 'Divergent'
-                          )
-                        )
-                      ),
-                      fluidRow(
-                        style = 'margin-top: -10px; padding-top: -10px; margin-bottom: -10px; padding-bottom: -10px',
+                            choices = c('Light','Dark'),
+                            selected = 'Dark'
+                            )
+                          ),
                         column(
-                          width = 4,
-                          align = 'right',
-                          div(
-                            checkboxInput(inputId = ns('dark_mode'), label = "Dark", value = TRUE),
-                            style = 'margin-top: -15px; padding-top: -10px;'
-                          )
-                        ),
-                        column(
-                          width = 8,
+                          width = 7,
                           align = 'center',
-                          uiOutput(ns('sectors_ui'))
+                          radioGroupButtons(
+                            inputId = ns('max_units'),
+                            label = NULL,
+                            justified = TRUE,
+                            size = 'xs',
+                            choiceValues = c(50000,250000),
+                            choiceNames = c('50k','250k'),
+                            selected = 50000
+                            )
+                          )
                         )
-                      )
-                    )
                   )
     )
-  )
 }
     
 #' MappaR Server Function
@@ -214,9 +193,9 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
                    input$opacity,
                    input$hotspots,
                    input$label_size,
-                   input$colour1,
-                   input$colour2,
-                   input$colour3,
+                   input$palettes,
+                   input$resolution,
+                   input$max_units,
                    input$sectors), {
       map_options(
         list(
@@ -224,27 +203,12 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
           opacity = input$opacity,
           hotspots = input$hotspots,
           label_size = input$label_size,
-          colour1 = input$colour1,
-          colour2 = input$colour2,
-          colour3 = input$colour3,
-          sectors = ifelse(is.null(input$sectors), FALSE, input$sectors),
+          palette = input$palettes,
+          resolution = input$resolution,
+          max_units = input$max_units,
           label_size = input$label_size
         )
       )
-    })
-    observeEvent(d(), {
-      if(!is.null(d())){
-        if('PostcodeSector' %in% names(d())){
-          output$sectors_ui <- renderUI({
-            div(
-              checkboxInput(inputId = ns('sectors'), label = 'Sectors', value = FALSE),
-              style = 'margin-top: -15px; padding-top: -10px;'
-            )
-          })
-        } else {
-          output$sectors_ui <- renderUI({})
-        }
-      }
     })
     observeEvent(c(dt_update(), d(), response(), weight(), kpi_spec(), map_options(), plot_postcode_area()), {
       trigger_update(TRUE)
@@ -259,30 +223,11 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
       }
     })
     observeEvent(input$dark_mode, {
-      if(input$dark_mode){
+      if(input$dark_mode=='Dark'){
         session$sendCustomMessage("background-color", "#242d31")
       } else {
         session$sendCustomMessage("background-color", "#FFFFFF")
       }
-    })
-    observeEvent(input$palettes, {
-      p <- input$palettes
-      if(p=='Spectral'){
-        updateSpectrumInput(session, 'colour1', selected = 'blue')
-        updateSpectrumInput(session, 'colour2', selected = 'yellow')
-        updateSpectrumInput(session, 'colour3', selected = 'red')
-      } else if(p=='Divergent') {
-        updateSpectrumInput(session, 'colour1', selected = 'green')
-        updateSpectrumInput(session, 'colour2', selected = 'white')
-        updateSpectrumInput(session, 'colour3', selected = 'red')
-      } else if(p=='Viridis'){
-        updateSpectrumInput(session, 'colour1', selected = 'purple')
-        updateSpectrumInput(session, 'colour2', selected = 'green')
-        updateSpectrumInput(session, 'colour3', selected = 'yellow')
-      }
-    })
-    observeEvent(c(input$colour1, input$colour2, input$colour3), ignoreInit = TRUE, {
-      updateRadioGroupButtons(session, inputId = 'palettes', selected = character(0))
     })
     observeEvent(input$postcode, ignoreInit = TRUE,{
       if(input$postcode!=''){
@@ -358,8 +303,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot
       }
     }
     # summarise data by PostcodeSector and merge onto sector shapefile
-    if(is.null(map_options$sectors)) map_options$sectors <- FALSE
-    if(map_options$sectors & 'PostcodeSector' %in% names(d)){
+    if(map_options$resolution %in% c('Sector','Unit') & 'PostcodeSector' %in% names(d)){
       sector_summary <- postcode_summary(d, response, weight, 'PostcodeSector')
       if(!is.null(sector_summary)){
         setDF(sector_summary)
@@ -372,7 +316,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot
       }
     }
     # summarise data by PostcodeUnit if lat and long present
-    if(map_options$sectors & 'PostcodeUnit' %in% names(d) & 'lat' %in% names(d) & 'long' %in% names(d)){
+    if(map_options$resolution == 'Unit'  & 'PostcodeUnit' %in% names(d) & 'lat' %in% names(d) & 'long' %in% names(d)){
       unit_summary <- postcode_summary(d, response, weight, 'PostcodeUnit')
       if(!is.null(unit_summary)){
         if(weight=='no weights'){
@@ -381,12 +325,21 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot
           unit_summary$unit_plot <- unit_summary[,3]/unit_summary[,2]
         }
       }
+      # remove rows with NA or NaN
+      unit_summary <- unit_summary[!is.nan(lat)]
+      unit_summary <- unit_summary[!is.na(lat)]
       # filter if too many rows
-      if(nrow(unit_summary)>50000){
+      if(nrow(unit_summary)>as.numeric(map_options$max_units)){
+        # retain the postcode area and it's neighbours
         areas_to_plot <- uk_areas$PostcodeArea[unlist(uk_areas$neighbours[uk_areas$PostcodeArea==plot_postcode_area])]
         areas_to_plot <- c(plot_postcode_area, areas_to_plot)
         unit_summary[, PostcodeArea := substr(PostcodeUnit,1,regexpr('[0-9]', PostcodeUnit)-1)]
         unit_summary <- unit_summary[PostcodeArea %in% areas_to_plot]
+        if(nrow(unit_summary)>as.numeric(map_options$max_units)){
+          # still too many points
+          # retain just the postcode area
+          unit_summary <- unit_summary[PostcodeArea==plot_postcode_area]
+        }
         unit_summary[, PostcodeArea := NULL]
       }
     }
@@ -402,6 +355,20 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot
       show_area_labels <- TRUE
     }
     label_size <- ifelse(map_options$label_size==0,0,map_options$label_size+5)
+    # set colours
+    if(map_options$palette=='Spectral'){
+      map_options$colour1 = 'blue'
+      map_options$colour2 = 'yellow'
+      map_options$colour3 = 'red'
+    } else if(map_options$palette=='Divergent') {
+      map_options$colour1 = 'darkgreen'
+      map_options$colour2 = 'white'
+      map_options$colour3 = 'red'
+    } else if(map_options$palette=='Viridis'){
+      map_options$colour1 = 'purple'
+      map_options$colour2 = 'green'
+      map_options$colour3 = 'yellow'
+    }
     # area bins, labels and opacity
     if(!is.null(area_summary)){
       bins_area <- unique(stats::quantile(round(area_summary$area_plot,6), na.rm = TRUE, probs = 0:20/20))
