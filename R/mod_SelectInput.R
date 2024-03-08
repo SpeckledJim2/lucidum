@@ -106,7 +106,8 @@ selectInput_server <- function(id, d, dt_update, feature_spec, BoostaR_models, B
           input$selectChooser,
           input$selectChooserGroup,
           input$search,
-          numeric_only
+          numeric_only,
+          input$selectInput
           )
         selected <- character(0) # default
         if(!is.null(input$selectInput)){
@@ -143,7 +144,8 @@ selectInput_choices <- function(
     selectChooser,
     selectChooserGroup,
     search,
-    numeric_only
+    numeric_only,
+    current_selection
     ){
   if(!is.null(d) & !is.null(selectChooser) & !is.null(selectChooserGroup)){
     if(numeric_only){
@@ -170,7 +172,12 @@ selectInput_choices <- function(
         }
         if(!is.null(GlimmaR_idx)){
           if(GlimmaR_idx %in% names(GlimmaR_models)){
-            importance_cols_glm <- intersect(GlimmaR_models[[GlimmaR_idx]]$importances$vars$names, cols)
+            # check there are some vars (a mean only model won't contain any vars)
+            if(isTruthy(GlimmaR_models[[GlimmaR_idx]]$importances$vars)){
+              importance_cols_glm <- intersect(GlimmaR_models[[GlimmaR_idx]]$importances$vars$names, cols)
+            } else {
+              importance_cols_glm <- NULL
+            }
           }
         }
         lgbm_cols <- cols[grep('lgbm', cols)]
@@ -219,66 +226,34 @@ selectInput_choices <- function(
     # get search choices
     search_choices <- NULL
     if(!is.null(search) & search!=''){
-      choices_temp <- unlist(choices)
-      search_choices <- tryCatch({choices_temp[grepl(search, choices_temp)]}, error = function(e){e})
+      nl_cols <- remove_lucidum_cols(cols)
+      search_choices <- tryCatch({nl_cols[grepl(search, nl_cols)]}, error = function(e){e})
       search_choices <- unname(search_choices)
       if(inherits(search_choices,'simpleError')){
-        search_choices <- NULL
+        choices <- NULL
       } else if (length(search_choices)==0){
-        search_choices <- 'no match'
-      }
-    }
-    # split out search terms if search selected
-    if(selectChooserGroup=='No groups' & !is.null(search_choices)){
-      if(length(search_choices)>0){
-        search_choices <- data.table(feature = search_choices, interaction_grouping = '--- matching search ---')
-        choices_dt <- data.table(feature = unlist(choices), interaction_grouping = 'features')
-        choices_dt <- rbindlist(list(search_choices,choices_dt))
-        choices <- split(choices_dt, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
-        choices <- lapply(choices, function(d){d[[1]]}) # convert to character list
-        choices <- lapply(choices, list_if_length_one) # so selectInput choices look right
-        if(names(choices)[1]==''){
-          # selectInput lists must be named
-          names(choices)[1] <- 'No grouping'
-        }
-      }
-    }
-    # apply grouping if selected
-    if(selectChooserGroup=='Use groups' & selectChooser != 'lucidum'){
-      if(is.null(feature_spec)){
-        choices <- 'No feature specification'
+        choices <- 'no match'
       } else {
-        if(nrow(feature_spec)==0){
-          choices <- 'Empty feature specification'
-        } else {
-          choices_dt <- data.table(idx = 1:length(choices), feature = choices)
-          setkey(choices_dt, feature)
-          setkey(feature_spec, feature)
-          choices_dt <- feature_spec[, c('feature','interaction_grouping')][choices_dt][order(idx)]
-          choices_dt[is.na(interaction_grouping), interaction_grouping := 'No grouping']
-          choices_dt[, idx := NULL]
-          if(!is.null(search_choices)){
-            if(length(search_choices)>0){
-              search_choices <- data.table(feature = search_choices, interaction_grouping = '--- matching search ---')
-              choices_dt <- rbindlist(list(search_choices,choices_dt))
-            }
-          }
-          choices <- split(choices_dt, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
-          choices <- lapply(choices, function(d){d[[1]]}) # convert to character list
-          choices <- lapply(choices, list_if_length_one) # so selectInput choices look right
-          if(names(choices)[1]==''){
-            # selectInput lists must be named
-            names(choices)[1] <- 'No grouping'
-          }
-        }
+        choices <- sort(search_choices)
       }
-    } else if(selectChooserGroup=='Use groups' & selectChooser == 'lucidum') {
-      if(length(search_choices)>0){
-        new_choices <- list(search_choices)
-        if(length(unlist(new_choices))==1){
-          new_choices <- list_if_length_one(new_choices)
-        }
-        choices <- c('--- matching search ---' = new_choices, choices)
+    }
+  }
+  # split by group if selected
+  if(selectChooserGroup=='Use groups'){
+    # add on interaction groupings if not already created
+    if(selectChooser != 'lucidum'){
+      choices <- data.table(idx = 1:length(choices), feature = choices)
+      setkey(choices, feature)
+      setkey(feature_spec, feature)
+      choices <- feature_spec[, c('feature','interaction_grouping')][choices][order(idx)]
+      choices[is.na(interaction_grouping), interaction_grouping := 'No grouping']
+      choices[, idx := NULL]
+      choices <- split(choices, by = 'interaction_grouping', sorted = TRUE, keep.by = FALSE)
+      choices <- lapply(choices, function(d){d[[1]]}) # convert to character list
+      choices <- lapply(choices, list_if_length_one) # so selectInput choices look right
+      if(names(choices)[1]==''){
+        # selectInput lists must be named
+        names(choices)[1] <- 'No match'
       }
     }
   }
