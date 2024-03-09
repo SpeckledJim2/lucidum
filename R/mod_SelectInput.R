@@ -162,7 +162,7 @@ selectInput_choices <- function(
     } else if(selectChooser=='lucidum'){
       # get features
       if(length(BoostaR_models)>0 | length(GlimmaR_models)>0){
-        current_model_prediction <- intersect(cols, c('glm_prediction','lgbm_prediction','glm_tabulated_prediction','lgbm_tabulated_prediction'))
+        current_model_prediction <- intersect(cols, c('glm_prediction','glm_prediction_rate','lgbm_prediction','lgbm_prediction_rate','glm_tabulated_prediction','lgbm_tabulated_prediction'))
         importance_cols <- NULL
         importance_cols_glm <- NULL
         if(!is.null(BoostaR_idx)){
@@ -182,10 +182,10 @@ selectInput_choices <- function(
         }
         lgbm_cols <- cols[grep('lgbm', cols)]
         SHAP_cols <- cols[grep('lgbm_SHAP', cols)]
-        lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction','lgbm_tabulated_prediction'))
+        lgbm_cols <- setdiff(lgbm_cols, c(SHAP_cols, 'lgbm_prediction','lgbm_prediction_rate','lgbm_tabulated_prediction'))
         glm_cols <- cols[grep('glm', cols)]
         LP_cols <- cols[grep('glm_LP', cols)]
-        glm_cols <- setdiff(glm_cols, c(LP_cols, 'glm_prediction','glm_tabulated_prediction'))
+        glm_cols <- setdiff(glm_cols, c(LP_cols, 'glm_prediction','glm_prediction_rate','glm_tabulated_prediction'))
         all_cols <- c(current_model_prediction, importance_cols, importance_cols_glm, lgbm_cols, glm_cols, SHAP_cols, LP_cols)
         remaining_cols <- setdiff(numerical_cols(d), all_cols)
         # replace blanks

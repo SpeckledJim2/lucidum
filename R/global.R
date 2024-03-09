@@ -65,6 +65,8 @@ globalVariables(
     'tabulated_lgbm',
     'col%',
     'row%',
-    'lr'
+    'lr',
+    'glm_prediction_rate',
+    'lgbm_prediction_rate'
     )
   )

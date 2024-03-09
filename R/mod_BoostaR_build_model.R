@@ -908,7 +908,6 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             feature_interaction_constraints <- NULL
           }
         }
-        
         # assemble model parameters depending on whether it's a grid search or not
         if(input$BoostaR_grid_search=='Off'){
           main_params_combos <- setDT(extract_main_lgbm_parameters(input))
@@ -945,6 +944,12 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             params <- c(main_params_combos[i], additional_params)
             params$metric <- metric_from_objective(params$objective)
             BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, input$ebm_mode, BoostaR_feature_table())
+            # add on predictions_rate if weight has been used
+            if(weight()!='N'){
+              BoostaR_model$predictions_rate <- BoostaR_model$predictions/d()[[weight()]][BoostaR_model$pred_rows]
+            } else {
+              BoostaR_model$predictions_rate <- NULL
+            }
             BoostaR_model$name <- model_name
             BoostaR_model$additional_params <- additional_params
             BoostaR_model$additional_params_ace <- input$BoostaR_additional_parameters
@@ -1189,8 +1194,19 @@ make_BoostaR_feature_grid <- function(d, feature_spec){
   dt
 }
 remove_lucidum_cols <- function(x){
-  l_cols <- c('lgbm_prediction','lgbm_tabulated_prediction','glm_prediction','glm_tabulated_prediction','lgbm_residual','glm_residual',
-              'train_test','user_filter','total_filter')
+  l_cols <- c(
+    'lgbm_prediction',
+    'lgbm_prediction_rate',
+    'lgbm_tabulated_prediction',
+    'glm_prediction',
+    'glm_prediction_rate',
+    'glm_tabulated_prediction',
+    'lgbm_residual',
+    'glm_residual',
+    'train_test',
+    'user_filter',
+    'total_filter'
+    )
   l_contains_cols <- c('lgbm_SHAP_','glm_LP_')
   return_cols <- NULL
   if(!is.null(x)){

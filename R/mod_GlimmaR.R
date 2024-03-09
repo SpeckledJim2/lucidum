@@ -38,10 +38,11 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
       if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
         # copy model predictions to d
         g <- GlimmaR_models()[[GlimmaR_idx()]]
-        rows_idx <- g$pred_rows
-        preds <- g$predictions
         if('glm_prediction' %in% names(d())){
           d()[, glm_prediction:= NULL]
+        }
+        if('glm_prediction_rate' %in% names(d())){
+          d()[, glm_prediction_rate:= NULL]
         }
         # if there are tabulated predictions copy those
         if('glm_tabulated_prediction' %in% names(d())){
@@ -50,9 +51,13 @@ mod_GlimmaR_server <- function(id, d, dt_update, response, weight, feature_spec,
         if(!is.null(g$tabulated_predictions)){
           x <- g$tabulated_predictions$tabulated_glm
           x <- link_function(x, g$link)
-          d()[rows_idx, glm_tabulated_prediction := x]
+          d()[g$pred_rows, glm_tabulated_prediction := x]
         }
-        d()[rows_idx, glm_prediction := preds]
+        d()[g$pred_rows, glm_prediction := g$predictions]
+        if(!is.null(g$predictions_rate)){
+          d()[g$pred_rows, glm_prediction_rate := g$predictions_rate]
+        }
+        # we have updated d
         dt_update(dt_update()+1)
         # copy LP cols
         existing_LP_cols <- names(d())[grep('_LP_', names(d()))] # get rid of any existing SHAP columns

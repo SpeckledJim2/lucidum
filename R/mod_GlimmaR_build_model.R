@@ -588,8 +588,13 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                               text = fitted_glm$message,
                               btn_labels = c('OK'))
           } else {
-            # append predictions to main dataset
-            #fitted_glm[-non_zero_weight_rows] <- 0 # set predictions to zero for rows not used to build model
+            # if a weight is in use, also calculate the rate (prediction/weight)
+            if(weight!='N'){
+              fitted_glm_rate <- fitted_glm/d[[weight]][non_zero_weight_rows]
+            } else{
+              fitted_glm_rate <- NULL
+            }
+            # sum NAs in predictions (e.g. if NAs in features supplied to GLM)
             count_NAs <- sum(is.na(fitted_glm)) # in case we supplied a factor with NAs to the model
             # calculate linear predictor split by feature
             incProgress(0.1, detail = 'LP terms')
@@ -599,6 +604,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
             # return GlimmaR_model
             l <- list(time = time,
                       predictions = fitted_glm,
+                      predictions_rate = fitted_glm_rate,
                       pred_rows = non_zero_weight_rows,
                       glm = strip_glm(glm_model),
                       training_data = data_to_use,

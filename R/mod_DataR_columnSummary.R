@@ -53,14 +53,6 @@ mod_DataR_columnSummary_server <- function(id, d, dt_update){
     selected_row <- reactiveVal(NULL)
     selected_feature <- reactiveVal(NULL)
     column_summary <- reactiveVal(NULL)
-    observeEvent(c(d(), dt_update(), input$columns_to_display), {
-      #browser()
-      #col_sum <- get_column_summary(d(), sample = FALSE, columns_to_display = input$columns_to_display)
-      #column_summary(col_sum)
-      # QUESTION - why do I need an isolate here?
-      # we are inside an observeEvent
-      # output$column_summary <- renderDT({format_column_summary_DT(col_sum, isolate(selected_row()))})
-    })
     output$column_summary <- renderDT({
       dt_update()
       input$columns_to_display
