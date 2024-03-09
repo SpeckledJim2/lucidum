@@ -1542,7 +1542,6 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
     # extract the gain summarised by tree's feature combinations
     setProgress(value = 0.98, detail = paste0('best iteration: ', lgbm$best_iter, ', gain summary...'))
     gain_summary <- create_gain_summary_from_tree_summary(tree_table, lgbm$best_iter)
-    gain_summary <- gain_summary[order(-gain_summary$gain),]
   }
   # return list
   return(
@@ -1629,33 +1628,38 @@ make_evaluation_log <- function(lgbm, params){
                          metric = params$metric)
 }
 create_gain_summary_from_tree_summary <- function(trees, best_iter){
-  trees <- trees[tree_index<best_iter] # less than as trees start at zero
-  split_feature <- NULL
-  tree_index <- NULL
-  . <- NULL
-  split_gain <- NULL
-  split_features <- NULL
-  gain_proportion <- NULL
-  # get number of features in tree - i.e. interaction order
-  int_order <- trees[, sum(!is.na(split_feature)), by = tree_index]
-  max_int_depth <- max(int_order$V1)
-  # split out features
-  # sort trees by alphabetical feature
-  setorder(trees, tree_index, split_feature)
-  features <- trees[, .(split_features = toString(stats::na.omit(unique(split_feature)))), by = list(tree_index)]
-  # gain
-  gain <- trees[, list(gain = sum(split_gain, na.rm = TRUE)), by = tree_index]
-  total_gain <- sum(gain$gain)
-  # bind columns together
-  summary <- cbind(features, gain = gain[[2]])
-  # summarise by feature combinations, sorted by decreasing gain
-  summary <- summary[, list(trees = .N, gain = sum(gain)), by = split_features]
-  summary[, int_order := 1 + base_str_count(split_features, ',')]
-  summary[, gain_proportion := gain/total_gain]
-  summary[, split_features := gsub(', ',' x ', split_features)]
-  setorder(summary, -gain)
-  setcolorder(summary, c(1,4,2,3,5))
-  names(summary) <- c('tree_features','dim','trees','gain','%')
+  if(nrow(trees)>0){
+    trees <- trees[tree_index<best_iter] # less than as trees start at zero
+    split_feature <- NULL
+    tree_index <- NULL
+    . <- NULL
+    split_gain <- NULL
+    split_features <- NULL
+    gain_proportion <- NULL
+    # get number of features in tree - i.e. interaction order
+    int_order <- trees[, sum(!is.na(split_feature)), by = tree_index]
+    max_int_depth <- max(int_order$V1)
+    # split out features
+    # sort trees by alphabetical feature
+    setorder(trees, tree_index, split_feature)
+    features <- trees[, .(split_features = toString(stats::na.omit(unique(split_feature)))), by = list(tree_index)]
+    # gain
+    gain <- trees[, list(gain = sum(split_gain, na.rm = TRUE)), by = tree_index]
+    total_gain <- sum(gain$gain)
+    # bind columns together
+    summary <- cbind(features, gain = gain[[2]])
+    # summarise by feature combinations, sorted by decreasing gain
+    summary <- summary[, list(trees = .N, gain = sum(gain)), by = split_features]
+    summary[, int_order := 1 + base_str_count(split_features, ',')]
+    summary[, gain_proportion := gain/total_gain]
+    summary[, split_features := gsub(', ',' x ', split_features)]
+    setorder(summary, -gain)
+    setcolorder(summary, c(1,4,2,3,5))
+    names(summary) <- c('tree_features','dim','trees','gain','%')
+    summary <- summary[order(-summary$gain),]
+  } else {
+    summary <- NULL
+  }
   return(summary)
 }
 base_str_count <- function(strings, pattern) {
