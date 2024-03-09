@@ -129,7 +129,6 @@ mod_BoostaR_navigate_ui <- function(id){
 #' @importFrom shiny updateSliderInput
 #' @importFrom DiagrammeR renderGrViz render_graph
 #' @importFrom DT formatRound formatPercentage formatStyle
-#' @importFrom stringr str_count
 #' @importFrom lightgbm lgb.save
 #' 
 #' 
@@ -314,7 +313,7 @@ mod_BoostaR_navigate_server <- function(id, d, BoostaR_models, BoostaR_idx, feat
         b <- BoostaR_models()[[BoostaR_idx()]]
         rows_selected <- input$BoostaR_gain_summary_cell_clicked$value
         if(length(rows_selected)==1){
-          int_order <- str_count(rows_selected, ' x ') + 1
+          int_order <- base_str_count(rows_selected, ' x ') + 1
         }
         if(is.null(rows_selected)){
           confirmSweetAlert(session = session,
@@ -324,6 +323,8 @@ mod_BoostaR_navigate_server <- function(id, d, BoostaR_models, BoostaR_idx, feat
                             text = 'Please select a 1D or 2D interaction row from the gain summary table',
                             btn_labels = c('OK'))
         } else if (int_order>2) {
+          f1 <- NULL
+          f2 <- NULL
           confirmSweetAlert(session = session,
                             type = 'error',
                             inputId = "build_error",

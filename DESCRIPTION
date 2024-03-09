@@ -35,7 +35,6 @@ Imports:
     splines,
     statmod,
     stats,
-    stringr,
     tippy,
     utils
 Suggests: 

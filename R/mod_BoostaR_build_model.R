@@ -1628,7 +1628,6 @@ make_evaluation_log <- function(lgbm, params){
                          best_iteration = lgbm$best_iter,
                          metric = params$metric)
 }
-#' @importFrom stringr str_count
 create_gain_summary_from_tree_summary <- function(trees, best_iter){
   trees <- trees[tree_index<best_iter] # less than as trees start at zero
   split_feature <- NULL
@@ -1651,13 +1650,18 @@ create_gain_summary_from_tree_summary <- function(trees, best_iter){
   summary <- cbind(features, gain = gain[[2]])
   # summarise by feature combinations, sorted by decreasing gain
   summary <- summary[, list(trees = .N, gain = sum(gain)), by = split_features]
-  summary[, int_order := 1 + str_count(split_features, ',')]
+  summary[, int_order := 1 + base_str_count(split_features, ',')]
   summary[, gain_proportion := gain/total_gain]
   summary[, split_features := gsub(', ',' x ', split_features)]
   setorder(summary, -gain)
   setcolorder(summary, c(1,4,2,3,5))
   names(summary) <- c('tree_features','dim','trees','gain','%')
   return(summary)
+}
+base_str_count <- function(strings, pattern) {
+  sapply(strings, function(string) {
+    sum(gregexpr(pattern, string, fixed = TRUE)[[1]] > 0)
+  })
 }
 metric_from_objective <- function(x){
   # define the objective, metric and initial score
