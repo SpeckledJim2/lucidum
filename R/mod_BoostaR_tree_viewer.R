@@ -104,11 +104,13 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
     # QUESTION - same again, better to put above in observeEvent?
     observeEvent(c(BoostaR_models(), BoostaR_idx(), input$BoostaR_tree_selector), {
       if(length(BoostaR_models())>0){
-        updateSliderInput(
-          session,
-          inputId = 'BoostaR_tree_selector',
-          max = max(BoostaR_models()[[BoostaR_idx()]]$tree_table$tree_index, na.rm = TRUE)
-        )
+        if(!is.null(BoostaR_idx())){
+          updateSliderInput(
+            session,
+            inputId = 'BoostaR_tree_selector',
+            max = max(BoostaR_models()[[BoostaR_idx()]]$tree_table$tree_index, na.rm = TRUE)
+          )
+        }
       }
       output$BoostaR_tree_summary <- DT::renderDT({
         # model summary table
