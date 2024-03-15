@@ -303,14 +303,7 @@ mod_BoostaR_build_model_ui <- function(id){
 #top_rate: 0.2
 #other_rate: 0.1
 
-### DART
-#max_drop: 50
-#skip_drop: 0.5
-#xgboost_dart_mode: 0
-#uniform_drop: 0
-
 ### other
-#boosting: gbdt
 #feature_fraction_bynode: 1
 #extra_trees: FALSE
 #min_gain_to_split: 0
@@ -1461,6 +1454,12 @@ build_lgbm <- function(lgb_dat, params, offset, SHAP_sample, ebm_mode, feature_t
       predictions <- 1/(1+exp(-predictions))
     }
     setProgress(value = 0.92, detail = paste0('best iteration: ', lgbm$best_iter, ', SHAP values...'))
+    if(!is.null(params$linear_tree)){
+      if(params$linear_tree=='TRUE'){
+        # SHAP values not available for linear trees
+        SHAP_sample <- 'No'
+      }
+    }
     SHAP_cols <- BoostaR_extract_SHAP_values(lgb_dat$data, lgbm, lgb_dat$features, SHAP_sample, lgb_dat$rows_idx)
     SHAP_run_time <- Sys.time() - start_time
     SHAP_rows <- SHAP_cols[['idx']]
