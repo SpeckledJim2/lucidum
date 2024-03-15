@@ -272,145 +272,77 @@ mod_BoostaR_build_model_ui <- function(id){
                 autoComplete = 'disabled',
                 selectionId = 'selection',
                 debounce = 10,
-                value = 
-'#poisson_max_delta_step: 0.7
-#boost_from_average: TRUE
-#min_sum_hessian_in_leaf: 0.001
-#max_cat_threshold: 32
-#cat_l2: 0
-#cat_smooth: 10
-#max_cat_to_onehot: 4
-#objective: gamma
-#metric: gamma
-#deterministic: FALSE
-#force_col_wise: FALSE
-#force_row_wise: FALSE
-#histogram_pool_size: -1
-#bagging_freq: 1
-#bagging_seed: 3
-#feature_fraction: 1
-#feature_fraction_bynode: 1
+                value =
+'### seeds
+#seed: 0
+#data_random_seed: 1
 #feature_fraction_seed: 2
-#extra_trees: FALSE
-#extra_seed: 6
-#early_stopping_round: 100
-#first_metric_only: FALSE
-#max_delta_step: 0
-#linear_lambda: 0
-#min_gain_to_split: 0
-#drop_rate: 0.1
-#max_drop: 50
-#skip_drop: 0.5
-#xgboost_dart_mode: FALSE
-#uniform_drop: FALSE
+#bagging_seed: 3
 #drop_seed: 4
+#objective_seed: 5
+#extra_seed: 6
+
+### regularisation
+#lambda_l1: 0
+#lambda_l2: 0
+#min_sum_hessian_in_leaf: 0.001
+#max_delta_step: 0
+#path_smooth: 0
+#cat_l2: 10
+#cat_smooth: 10
+
+### only used with binary objective
+#pos_bagging_fraction: 1
+#neg_bagging_fraction: 1
+
+### linear tree paramters
+#linear_tree: FALSE
+#linear_lambda: 0
+
+### goss sample rates
 #top_rate: 0.2
 #other_rate: 0.1
-#min_data_per_group: 1
+
+### DART
+#max_drop: 50
+#skip_drop: 0.5
+#xgboost_dart_mode: 0
+#uniform_drop: 0
+
+### other
+#boosting: gbdt
+#feature_fraction_bynode: 1
+#extra_trees: FALSE
+#min_gain_to_split: 0
+#drop_rate: 0.1
+#min_data_per_group: 100
+#max_cat_threshold: 32
+#max_cat_to_onehot: 4
 #top_k: 20
 #monotone_penalty: 0
-#refit_decay_rate: 0.9
-#cegb_tradeoff: 1
-#cegb_penalty_split: 0
-#cegb_penalty_feature_lazy:
-#cegb_penalty_feature_coupled:
-#path_smooth: 0
-#saved_feature_importance_type: 0
+#use_quantized_grad: 0
+#num_grad_quant_bins: 4
+#quant_train_renew_leaf: 0
+#stochastic_rounding: 1
 #max_bin: 255
-#max_bin_by_feature:
 #min_data_in_bin: 3
 #bin_construct_sample_cnt: 200000
-#data_random_seed: 1
-#is_enable_sparse: TRUE
-#enable_bundle: TRUE
-#use_missing: TRUE
-#zero_as_missing: FALSE
-#feature_pre_filter: FALSE
-#pre_partition: FALSE
-#two_round: FALSE
-#header: FALSE
-#objective_seed: 5
+#is_enable_sparse: 1
+#enable_bundle: 1
+#use_missing: 1
+#zero_as_missing: 0
+#feature_pre_filter: TRUE
+#pre_partition: 0
 #num_class: 1
-#is_unbalance: FALSE
+#is_unbalance: 0
 #scale_pos_weight: 1
 #sigmoid: 1
+#boost_from_average: TRUE
 #reg_sqrt: FALSE
 #alpha: 0.9
-#fair_c: 1'
+#fair_c: 1
+#poisson_max_delta_step: 0.7'
               )
-#               textAreaInput(
-#                 inputId = ns('BoostaR_additional_parameters'),
-#                 value =
-# '#poisson_max_delta_step: 0.7
-# #boost_from_average: TRUE
-# #min_sum_hessian_in_leaf: 0.001
-# #max_cat_threshold: 32
-# #cat_l2: 0
-# #cat_smooth: 10
-# #max_cat_to_onehot: 4
-# #objective: gamma
-# #metric: gamma
-# #deterministic: FALSE
-# #force_col_wise: FALSE
-# #force_row_wise: FALSE
-# #histogram_pool_size: -1
-# #bagging_freq: 1
-# #bagging_seed: 3
-# #feature_fraction: 1
-# #feature_fraction_bynode: 1
-# #feature_fraction_seed: 2
-# #extra_trees: FALSE
-# #extra_seed: 6
-# #early_stopping_round: 100
-# #first_metric_only: FALSE
-# #max_delta_step: 0
-# #linear_lambda: 0
-# #min_gain_to_split: 0
-# #drop_rate: 0.1
-# #max_drop: 50
-# #skip_drop: 0.5
-# #xgboost_dart_mode: FALSE
-# #uniform_drop: FALSE
-# #drop_seed: 4
-# #top_rate: 0.2
-# #other_rate: 0.1
-# #min_data_per_group: 1
-# #top_k: 20
-# #monotone_penalty: 0
-# #refit_decay_rate: 0.9
-# #cegb_tradeoff: 1
-# #cegb_penalty_split: 0
-# #cegb_penalty_feature_lazy:
-# #cegb_penalty_feature_coupled:
-# #path_smooth: 0
-# #saved_feature_importance_type: 0
-# #max_bin: 255
-# #max_bin_by_feature:
-# #min_data_in_bin: 3
-# #bin_construct_sample_cnt: 200000
-# #data_random_seed: 1
-# #is_enable_sparse: TRUE
-# #enable_bundle: TRUE
-# #use_missing: TRUE
-# #zero_as_missing: FALSE
-# #feature_pre_filter: FALSE
-# #pre_partition: FALSE
-# #two_round: FALSE
-# #header: FALSE
-# #objective_seed: 5
-# #num_class: 1
-# #is_unbalance: FALSE
-# #scale_pos_weight: 1
-# #sigmoid: 1
-# #reg_sqrt: FALSE
-# #alpha: 0.9
-# #fair_c: 1'
-#                 ,
-#                 label = 'LightGBM all parameters',
-#                 width = '560px',
-#                 height = '600px',
-#                 resize = 'vertical'
-#               )
             ),
             actionButton(
               inputId = ns("BoostaR_build_model"),
@@ -884,7 +816,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         d(),
         response(),
         weight(),
-        input$BoostaR_initial_score,
+        input,
         BoostaR_feature_table(),
         input$BoostaR_objective
        )
@@ -1235,18 +1167,18 @@ rhandsontable_formatted <- function(dt, height){
     hot_col(c('feature','gain'), readOnly = TRUE) %>%
     hot_cols(manualColumnResize = TRUE)
 }
-check_model_features_and_parameters <- function(d, response, weight, init_score, feature_table, objective){
+check_model_features_and_parameters <- function(d, response, weight, input, feature_table, objective){
   # check that the objective is consistent with the response and weight
   # check monotonicity constraints have only been applied to numerical features
   cols <- names(d)
   features <- feature_table[include==TRUE,feature]
   check <- 'ok'
-  # quick checks
+  # checks
   if(response %not_in% names(d)){
     check <- 'Response not found in dataset'
   } else if (weight %not_in% c('N',cols)){
     check <- 'Weight not found in dataset'
-  } else if (init_score %not_in% c('no offset', cols)){
+  } else if (input$BoostaR_initial_score %not_in% c('no offset', cols)){
     check <- 'Initial score not found in dataset'
   } else if ('train_test' %not_in% cols){
     check <- 'train_test column not found in dataset'
@@ -1297,6 +1229,10 @@ check_model_features_and_parameters <- function(d, response, weight, init_score,
     if(any(mono_features %in% non_numeric_cols)){
       check <- 'monotonicity applied to non-numeric feature'
     }
+  }
+  # if GOSS selected, can't use row sampling
+  if(check=='ok' & input$BoostaR_boosting=='goss' & input$BoostaR_row_sample_rate<1){
+    check <- 'row sampling not compatible with goss'
   }
   check
 }
