@@ -1224,7 +1224,7 @@ check_model_features_and_parameters <- function(d, response, weight, input, feat
     }
   }
   # if GOSS selected, can't use row sampling
-  if(check=='ok' & input$BoostaR_boosting=='goss' & input$BoostaR_row_sample_rate<1){
+  if(check=='ok' & input$BoostaR_boosting=='goss' & any(input$BoostaR_row_sample_rate<1)){
     check <- 'row sampling not compatible with goss'
   }
   check
