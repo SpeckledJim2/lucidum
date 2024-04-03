@@ -174,15 +174,32 @@ app_server <- function(input, output, session) {
   observeEvent(BoostaR_idx(), {
     if(!is.null(BoostaR_models()) & !is.null(BoostaR_idx())){
       b <- BoostaR_models()[[BoostaR_idx()]]
+      # following lines with dt_update
+      # used within ChartaR to ensure chart only updates
+      # once when model is changed
+      if(!is.null(new_response()) & !is.null(b)){
+        if(new_response()!=b$response){dt_update(-1)}
+      }
+      if(!is.null(new_weight()) & !is.null(b)){
+        if(new_weight()!=b$weight){dt_update(-1)}
+      }
       new_response(b$response)
       new_weight(b$weight)
     }
   })
-  
   # update response and weight when GlimmaR model is changed
   observeEvent(GlimmaR_idx(), {
     if(!is.null(GlimmaR_models()) & !is.null(GlimmaR_idx())){
       g <- GlimmaR_models()[[GlimmaR_idx()]]
+      # following lines with dt_update
+      # used within ChartaR to ensure chart only updates
+      # once when model is changed
+      if(!is.null(new_response()) & !is.null(g)){
+        if(new_response()!=g$response){dt_update(-1)}
+      }
+      if(!is.null(new_weight()) & !is.null(g)){
+        if(new_weight()!=g$weight){dt_update(-1)}
+      }
       new_response(g$response)
       new_weight(g$weight)
     }

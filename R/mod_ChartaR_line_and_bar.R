@@ -138,7 +138,35 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
     observeEvent(banding_new(), {
       x_col_and_banding(list(x_col = x_col_and_banding()$x_col, banding = banding_new()))
     })
-    observeEvent(c(dt_update(), response(), weight(), x_col_and_banding(), add_cols(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
+    observeEvent(dt_update(), {
+      if(!is.null(BoostaR_idx())){
+        gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
+      }
+      if(!is.null(GlimmaR_idx())){
+        glm_link <- GlimmaR_models()[[GlimmaR_idx()]]$link
+      }
+      if(dt_update()>-1){
+        data_summary(
+          line_and_bar_summary(
+            d(),
+            response(),
+            weight(),
+            x_col_and_banding()$x_col,
+            add_cols(),
+            x_col_and_banding()$banding,
+            input$group_low_exposure,
+            input$sort,
+            input$show_partial_dependencies,
+            input$sigma_bars,
+            input$response_transform,
+            kpi_spec(),
+            feature_spec(),
+            gbm_link,
+            glm_link)
+        )
+      }
+    })
+    observeEvent(c(response(), weight(), x_col_and_banding(), add_cols(), kpi_spec(), feature_spec(), input$group_low_exposure, input$show_partial_dependencies, input$sigma_bars, input$response_transform, input$sort), {
       if(!is.null(BoostaR_idx())){
         gbm_link <- BoostaR_models()[[BoostaR_idx()]]$link
       }
@@ -162,14 +190,14 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
           feature_spec(),
           gbm_link,
           glm_link)
-        )
+      )
     })
     observeEvent(data_summary(), {
       output$one_way_table <- DT::renderDT({
         format_table_DT(
           data_summary(),
-          response(),
-          weight(),
+          isolate(response()),
+          isolate(weight()),
           kpi_spec(),
           feature_spec(),
           input$response_transform
@@ -178,8 +206,8 @@ mod_ChartaR_line_and_bar_server <- function(id, d, dt_update, response, weight, 
       output$chart <- renderPlotly({
         format_plotly(
           data_summary(),
-          response(),
-          weight(),
+          isolate(response()),
+          isolate(weight()),
           input$show_labels,
           input$show_response,
           input$sigma_bars,
@@ -693,7 +721,9 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
       config(displayModeBar = FALSE) |>
       layout(font=list(family = 'Helvetica Neue'), title = list(text = 'Too many rows (>10,000) to display - view table instead',yref = "paper", y = 0.5))
   } else {
-    p <- plot_ly()
+    # modify the plotly image export to same dimensions as on-screen plot
+    # scale factor 3 for sharper image
+    p <- plot_ly() |> config(toImageButtonOptions = list(scale = 3, height=NULL, width=NULL))
     p <- p |> layout(font=list(family = 'Helvetica Neue'))
     # make the first column character
     dt[[1]] <- as.character(dt[[1]])

@@ -210,7 +210,16 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
         )
       )
     })
-    observeEvent(c(dt_update(), d(), response(), weight(), kpi_spec(), map_options(), plot_postcode_area()), {
+    observeEvent(dt_update(), {
+      # don't trigger update if dt_update is -1
+      # this happens when selected model has been changed
+      # and the response and/or weight are changing
+      # and hence the following observeEvent will trigger anyway
+      if(dt_update()>-1){
+        trigger_update(TRUE)
+      }
+    })
+    observeEvent(c(d(), response(), weight(), kpi_spec(), map_options(), plot_postcode_area()), {
       trigger_update(TRUE)
     })
     observeEvent(c(trigger_update(), selected_tab()), {
