@@ -115,7 +115,7 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
           DT::datatable(rownames= FALSE,
                         extensions = 'Buttons',
                         selection=list(mode="multiple", target="row"),
-                        options = list(pageLength = nrow(dt),
+                        options = list(pageLength = nrow(model_summary),
                                        #initComplete = JS("function(settings, json) {$(this.api().table().header()).css({'font-size' : '12px'});}"),
                                        dom = 'Bfrt',
                                        scrollX = T,
