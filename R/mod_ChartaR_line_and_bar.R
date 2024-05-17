@@ -777,14 +777,14 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     yform2$overlaying <- 'y'
     yform2$side <- 'left'
     if(show_response=='Show'){
-      yform2$range <- return_y_axis_limits(as.matrix(dt[, first_line_col:last_ex_sigma]))
+      yform2$range <- return_y_axis_limits(as.matrix(dt[, first_line_col:ncol(dt)]), sigma_col)
     } else if (show_response=='Hide'){
       if(ncol(dt)==last_line_col){
         col <- first_line_col
       } else {
         col <- last_line_col+1
       }
-      yform2$range <- return_y_axis_limits(as.matrix(dt[, col:ncol(dt)]))
+      yform2$range <- return_y_axis_limits(as.matrix(dt[, col:ncol(dt)]), sigma_col)
     }
     yform2$showgrid <- TRUE
     yform2$title <- ''
@@ -961,9 +961,27 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
   p
 }
 
-return_y_axis_limits <- function(y){
+return_y_axis_limits <- function(y, sigma_col){
   # return nicer limits than plotly defaults
+  pre_error_min <- NA
+  if(sigma_col){
+    # last column is the sigma values
+    # last but one is expected
+    # remove sigma col
+    # create sigma col with expected - sigma
+    # and an additional col with expected + sigma
+    sigmas <- y[,ncol(y)]
+    pre_error_min <- min(y[is.finite(y[,1:(ncol(y)-1)])], na.rm = TRUE)
+    y <- cbind(y[,-ncol(y)], y[,ncol(y)-1]+sigmas, y[,ncol(y)-1]-sigmas)
+  }
+  # plot minimum
   ymin <- min(y[is.finite(y)], na.rm = TRUE)
+  if(!is.na(pre_error_min)){
+    if(pre_error_min>=0){
+      ymin <- max(0, ymin)
+    }
+  }
+  # plot maximum
   ymax <- max(y[is.finite(y)], na.rm = TRUE)
   range <- ymax - ymin
   ymin_plot <- ymin - range * 0.05
