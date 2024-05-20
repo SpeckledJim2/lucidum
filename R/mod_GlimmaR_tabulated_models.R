@@ -19,8 +19,8 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
             h3('Tabulations')
           )
         ),
-        selectInput(inputId = ns('model_chooser'), label = 'Select tabulated model', choices = NULL, size = 10, selectize = FALSE),
-        selectInput(inputId = ns('table_chooser'), label = 'Select table', choices = NULL, size = 25, selectize = FALSE),
+        selectInput(inputId = ns('model_chooser'), label = 'Select tabulated model', choices = NULL, size = 12, selectize = FALSE, multiple = TRUE),
+        selectInput(inputId = ns('table_chooser'), label = 'Select table', choices = NULL, size = 20, selectize = FALSE),
         htmlOutput(ns('table_min')),
         htmlOutput(ns('table_max')),
         htmlOutput(ns('table_span'))
@@ -134,7 +134,7 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
       if(length(tabulated_models)>0){
         selected <- tabulated_models[1]
         if(!is.null(input$model_chooser)){
-          if(input$model_chooser %in% tabulated_models){
+          if(all(input$model_chooser %in% tabulated_models)){
             selected <- input$model_chooser
           }
         }
@@ -145,11 +145,21 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
       # update the table_chooser selectInput depending on which model is selected
       # get the selectInput choices
       curr_selection <- input$table_chooser
-      if(input$model_chooser %in% names(GlimmaR_models())){
-        choices <- model_table_list(GlimmaR_models()[[input$model_chooser]]$tabulations)
-      } else if (input$model_chooser %in% names(BoostaR_models())){
-        choices <- model_table_list(BoostaR_models()[[input$model_chooser]]$tabulations)
+      choices_superset <- vector("list", length = length(input$model_chooser))
+      i <- 1
+      for(model in input$model_chooser){
+        if(model %in% names(GlimmaR_models())){
+          choices <- model_table_list(GlimmaR_models()[[model]]$tabulations)
+        } else if (model %in% names(BoostaR_models())){
+          choices <- model_table_list(BoostaR_models()[[model]]$tabulations)
+        }
+        choices_superset[[i]] <- choices
+        i <- i + 1
       }
+      if(length(choices_superset)>1){
+        choices <- sort(unique(unlist(choices_superset)))
+      }
+
       # decide what is selected
       if(length(curr_selection)==0){
         selected <- choices[1]
@@ -162,12 +172,19 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
       }
       updateSelectInput(session, inputId = 'table_chooser', choices = choices, selected = selected)
     })
-    observeEvent(input$table_chooser, ignoreInit = TRUE, {
+    observeEvent(c(input$model_chooser, input$table_chooser), ignoreInit = TRUE, {
       # update the crosstab selectInput
       if(is.null(input$table_chooser)){
         choices <- c('no crosstab')
       } else {
         vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
+        # if multiple models selected, include them in vars
+        # so we can view multiple models' tabulations side by side
+        if(length(input$model_chooser)>1){
+          # include the model in the variable list
+          # so can be selected via crosstab
+          vars <- c('model', vars)
+        }
         if(length(vars)>1){
           choices <- c('no crosstab', setdiff(vars, 'base'))
         } else {
@@ -208,55 +225,96 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
     output$tabulated_model <- renderDT({
       if(!is.null(input$model_chooser)){
         vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
-        if(input$model_chooser %in% names(GlimmaR_models())){
-          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
-          type <- 'glm'
-        } else if (input$model_chooser %in% names(BoostaR_models())){
-          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
-          type <- 'lgbm'
+        tabulations <- vector("list", length = length(input$model_chooser))
+        i <- 1
+        for(model in input$model_chooser){
+          if(model %in% names(GlimmaR_models())){
+            tabulation <- GlimmaR_models()[[model]]$tabulations[[input$table_chooser]]
+            type <- 'glm'
+          } else if (model %in% names(BoostaR_models())){
+            tabulation <- BoostaR_models()[[model]]$tabulations[[input$table_chooser]]
+            type <- 'lgbm'
+          }
+          # if multiple models selected, drop terms
+          # add column to denote model
+          if(length(input$model_chooser)>1 & !is.null(tabulation)){
+            if(vars[1]=='base'){
+              # do nothing
+            } else {
+              # keep the cols containing vars and the last column
+              # i.e. leave out the terms columns
+              keep_idx <- c(1:length(vars), ncol(tabulation))
+              keep_cols <- names(tabulation)[keep_idx]
+              tabulation <- tabulation[, ..keep_cols]
+            }
+            # create model name column in first column
+            tabulation[, model := model]
+            setcolorder(tabulation, 'model')
+            setnames(tabulation, ncol(tabulation), 'tabulated_model')
+          }
+          tabulations[[i]] <- tabulation
+          i <- i + 1
+        }
+        if(length(tabulations)==1){
+          tabulation <- tabulations[[1]]
+        } else {
+          tabulation <- rbindlist(tabulations)
+        }
+        if(length(input$model_chooser)>1){
+          vars <- c('model', vars)
+          type <- 'multiple_models'
         }
         if(input$crosstab %in% c('no crosstab', vars)){
-          GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table, type)
+          GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table, input$model_chooser, type)
         }
       }
     })
     output$table_min <- renderUI({
       # render the smallest value in the table
       if(!is.null(input$model_chooser)){
-        if(input$model_chooser %in% names(GlimmaR_models())){
-          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
-        } else if (input$model_chooser %in% names(BoostaR_models())){
-          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        # only show if a single model is selected
+        if(length(input$model_chooser)==1){
+          if(input$model_chooser %in% names(GlimmaR_models())){
+            tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          } else if (input$model_chooser %in% names(BoostaR_models())){
+            tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          }
+          value <- table_metric(tabulation, input$transform, 'min')
+          text <- paste0('Table min: ', value)
+          p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
         }
-        value <- table_metric(tabulation, input$transform, 'min')
-        text <- paste0('Table min: ', value)
-        p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
       }
     })
     output$table_max <- renderUI({
       # render the largest value in the table
       if(!is.null(input$model_chooser)){
-        if(input$model_chooser %in% names(GlimmaR_models())){
-          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
-        } else if (input$model_chooser %in% names(BoostaR_models())){
-          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        # only show if a single model is selected
+        if(length(input$model_chooser)==1){
+          if(input$model_chooser %in% names(GlimmaR_models())){
+            tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          } else if (input$model_chooser %in% names(BoostaR_models())){
+            tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          }
+          value <- table_metric(tabulation, input$transform, 'max')
+          text <- paste0('Table max: ', value)
+          p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
         }
-        value <- table_metric(tabulation, input$transform, 'max')
-        text <- paste0('Table max: ', value)
-        p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
       }
     })
     output$table_span <- renderUI({
       # render the largest value in the table
       if(!is.null(input$model_chooser)){
-        if(input$model_chooser %in% names(GlimmaR_models())){
-          tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
-        } else if (input$model_chooser %in% names(BoostaR_models())){
-          tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+        # only show if a single model is selected
+        if(length(input$model_chooser)==1){
+          if(input$model_chooser %in% names(GlimmaR_models())){
+            tabulation <- GlimmaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          } else if (input$model_chooser %in% names(BoostaR_models())){
+            tabulation <- BoostaR_models()[[input$model_chooser]]$tabulations[[input$table_chooser]]
+          }
+          value <- table_metric(tabulation, input$transform, 'span')
+          text <- paste0('<b><span style=\"color:black\"><b>Table span: ', value, '</span>')
+          p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
         }
-        value <- table_metric(tabulation, input$transform, 'span')
-        text <- paste0('<b><span style=\"color:black\"><b>Table span: ', value, '</span>')
-        p(HTML(text), style = 'font-size: 14px; margin-top:0px; margin-bottom:0px')
       }
     })
   })
@@ -269,10 +327,15 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
 # mod_tabulatedGlimmaR_server("tabulatedGlimmaR_1")
 
 #' @importFrom DT styleInterval
-GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, crosstab, colour_table, type){
+GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, crosstab, colour_table, models, type){
   if(!is.null(tabulation)){
     # split out the individual vars in the table
     vars <- unlist(strsplit(vars, '|', fixed = TRUE))
+    if(type=='multiple_models'){
+      # include the model names in the vars list
+      # so can be selected from crosstab
+      vars <- c('model', vars)
+    }
     dt <- copy(tabulation)
     if(type=='glm'){
       if(show_terms=='terms'){
@@ -292,27 +355,52 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, cro
     if(crosstab!='no crosstab'){
       # dcast the table
       lhs_vars <- setdiff(vars, crosstab)
-      dcast_form <- paste0(paste0(lhs_vars, collapse = '+'),'~',crosstab)
+      lhs_vars <- setdiff(lhs_vars, 'base')
+      if(length(lhs_vars)==0){
+        # this only happens for the base table, as there are no variables in the base level
+        # it is a constant
+        dcast_form <- paste0(paste0('.', collapse = '+'),'~',crosstab)
+      } else {
+        dcast_form <- paste0(paste0(lhs_vars, collapse = '+'),'~',crosstab)
+      }
       if(type=='glm'){
         dt <- dcast(dt, dcast_form, value.var = 'tabulated_glm')
       } else if (type=='lgbm'){
         dt <- dcast(dt, dcast_form, value.var = 'tabulated_lgbm')
+      } else if(type=='multiple_models'){
+        dt <- dcast(dt, dcast_form, value.var = 'tabulated_model')
+        if(crosstab=='model'){
+          # create zero columns for the missing models
+          missing_models <- setdiff(models, names(dt))
+          dt[, (missing_models):=0]
+          # ensure models are sorted in same order as input$model_chooser
+          new_order <- c(names(dt)[1:(ncol(dt)-length(models))], models)
+          new_order <- intersect(new_order, names(dt))
+          setcolorder(dt, new_order)
+        }
       }
     } else {
       lhs_vars <- vars
+      lhs_vars <- setdiff(lhs_vars, 'base')
     }
     # value transform
-    if(vars[1]=='base'){
-      transform_idx <- 1
+    if(type=='multiple_models'){
+      transform_idx <- (max(1,length(lhs_vars))+1):ncol(dt)
     } else {
-      transform_idx <- setdiff(1:ncol(dt), 1:length(lhs_vars))
+      if(length(lhs_vars)==0){
+        transform_idx <- ncol(dt)
+      } else {
+        transform_idx <- setdiff(1:ncol(dt), 1:length(lhs_vars))
+      }
     }
+    # replace any NAs with zeroes
+    setnafill(dt, fill = 0, cols = transform_idx)
     if(transform=='exp'){
       dt[, (transform_idx) := exp(.SD),.SDcols=transform_idx]
     }
     pg_length <- min(1000, nrow(dt))
     # cell colours
-    if(colour_table=='colours'){
+    if(length(lhs_vars)>0 & colour_table=='colours'){
       values <- dt[, .SD, .SDcols=transform_idx]
       values <- as.matrix(values)
       if(transform=='-'){
@@ -345,7 +433,7 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, cro
         ) |>
         formatStyle(columns = 1:ncol(dt), lineHeight='0%', fontSize = '14px') |>
         formatRound(columns = transform_idx, digits = 6)
-      if(vars[1]!='base' & colour_table=='colours'){
+      if(length(lhs_vars)>0 & colour_table=='colours'){
         t <- t |> formatStyle(columns = transform_idx, backgroundColor = styleInterval(brks, clrs))
       }
     } else {
