@@ -14,10 +14,10 @@ mod_BoostaR_navigate_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 6,
+        width = 4,
         h3('BoostaR model summary')
       ),
-      column(width = 6,
+      column(width = 8,
              align = 'right',
              style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
              actionButton(
