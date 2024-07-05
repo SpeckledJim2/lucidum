@@ -229,10 +229,10 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
         i <- 1
         for(model in input$model_chooser){
           if(model %in% names(GlimmaR_models())){
-            tabulation <- GlimmaR_models()[[model]]$tabulations[[input$table_chooser]]
+            tabulation <- copy(GlimmaR_models()[[model]]$tabulations[[input$table_chooser]])
             type <- 'glm'
           } else if (model %in% names(BoostaR_models())){
-            tabulation <- BoostaR_models()[[model]]$tabulations[[input$table_chooser]]
+            tabulation <- copy(BoostaR_models()[[model]]$tabulations[[input$table_chooser]])
             type <- 'lgbm'
           }
           # if multiple models selected, drop terms
