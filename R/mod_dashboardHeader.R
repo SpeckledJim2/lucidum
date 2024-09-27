@@ -15,7 +15,7 @@ mod_dashboardHeader_ui <- function(id){
   ns <- NS(id)
     dashboardHeader(
       title = span(tagList(tags$img(src='www/dashboard_title.png', height='40px', width='220px'),'')),
-      titleWidth = 250,
+      titleWidth = golem::get_golem_options('sidebar_width'),
       # controls placed in the header
       # Specs
       insertDashboardHeader(

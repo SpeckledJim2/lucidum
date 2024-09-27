@@ -15,6 +15,7 @@
 #' @param show_DevelopaR logical, TRUE (not default) will show the ShinyAce console.
 #' @param starting_tab character, name of tab to show on startup.
 #' @param starting_response character, name of response column to show on startup.
+#' @param sidebar_width integer, width of the sidebar.
 #' @param num_threads integer, number of threads for data.table and lightgbm (default -1 means max threads)
 #'
 #' @export
@@ -41,10 +42,9 @@ lucidum <- function(data=NULL,
                      show_DevelopaR = T,
                      starting_tab = 'ChartaR',
                      starting_response = NULL,
+                     sidebar_width = 250,
                      num_threads = -1
                      ) {
-  # QUESTION - I need the dataset name to load up other files automatically
-  # any issues modifying run_app in this way?
   dataset_name <- deparse(substitute(data))
   with_golem_options(
     app = shinyApp(ui = app_ui, server = app_server), 
@@ -64,6 +64,7 @@ lucidum <- function(data=NULL,
                       show_DevelopaR = show_DevelopaR,
                       starting_tab = starting_tab,
                       starting_response = starting_response,
+                      sidebar_width = sidebar_width,
                       num_threads = num_threads
                       )
   )

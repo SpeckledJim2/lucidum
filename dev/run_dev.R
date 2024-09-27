@@ -26,5 +26,6 @@ lucidum(
   show_BoostaR = TRUE,
   show_GlimmaR = TRUE,
   num_threads = -1,
+  sidebar_width = 250,
   specification_path = 'inst'
   )

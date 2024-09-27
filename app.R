@@ -19,5 +19,6 @@ lucidum::lucidum(
   kpi_spec = kpi_spec,
   feature_spec = feature_spec,
   filter_spec = filter_spec,
+  sidebar_width = 250,
   num_threads = 1
   )

@@ -20,6 +20,7 @@ lucidum(
   show_DevelopaR = T,
   starting_tab = "ChartaR",
   starting_response = NULL,
+  sidebar_width = 250,
   num_threads = -1
 )
 }
@@ -53,6 +54,8 @@ lucidum(
 \item{starting_tab}{character, name of tab to show on startup.}
 
 \item{starting_response}{character, name of response column to show on startup.}
+
+\item{sidebar_width}{integer, width of the sidebar.}
 
 \item{num_threads}{integer, number of threads for data.table and lightgbm (default -1 means max threads)}
 }

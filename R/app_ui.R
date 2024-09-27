@@ -19,7 +19,7 @@ app_ui <- function(request) {
     dashboardPage(
       mod_dashboardHeader_ui('header_nav_buttons'),
       dashboardSidebar(
-        width = 250,
+        width = golem::get_golem_options('sidebar_width'),
         sidebarMenu(
           id = 'tabs',
           br(),
