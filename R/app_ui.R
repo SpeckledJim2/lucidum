@@ -20,10 +20,29 @@ app_ui <- function(request) {
       mod_dashboardHeader_ui('header_nav_buttons'),
       dashboardSidebar(
         width = golem::get_golem_options('sidebar_width'),
+        tags$div(class = "draggable", id = "draggable"),  # Draggable element
         sidebarMenu(
           id = 'tabs',
           br(),
           tags$head(tags$style(".sidebar-menu li a {padding-top: 3px; padding-bottom: 3px; font-size: 14px}")),
+          
+          # draggable sidebar
+          tags$head(
+            tags$style(
+            HTML(
+            ".draggable {
+              width: 5px; 
+              background: rgba(0,0,0,0); 
+              cursor: ew-resize; 
+              height: 100%; 
+              position: absolute; 
+              right: 0; 
+              top: 0; 
+              z-index: 1000;}"
+                 )
+              )
+            ),
+          
           menuItemOutput('Specs'),
           menuItemOutput('DataR'),
           menuItemOutput('ChartaR'),
@@ -35,15 +54,8 @@ app_ui <- function(request) {
           mod_selectResponseColumn_ui('response', label = 'Response', width = '100%'),
           mod_selectWeightColumn_ui('weight', label = 'Weight', width = '100%'),
           mod_navigator_ui("navigator"),
-          mod_defineFilter_ui("filter"),
-
-          # QUESTION where should I put this so it only applies to THIS control and no others?
-          # this is still applying to EVERY sliderInput
-          # tags$style(".irs-from, .irs-to, .irs-min, .irs-max, .irs-single{display:none}"),
-          div(
-            #style="margin-top:-10px; margin-bottom:0px;padding-top:0px;",
-            #sliderInput("sidebarWidth", label = NULL, value = 250, min = 200, max = 400, step = 50, width = '80px', ticks = FALSE)
-          )
+          mod_defineFilter_ui("filter")
+          
         )
       ),
       dashboardBody(
@@ -75,7 +87,7 @@ golem_add_external_resources <- function(){
     # If you have a custom.css in the inst/app/www
     # Or for example, you can add shinyalert::useShinyalert() here
     tags$link(rel="stylesheet", type="text/css", href="www/custom.css"),
-    #tags$script(src="www/sidebar_resize.js"),
+    tags$script(src="www/sidebar_drag.js"),
     tags$script(src="www/window_dimensions.js")
   )
 }

@@ -14,7 +14,20 @@ mod_dashboardHeader_ui <- function(id){
   pd_marg <- 'padding:3px 5px 3px 5px; margin-right: 12px'
   ns <- NS(id)
     dashboardHeader(
-      title = span(tagList(tags$img(src='www/dashboard_title.png', height='40px', width='220px'),'')),
+      title = span(
+        tagList(
+          tags$a(
+            href = "https://github.com/SpeckledJim2/lucidum", 
+            target = "_blank",  # this opens the link in a new tab
+            tags$img(
+              src = 'www/dashboard_title.png',
+              height = '40px',
+              width = '220px',
+              style = "user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; pointer-events: none;"
+              )
+            )
+          )
+        ),
       titleWidth = golem::get_golem_options('sidebar_width'),
       # controls placed in the header
       # Specs
