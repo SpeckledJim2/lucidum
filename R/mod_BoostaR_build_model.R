@@ -591,9 +591,9 @@ mod_BoostaR_build_model_ui <- function(id){
                     12
                   )
                 ),
-                uiOutput(ns('BoostaR_min_data_in_leaf')),
+                uiOutput(ns('BoostaR_min_data_in_leaf_UI')),
                 tippy_this(
-                  ns('BoostaR_min_data_in_leaf'),
+                  ns('BoostaR_min_data_in_leaf_UI'),
                   delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
@@ -604,9 +604,9 @@ mod_BoostaR_build_model_ui <- function(id){
                   )
                 ),
                 div(style = "margin-top:-10px"),
-                uiOutput(ns('BoostaR_lambda_l1')),
+                uiOutput(ns('BoostaR_lambda_l1_UI')),
                 tippy_this(
-                  ns('BoostaR_lambda_l1'),
+                  ns('BoostaR_lambda_l1_UI'),
                   delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
@@ -616,9 +616,9 @@ mod_BoostaR_build_model_ui <- function(id){
                   )
                 ),
                 div(style = "margin-top:-10px"),
-                uiOutput(ns('BoostaR_lambda_l2')),
+                uiOutput(ns('BoostaR_lambda_l2_UI')),
                 tippy_this(
-                  ns('BoostaR_lambda_l2'),
+                  ns('BoostaR_lambda_l2_UI'),
                   delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
@@ -924,7 +924,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
         max_depth <- c(32,32)
         col_sample_rate <- c(0.5,1.0)
         row_sample_rate <- c(0.5,1.0)
-        min_data_in_leaf <- c(0,200)
+        min_data_in_leaf <- c(0,1000)
         lambda_l1 <- c(0,200)
         lambda_l2 <- c(0,200)
       }
@@ -988,19 +988,19 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           width = '100%'
         )
       })
-      output$BoostaR_min_data_in_leaf <- renderUI({
+      output$BoostaR_min_data_in_leaf_UI <- renderUI({
         sliderInput(
           inputId = ns('BoostaR_min_data_in_leaf'),
           label = 'Min data in leaf',
           min = 0,
-          max = 200,
+          max = 1000,
           value = min_data_in_leaf,
           step = 10,
           ticks = FALSE,
           width = '100%'
         )
       })
-      output$BoostaR_lambda_l1 <- renderUI({
+      output$BoostaR_lambda_l1_UI <- renderUI({
         sliderInput(
           inputId = ns('BoostaR_lambda_l1'),
           label = 'L1 normalisation',
@@ -1012,7 +1012,7 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           width = '100%'
         )
       })
-      output$BoostaR_lambda_l2 <- renderUI({
+      output$BoostaR_lambda_l2_UI <- renderUI({
         sliderInput(
           inputId = ns('BoostaR_lambda_l2'),
           label = 'L2 normalisation',
@@ -1024,42 +1024,6 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
           width = '100%'
         )
       })
-    })
-    output$BoostaR_min_data_in_leaf <- renderUI({
-      sliderInput(
-        inputId = ns('BoostaR_min_data_in_leaf'),
-        label = 'Min data in leaf',
-        min = 0,
-        max = 200,
-        value = 0,
-        step = 10,
-        ticks = FALSE,
-        width = '100%'
-      )
-    })
-    output$BoostaR_lambda_l1 <- renderUI({
-      sliderInput(
-        inputId = ns('BoostaR_lambda_l1'),
-        label = 'L1 normalisation',
-        min = 0,
-        max = 200,
-        value = 0,
-        step = 10,
-        ticks = FALSE,
-        width = '100%'
-      )
-    })
-    output$BoostaR_lambda_l2 <- renderUI({
-      sliderInput(
-        inputId = ns('BoostaR_lambda_l2'),
-        label = 'L2 normalisation',
-        min = 0,
-        max = 200,
-        value = 0,
-        step = 10,
-        ticks = FALSE,
-        width = '100%'
-      )
     })
     observeEvent(input$BoostaR_goto_ChartaR, {
       # get the selected row in the table
@@ -1860,19 +1824,19 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
         width = '100%'
       )
     })
-    output$BoostaR_min_data_in_leaf <- renderUI({
+    output$BoostaR_min_data_in_leaf_UI <- renderUI({
       sliderInput(
         inputId = ns('BoostaR_min_data_in_leaf'),
         label = 'Min data in leaf',
         min = 0,
-        max = 200,
+        max = 1000,
         value = BoostaR_model$params$min_data_in_leaf,
         step = 10,
         ticks = FALSE,
         width = '100%'
       )
     })
-    output$BoostaR_lambda_l1 <- renderUI({
+    output$BoostaR_lambda_l1_UI <- renderUI({
       sliderInput(
         inputId = ns('BoostaR_lambda_l1'),
         label = 'L1 normalisation',
@@ -1884,7 +1848,7 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
         width = '100%'
       )
     })
-    output$BoostaR_lambda_l2 <- renderUI({
+    output$BoostaR_lambda_l2_UI <- renderUI({
       sliderInput(
         inputId = ns('BoostaR_lambda_l2'),
         label = 'L2 normalisation',
