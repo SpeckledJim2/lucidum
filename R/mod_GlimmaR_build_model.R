@@ -13,7 +13,7 @@ mod_GlimmaR_build_model_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 5,
+        width = 6,
         fluidRow(
           column(
             width = 3,
@@ -221,10 +221,10 @@ mod_GlimmaR_build_model_ui <- function(id){
         )
       ),
       column(
-        width = 7,
+        width = 6,
         fluidRow(
           column(
-            width = 3,
+            width = 2,
             h3("Coefficients")
           ),
           column(
@@ -237,6 +237,14 @@ mod_GlimmaR_build_model_ui <- function(id){
           column(
             width = 3,
             htmlOutput(ns('model_NAs'))
+          ),
+          column(
+            width = 1,
+            style = 'margin-top:15px; margin-left:0px',
+            checkboxInput(
+              inputId = ns('show_full_terms'),
+              label = 'Full',
+                )
           ),
           column(
             width = 2,
@@ -320,7 +328,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         g <- GlimmaR_models()[[GlimmaR_idx()]]
         # update coefficient table
         output$glm_coefficients <- DT::renderDataTable({
-          GlimmaR_coefficient_DT(g$coefficients)
+          GlimmaR_coefficient_DT(g$coefficients, input$show_full_terms)
           })
         # update whether All/Training used
         updateRadioGroupButtons(session, inputId = 'data_to_use', selected = g$training_data)
@@ -850,14 +858,17 @@ make_numerical_feature_formula <- function(feature, formula_type, inputs){
   
   
 }
-GlimmaR_coefficient_DT <- function(coefficients_dt){
+GlimmaR_coefficient_DT <- function(coefficients_dt, full_terms){
   if(!is.null(coefficients_dt)){
     setDT(coefficients_dt)
-    num_rows <- nrow(coefficients_dt)
+    coefficients_for_display <- copy(coefficients_dt)
+    num_rows <- nrow(coefficients_for_display)
     # shorten very long terms for display
-    long_terms <- nchar(coefficients_dt$term)>100
-    coefficients_dt[long_terms, term := paste0(substr(term,1,100), '...')]
-    coefficients_dt %>%
+    if(!full_terms){
+      long_terms <- nchar(coefficients_for_display$term)>40
+      coefficients_for_display[long_terms, term := paste0(substr(term,1,40), '...')]
+    }
+    coefficients_for_display %>%
       DT::datatable(rownames= TRUE,
                     extensions = 'Buttons',
                     selection = 'single',#HERE
