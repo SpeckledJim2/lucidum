@@ -26,6 +26,7 @@ lucidum's functionality includes:
 * **Interactive mapping of data at UK Postcode Area, Sector and Unit resolution**  
   - uses the [leaflet](https://github.com/Leaflet/Leaflet) library to draw choropleth maps for Postcode Area and Sector
   - uses open source shapefiles for Area and Sector
+  - point plotting for postcode units based on latitude and longitude
 
 * **Support a GLM build**  
   - "formula helper" to make the job of building an R GLM formula much faster
@@ -68,7 +69,17 @@ lucidum(insurance)
 
 To separate training and test rows in your dataset, include a numerical column called "train_test" with value 0 for training and 1 for test.
 
-## 5. Specification files
+## 5. UK mapping
+
+Include columns in your dataset called **PostcodeArea** and **PostcodeSector** to enable UK mapping.
+
+Include columns called **PostcodeUnit**, **lat** (latitude) and **long** (longitude) to enable postcode unit level plotting.
+
+Search for the "National Statistics Postcode Lookup" at https://geoportal.statistics.gov.uk to download the latest unit to lat,long mapping - updated versions are released quarterly.
+
+Ensure postcode sector and unit contain a single character space between the outcode and incode with all letters in CAPITALS, e.g. PO15 7JT.
+
+## 6. Specification files
 
 Specification files make lucidum more useful by specifying metadata to make model building faster.  
 
