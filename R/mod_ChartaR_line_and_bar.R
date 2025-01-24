@@ -954,7 +954,6 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
                  textfont = list(size = 10, color = 'black'),
                  textposition = "top",
                  yaxis = 'y2',
-                 bgcolor = 'white',
                  showlegend = FALSE)
     }
   }
