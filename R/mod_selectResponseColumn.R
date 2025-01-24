@@ -113,6 +113,12 @@ mod_selectResponseColumn_server <- function(
       if(!is.null(startup())){
         if(startup() %in% numerical_cols(d())){
           updateSelectInput(inputId = 'col', selected = startup())
+        } else {
+          # set to zero from app_server.R
+          # means nothing selected
+          # pick the first numerical column
+          first_numerical_col <- numerical_cols(d())[1]
+          updateSelectInput(inputId = 'col', selected = first_numerical_col)
         }
       }
     })

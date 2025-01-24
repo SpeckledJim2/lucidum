@@ -55,7 +55,16 @@ app_server <- function(input, output, session) {
     if(demo() & is.null(golem::get_golem_options('starting_response'))){
       starting_response('price')
     } else {
-      starting_response(golem::get_golem_options('starting_response'))
+      if(!is.null(golem::get_golem_options('starting_response'))){
+        starting_response(golem::get_golem_options('starting_response'))
+      } else {
+        # if any input BoostaR or GlimmaR models are specified
+        # then the response will get set by those reactiveVals
+        # but if no models specified, set to zero 
+        # to ensure reactiveVal still triggers mod_selectResponseColumn_server below
+        if(is.null(golem::get_golem_options('BoostaR_models')) & is.null(golem::get_golem_options('GlimmaR_models')) )
+        starting_response(0)
+      }
     }
   })
   
@@ -204,9 +213,6 @@ app_server <- function(input, output, session) {
       new_weight(g$weight)
     }
   })
-  
-  # run on close browser - stops server
-  session$onSessionEnded(function() {stopApp()})
   
 }
 
