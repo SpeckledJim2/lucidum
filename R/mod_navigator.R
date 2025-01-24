@@ -12,7 +12,7 @@ mod_navigator_ui <- function(id){
   ns <- NS(id)
   tagList(
     div(
-      style = 'margin-top:0px; margin-bottom:-30px; padding-top:0px ; padding-bottom:0px;  border-radius: 3px 3px 0px 0px;',
+      style = 'margin-top:0px; margin-bottom:0px; padding-top:0px ; padding-bottom:0px;  border-radius: 3px 3px 0px 0px;',
       radioGroupButtons(
         inputId = ns('type'),
         label = 'KPIs (0/0)',
@@ -26,7 +26,7 @@ mod_navigator_ui <- function(id){
       )
     ),
     div(
-      style = 'margin-bottom:-15px;',
+      style = 'margin-bottom:0px;',
       conditionalPanel(sprintf("input['%s'] == 'KPI'", ns("type")),
                        selectInput(inputId=ns('kpi_chooser'),
                                    label = NULL,

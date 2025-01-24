@@ -24,7 +24,19 @@ app_ui <- function(request) {
         sidebarMenu(
           id = 'tabs',
           br(),
-          tags$head(tags$style(".sidebar-menu li a {padding-top: 3px; padding-bottom: 3px; font-size: 14px}")),
+          tags$head(tags$style(".sidebar-menu li a {padding-top: 3px; padding-bottom: 3px; margin-bottom:0px; font-size: 14px}")),
+          tags$head(
+            tags$style(HTML("
+
+        /* zero margin and padding in sidebar */
+        .main-sidebar .sidebar .shiny-input-container {
+          margin-bottom: 0px !important;
+          padding-top: 0px !important;
+          padding-bottom: 0px !important;
+        }
+        
+      "))
+          ),
           
           # draggable sidebar
           tags$head(
@@ -49,11 +61,15 @@ app_ui <- function(request) {
           menuItemOutput('MappaR'),
           menuItemOutput('BoostaR'),
           menuItemOutput('GlimmaR'),
+          br(),
 
           # response, weight, navigator and filter
           mod_selectResponseColumn_ui('response', label = 'Response', width = '100%'),
+          div(style = "margin-top: 25px;"),
           mod_selectWeightColumn_ui('weight', label = 'Weight', width = '100%'),
+          div(style = "margin-top: 40px;"),
           mod_navigator_ui("navigator"),
+          div(style = "margin-top: 25px;"),
           mod_defineFilter_ui("filter")
           
         )

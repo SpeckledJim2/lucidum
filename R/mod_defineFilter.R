@@ -29,18 +29,17 @@ mod_defineFilter_ui <- function(id){
     fluidRow(
       column(
         width = 10,
-        style = 'margin-top: -27px; margin-right:0px; padding-right: 0px',
+        style = 'margin-top: 0px; margin-right:0px; padding-right: 0px',
         div(
           textInput(inputId = ns('free_filter'), placeholder = 'enter filter...', label = NULL, width = '100%'),
         )
       ),
       column(
         width = 2,
-        style = 'margin-left:-30px; margin-top:-21px; padding-left:0px;',
+        style = 'margin-left:-30px; margin-top:0px; padding-top: 0px; padding-left:0px;',
         div(
-          style = 'padding:0px;',
           actionButton(
-            style = 'height:34px; border-radius:0px',
+            style = 'height:34px; border-radius:0px; margin-top: 0px; margin-bottom: 0px; padding-left:0px; padding-right:0px',
             width = '100%',
             inputId = ns('apply_filter'),
             label = NULL,
@@ -53,7 +52,7 @@ mod_defineFilter_ui <- function(id){
       column(
         width = 12,
         div(
-          style = 'margin-top:-27px',
+          #style = 'margin-top:0px',
           selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 6, selectize = FALSE, multiple = TRUE, choices = NULL)
         )
       )
@@ -61,7 +60,7 @@ mod_defineFilter_ui <- function(id){
     fluidRow(
       column(
         width = 12,
-        style = 'margin-top: -27px',
+        #style = 'margin-top: 0px',
         div(
           radioGroupButtons(
             inputId = ns('filter_operation'),
@@ -77,7 +76,7 @@ mod_defineFilter_ui <- function(id){
     fluidRow(
       column(
         width = 12,
-        style = 'margin-left:18px; margin-top: -10px; font-size: 9px',
+        style = 'margin-left:18px; margin-top: 2px; font-size: 8px',
           textOutput(ns('message'))
       )
     )
