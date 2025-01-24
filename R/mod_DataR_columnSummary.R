@@ -202,11 +202,12 @@ get_feature_summary <- function(d, col){
         summary[9, value := stats::quantile(x,prob=0.99,na.rm=TRUE, type = type)]
         summary[10, value := max(x,na.rm=TRUE)]
         summary[11, value := stats::sd(x,na.rm=TRUE)]
-        if(class(x)[1] %in% c('numeric')){
+        # if a number, round to 6 d.p. otherwise too many digits are displayed
+        if(inherits(x, c('integer','numeric','logical'))){
           summary[, value := signif(value, 6)]
         }
       } else {
-        frequencies <- sort(table(x, useNA = 'ifany'),decreasing=TRUE)
+        frequencies <- sort(table(x, useNA = 'ifany'), decreasing=TRUE)
         summary <- as.data.table(frequencies)
         names(summary) <- c('Level','count')
         num_levels <- nrow(summary)
