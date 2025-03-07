@@ -507,7 +507,10 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
     )
     x <- data.table(parameter=names(x), value = t(x[1]))
     setnames(x, c('parameter','value'))
-    if(!is.null(BoostaR_model$additional_params)){
+    # BoostaR_model$additional_params will use pattern matching
+    # and return same as BoostaR_model$additional_params_ace
+    # use [[ to stop this
+    if(!is.null(BoostaR_model[['additional_params']])){
       add_params <- BoostaR_model$additional_params
       add_params$interaction_constraints <- NULL
       add_params$monotone_constraints <- NULL

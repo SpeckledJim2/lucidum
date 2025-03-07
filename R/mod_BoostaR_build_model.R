@@ -1084,6 +1084,8 @@ make_BoostaR_feature_grid <- function(d, feature_spec){
 }
 remove_lucidum_cols <- function(x){
   l_cols <- c(
+    'lat',
+    'long',
     'lgbm_prediction',
     'lgbm_prediction_rate',
     'lgbm_tabulated_prediction',
