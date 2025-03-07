@@ -104,7 +104,21 @@ mod_GlimmaR_tabulated_models_ui <- function(id){
           )
         ),
         br(),
-        DTOutput(ns('tabulated_model'))
+        tabsetPanel(
+          id = ns('tabulations_tabset_panel'),
+          tabPanel(
+            value = 'Tabulation',
+            title = 'Tabulation',
+            br(),
+            DTOutput(ns('tabulated_model'))
+            ),
+          tabPanel(
+            value = 'Plot',
+            title = 'Plot',
+            br(),
+            plotlyOutput(ns('tabulated_model_plot'), height = 'calc(85vh - 170px)')
+            )
+        )
       )
     )
   )
@@ -267,6 +281,56 @@ mod_GlimmaR_tabulated_models_server <- function(id, GlimmaR_models, BoostaR_mode
         if(input$crosstab %in% c('no crosstab', vars)){
           GlimmaR_format_table_DT(tabulation, input$table_chooser, input$transform, input$show_terms, input$crosstab, input$colour_table, input$model_chooser, type)
         }
+      }
+    })
+    output$tabulated_model_plot <- renderPlotly({
+      if(!is.null(input$model_chooser)){
+        vars <- unlist(strsplit(input$table_chooser, '|', fixed = TRUE))
+        tabulations <- vector("list", length = length(input$model_chooser))
+        i <- 1
+        for(model in input$model_chooser){
+          if(model %in% names(GlimmaR_models())){
+            tabulation <- copy(GlimmaR_models()[[model]]$tabulations[[input$table_chooser]])
+            type <- 'glm'
+          } else if (model %in% names(BoostaR_models())){
+            tabulation <- copy(BoostaR_models()[[model]]$tabulations[[input$table_chooser]])
+            type <- 'lgbm'
+          }
+          # if multiple models selected, drop terms
+          # add column to denote model
+          if(length(input$model_chooser)>1 & !is.null(tabulation)){
+            if(vars[1]=='base'){
+              # do nothing
+            } else {
+              # keep the cols containing vars and the last column
+              # i.e. leave out the terms columns
+              keep_idx <- c(1:length(vars), ncol(tabulation))
+              keep_cols <- names(tabulation)[keep_idx]
+              tabulation <- tabulation[, ..keep_cols]
+            }
+            # create model name column in first column
+            tabulation[, model := model]
+            setcolorder(tabulation, 'model')
+            setnames(tabulation, ncol(tabulation), 'tabulated_model')
+          }
+          tabulations[[i]] <- tabulation
+          i <- i + 1
+        }
+        if(length(tabulations)==1){
+          tabulation <- tabulations[[1]]
+        } else {
+          tabulation <- rbindlist(tabulations)
+        }
+        if(length(input$model_chooser)>1){
+          vars <- c('model', vars)
+          type <- 'multiple_models'
+        }
+        if(input$crosstab %in% c('no crosstab', vars)){
+          p <- GlimmaR_tabulation_plot(tabulation, vars, input$crosstab, input$transform, type)
+        } else {
+          p <- NULL
+        }
+        p
       }
     })
     output$table_min <- renderUI({
@@ -570,4 +634,55 @@ table_metric <- function(tabulation, transform, metric){
     value <- exp(value)
   }
   signif(value, 6)
+}
+GlimmaR_tabulation_plot <- function(tabulation, feature_cols, crosstab, transform, type){
+  # create a concatenated feature column (excluding crosstab if specified)
+  tabulation_dt <- data.table::copy(tabulation)
+  # only render chart if all features are in tabulation
+  # avoids a red text plotly error message in app
+  if(all(feature_cols %in% names(tabulation_dt)) & crosstab %in% c('no crosstab', names(tabulation_dt)) & names(tabulation_dt)[1]!='base'){
+    if(type=='glm'){
+      value_col <- 'tabulated_glm'
+    } else if (type=='lgbm'){
+      value_col <- 'tabulated_lgbm'
+    } else if (type=='multiple_models'){
+      value_col <- 'tabulated_model'
+    }
+    y_formula <- as.formula(paste0("~", value_col))
+    if(transform=='exp'){
+      if(feature_cols[[1]]=='base'){
+        tabulation_dt[, base := exp(base)]
+      } else {
+        tabulation_dt[, (value_col) := exp(.SD), .SDcol = value_col]
+      }
+    }
+    if (crosstab == "no crosstab") {
+      color <- NULL
+      n_row <- nrow(tabulation_dt)
+    } else {
+      feature_cols <- setdiff(feature_cols, crosstab)
+      color <- as.formula(paste0("~", crosstab))
+      tabulation_dt[, (crosstab) := factor(get(crosstab), levels = unique(get(crosstab)))]
+      n_row <- nrow(tabulation_dt) / uniqueN(tabulation_dt[[crosstab]])
+    }
+    tabulation_dt[, feature_concat := do.call(paste, c(.SD, list(sep = " x "))), .SDcols = feature_cols]
+    tabulation_dt[, feature_concat := factor(feature_concat, levels = unique(feature_concat))]
+    p <- plot_ly(
+      tabulation_dt,
+      x = ~feature_concat,
+      y = y_formula,
+      color = color,
+      type = 'scatter',
+      mode = 'lines+markers'
+    ) |>
+      layout(
+        xaxis = list(
+          title = paste(feature_cols, collapse = ' x '),
+          tickmode = "array",
+          tickvals = tabulation_dt$feature_concat,
+          tickfont = list(size = min(12, max(6, 500/n_row)))
+        )
+      )
+    return(p)
+  }
 }
