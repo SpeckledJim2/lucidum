@@ -1177,7 +1177,7 @@ check_model_features_and_parameters <- function(d, response, weight, input, feat
   }
   if(check=='ok' & objective %in% c('gamma')){
     if(min(d[rows_idx, ..response], na.rm = TRUE)<=0){
-      check <- paste0('Non-negative response not allowed for ', objective)
+      check <- paste0('Negative/Zero response not allowed for ', objective)
     }
   }
   # check monotonicity only specified for numerical features
