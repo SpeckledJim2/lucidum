@@ -16,11 +16,11 @@ mod_GlimmaR_build_model_ui <- function(id){
         width = 6,
         fluidRow(
           column(
-            width = 3,
-            h3("Formula")
+            width = 5,
+            h3("Formula & family")
           ),
           column(
-            width = 4,
+            width = 3,
             div(
               id = ns('wrapper'),
               style = 'margin-top: 22px',
@@ -45,6 +45,43 @@ mod_GlimmaR_build_model_ui <- function(id){
             width = 2,
             align = 'right',
             br(),
+            textInput(
+              ns('GlimmaR_tweedie_variance_power'),
+              label = NULL,
+              placeholder = 'var.power'
+              )
+          ),
+          column(
+            width = 2,
+            align = 'right',
+            style = 'padding-left: 0px;',
+            br(),
+            actionButton(
+              inputId = ns('build_GLM'),
+              label = "Build",
+              icon = icon("chevron-right"),
+              style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
+            ),
+            tippy_this(ns('build_GLM'), delay = 1000, placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
+          )
+        ),
+        fluidRow(
+          column(
+            width = 3,
+            style = 'padding-right:0px',
+            align = 'right',
+            radioGroupButtons(
+              inputId = ns('data_to_use'),
+              justified =  TRUE,
+              label = NULL,
+              choices = c('All', 'Training'),
+              selected = 'All'
+            ),
+            tippy_this(ns('data_to_use'), delay = 1000, placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
+          ),
+          column(
+            width = 2,
+            align = 'right',
             dropdownButton(inputId = ns('helper_dropdown'),
                            width = 700,
                            up = FALSE,
@@ -131,35 +168,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             tippy_this(ns('helper_dropdown'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Create GLM formula',12))
           ),
           column(
-            width = 3,
-            align = 'right',
-            style = 'padding-left: 0px;',
-            br(),
-            actionButton(
-              inputId = ns('build_GLM'),
-              label = "Build",
-              icon = icon("chevron-right"),
-              style="color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left"
-            ),
-            tippy_this(ns('build_GLM'), delay = 1000, placement = 'right', tooltip = tippy_text('Build the GLM and create coefficient table',12))
-          )
-        ),
-        fluidRow(
-          column(
             width = 4,
-            style = 'padding-right:0px',
-            align = 'right',
-            radioGroupButtons(
-              inputId = ns('data_to_use'),
-              justified =  TRUE,
-              label = NULL,
-              choices = c('All', 'Training'),
-              selected = 'All'
-            ),
-            tippy_this(ns('data_to_use'), delay = 1000, placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
-          ),
-          column(
-            width = 5,
             align = 'right',
             actionButton(
               inputId = ns('clear_formula'),
@@ -296,7 +305,8 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         weight(),
         input$data_to_use,
         input$glm_formula,
-        input$objective
+        input$objective,
+        input$GlimmaR_tweedie_variance_power
         )
       if(GlimmaR_model$message=='ok'){
         # QUESTION - feels inefficient (copying large object), is there a better way?}
@@ -336,6 +346,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         updateAceEditor(session, editorId = 'glm_formula', value = g$formula)
         # update the objective
         updateSelectInput(session, inputId = 'objective', selected = g$objective)
+        updateTextInput(session, inputId = 'GlimmaR_tweedie_variance_power', value = g$tweedie_variance_power)
         # update the model dispersion
         output$model_dispersion <- renderUI({
           if(GlimmaR_idx() %in% names(GlimmaR_models())){
@@ -454,7 +465,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
 
 #' @importFrom broom tidy
 #' @importFrom statmod tweedie
-GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_formula, glm_objective){
+GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_formula, glm_objective, var.power){
   l <- list()
   if(!(response %in% names(d))){
     l$message <- 'no response selected'
@@ -474,7 +485,15 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                       text = '',
                       btn_labels = c('OK')
     )
-  } else if (is.null(d)){
+  } else if (glm_objective=='tweedie' & is.na(as.numeric(var.power))){
+    l$message <- 'specify numeric var.power for Tweedie'
+    confirmSweetAlert(session = session,
+                      type = 'error',
+                      inputId = "build_error",
+                      title = l$message,
+                      text = 'Choose a var.power between 1 and 2',
+                      btn_labels = c('OK')
+    )
   } else if (data_to_use=='Training' & !('train_test' %in% names(d))){
     # training data selected but no train test column
     l$message <- 'no train_test column'
@@ -539,7 +558,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
         link <-  'log'
       } else if (glm_objective=='tweedie'){
         # link.power = 0 means log link which is usually what you want
-        family <- statmod::tweedie(var.power = 1.1, link.power = 0)
+        family <- statmod::tweedie(var.power = as.numeric(var.power), link.power = 0)
         link <-  'log'
       } else if (glm_objective=='quasipoisson'){
         family <- stats::quasipoisson(link = 'log')
@@ -620,6 +639,7 @@ GlimmaR_build_GLM <- function(session, d, response, weight, data_to_use, glm_for
                       coefficients = c,
                       num_terms = nrow(c),
                       objective = glm_objective,
+                      tweedie_variance_power = as.numeric(var.power),
                       link = link,
                       response = response,
                       weight = weight,
