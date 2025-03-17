@@ -680,7 +680,8 @@ GlimmaR_tabulation_plot <- function(tabulation, feature_cols, crosstab, transfor
           title = paste(feature_cols, collapse = ' x '),
           tickmode = "array",
           tickvals = tabulation_dt$feature_concat,
-          tickfont = list(size = min(12, max(6, 500/n_row)))
+          tickfont = list(size = min(12, max(6, 500/n_row))),
+          showticklabels = ifelse(n_row>200,FALSE,TRUE)
         )
       )
     return(p)
