@@ -527,7 +527,11 @@ make_BoostaR_detailed_summary <- function(BoostaR_model){
 lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_specification = NULL){
   # prepare the tabulations - all combinations of features that appear at least once in the GBM
   var_terms <- lgbm.extract.feature.combinations(BoostaR_model$tree_table, BoostaR_model$lgbm$best_iter)
-  tabulations <- prepare_lgbm_tabulations(d[BoostaR_model$pred_rows], var_terms$split_features, feature_specification)
+  features_to_tabulate <- var_terms$split_features
+  if(BoostaR_model$weight!='N'){
+    features_to_tabulate <- c(features_to_tabulate, BoostaR_model$weight)
+  }
+  tabulations <- prepare_lgbm_tabulations(d[BoostaR_model$pred_rows], features_to_tabulate, feature_specification)
   # check if tabulations is a character - if so then don't go further as this is a warning message
   if(!inherits(tabulations, 'character')){
     # predict on the base level
@@ -542,21 +546,30 @@ lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_s
       # replace base risk features for this table with the columns in tabulation
       # convert for format needed for lgbm to predict
       table_name <- names(tabulations)[[i]]
-      vars <- unlist(strsplit(table_name, '|', fixed = TRUE))
-      dummy_risks <- base_risk[rep(1,each=nrow(tabulations[[i]]))]
-      new_cols <- vars # otherwise will get warning on next line
-      dummy_risks[, (new_cols):=tabulations[[i]][,..vars]]
-      # make factor columns character so that the rules can be correctly applied by lgb.convert_with_rules
-      cols <- names(dummy_risks)[sapply(dummy_risks, inherits, 'factor')]
-      dummy_risks[, (cols) := lapply(.SD, as.character), .SDcols = cols]
-      # convert with rules to lgb dataset
-      dummy_risks_converted <- lgb.convert_with_rules(dummy_risks, rules = BoostaR_model$rules)
-      dummy_risks_converted <- as.matrix(dummy_risks_converted$data)
-      # get the trees used by this table
-      trees_idx <- var_terms[i-1][['trees']] # as var_terms do not contain the base level need the minus 1
-      trees_idx <- as.numeric(trimws(unlist(strsplit(trees_idx, ",")))) # split into vector, trim leading whitespace
-      # predict on tables
-      predictions <- lgbm.extract.tree.predictions(dummy_risks_converted, BoostaR_model$lgbm, trees_idx)
+      if(table_name == BoostaR_model$weight){
+        # this is the offset - calculate directly
+        if(BoostaR_model$link=='log'){
+          predictions <- log(tabulations[[i]][[1]])
+        } else {
+          predictions <- tabulations[[i]][[1]]
+        }
+      } else {
+        vars <- unlist(strsplit(table_name, '|', fixed = TRUE))
+        dummy_risks <- base_risk[rep(1,each=nrow(tabulations[[i]]))]
+        new_cols <- vars # otherwise will get warning on next line
+        dummy_risks[, (new_cols):=tabulations[[i]][,..vars]]
+        # make factor columns character so that the rules can be correctly applied by lgb.convert_with_rules
+        cols <- names(dummy_risks)[sapply(dummy_risks, inherits, 'factor')]
+        dummy_risks[, (cols) := lapply(.SD, as.character), .SDcols = cols]
+        # convert with rules to lgb dataset
+        dummy_risks_converted <- lgb.convert_with_rules(dummy_risks, rules = BoostaR_model$rules)
+        dummy_risks_converted <- as.matrix(dummy_risks_converted$data)
+        # get the trees used by this table
+        trees_idx <- var_terms[i-1][['trees']] # as var_terms do not contain the base level need the minus 1
+        trees_idx <- as.numeric(trimws(unlist(strsplit(trees_idx, ",")))) # split into vector, trim leading whitespace
+        # predict on tables
+        predictions <- lgbm.extract.tree.predictions(dummy_risks_converted, BoostaR_model$lgbm, trees_idx)
+      }
       tabulations[[table_name]]$tabulated_lgbm <- predictions
     }
   }
