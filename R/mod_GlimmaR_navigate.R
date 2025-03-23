@@ -387,11 +387,6 @@ export_model <- function(dat, model, base_risk, collapse, type, feature_spec = N
     } else {
       wts <- model$data[[weight]]
     }
-    # dat_subset <- data.frame(weight = wts, observed = model$y, fitted = model$fitted.values)
-    # summary_tot <- dat_subset %>%
-    #   dplyr::summarise_at(c('observed','fitted','weight'), sum, na.rm = TRUE) %>%
-    #   dplyr::mutate_at(c('observed','fitted'), ~./ weight)
-    
     # DATA.TABLE replacement
     cols <- c('observed','fitted')
     summary_tot <- data.table(weight = wts, observed = model$y, fitted = model$fitted.values)
@@ -700,9 +695,6 @@ export_model <- function(dat, model, base_risk, collapse, type, feature_spec = N
       export_table$weighted_relativity <- export_table$model_relativity * export_table$weight
       export_table$weighted_observed <- export_table$observed * export_table$weight
       export_table$weighted_fitted <- export_table$fitted * export_table$weight
-      # summary_tot <- export_table %>%
-      #   dplyr::summarise_at(c('weighted_observed','weighted_fitted','weight','weighted_relativity'), sum, na.rm = TRUE) %>%
-      #   dplyr::mutate_at(c('weighted_observed','weighted_fitted','weighted_relativity'), ~./ weight)
       
       # data.table version
       cols <- c('weighted_observed','weighted_fitted','weighted_relativity')
@@ -908,10 +900,20 @@ uncentered_terms_new <- function(object, newdata, terms, na.action = na.pass, ..
     
     n_terms <- length(terms)
     attr(tt, '.Environment') <- environment() # makes splines package available as loaded by lucidum
-    m <- model.frame(tt, newdata, na.action = na.action, xlev = object$xlevels, drop.unused.levels = TRUE)
+    # only retain xlevels in tt to remove warning message
+    # extract any features used unadjusted in formula
+    underlying_vars <- all.vars(vars)
+    unadjusted_vars <- underlying_vars[underlying_vars %in% attr(terms(tt), "term.labels")]
+    unadjusted_vars <- intersect(unadjusted_vars, names(object$xlevels))
+    filtered_xlevs <- object$xlevels[names(object$xlevels) %in% unadjusted_vars]
+    filtered_contrasts <- object$contrasts[names(object$contrasts) %in% unadjusted_vars]
+    if (length(filtered_xlevs) == 0) filtered_xlevs <- NULL
+    if (length(filtered_contrasts) == 0) filtered_contrasts <- NULL
+    m <- model.frame(tt, newdata, na.action = na.action, xlev = filtered_xlevs, drop.unused.levels = TRUE)
     if (!is.null(cl <- attr(tt, "dataClasses"))) .checkMFClasses(cl, m)
     new_form <- as.formula(paste0('~',paste0(terms, collapse = '+')))
-    X <- model.matrix(new_form, m, contrasts.arg = object$contrasts)
+    # only retain constrasts in tt to remove warning message
+    X <- model.matrix(new_form, m, contrasts.arg = filtered_contrasts)
     aa <- attr(X, "assign")
     
     hasintercept <- attr(tt, "intercept") > 0L
