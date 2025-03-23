@@ -284,20 +284,20 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
   p <- plot_ly()
   # min to max SHAP
   if(SHAP_ribbons %in% c('All')){
-    p <- p %>%
+    p <- p |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['min']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = FALSE, name = 'SHAP_min') %>%
+                showlegend = FALSE, name = 'SHAP_min') |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['max']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                 showlegend = TRUE, name = 'SHAP_min_max')
   }
   # 5th-95th percentiles
   if(SHAP_ribbons %in% c('All','5_95')){
-    p <- p %>%
+    p <- p |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_5']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = FALSE, name = 'SHAP_5') %>%
+                showlegend = FALSE, name = 'SHAP_5') |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_95']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.2)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                 showlegend = TRUE, name = 'SHAP_5_95')
@@ -307,7 +307,7 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
     p <- p |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_25']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                showlegend = FALSE, name = 'SHAP_25') %>%
+                showlegend = FALSE, name = 'SHAP_25') |>
       add_trace(x = SHAP_summary[[1]], y = SHAP_summary[['perc_75']], type = 'scatter', mode = 'lines', yaxis = "y1",
                 fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                 showlegend = TRUE, name = 'SHAP_25_75')
@@ -367,8 +367,8 @@ SHAP_box_and_whisker <- function(d, weight, feature_1, banding_1, factor_1, q, r
                 categoryorder = 'array',
                 categoryarray = mean_SHAP[[1]])
   if(nrow(mean_SHAP)>500){
-    p <- plotly_empty(type = "scatter", mode = "markers") %>%
-      config(displayModeBar = FALSE) %>%
+    p <- plotly_empty(type = "scatter", mode = "markers") |>
+      config(displayModeBar = FALSE) |>
       layout(title = list(text = 'Too many levels to display (>500)',yref = "paper", y = 0.5)
       )
   } else {
@@ -382,7 +382,7 @@ SHAP_box_and_whisker <- function(d, weight, feature_1, banding_1, factor_1, q, r
       boxmean = TRUE,
       boxpoints = FALSE,
       type = 'box',
-    ) %>%
+    ) |>
       layout(legend = list(title=list(text='
 <b>Box and whisker plot</b>
 Each box spans Q1 to Q3
@@ -394,7 +394,7 @@ Whiskers extend to min/max <br>'),
                            size = 50,
                            font = list(size = 10)
       )
-      ) %>%
+      ) |>
       layout(xaxis = xform,
              font = list(family = 'Helvetica Neue'),
              title = list(text = boldify(paste0('SHAP box plot: ',feature_1)), font = list(size = 16, face='bold'))
@@ -422,14 +422,14 @@ SHAP_surface <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
   d_summary <- dcast(d_summary, stats::as.formula('banded_1 ~ banded_2'), value.var = 'SHAP')
   p <- plot_ly(x = names(d_summary)[-1],
                y = d_summary[[1]],
-               z = ~as.matrix(d_summary[,-1])) %>%
-    add_surface(color = 'RdYlBlu') %>%
+               z = ~as.matrix(d_summary[,-1])) |>
+    add_surface(color = 'RdYlBlu') |>
     layout(font = list(family = 'Helvetica Neue'),
            scene = list(xaxis = list(title = feature_2),
                         yaxis = list(title = feature_1),
                         zaxis = list(title = 'SHAP'),
                         camera = list(eye = list(x=0.8, y=-0.3, z=2))
-    )
+                        )
     )
   return(p)
 }
@@ -461,12 +461,7 @@ SHAP_heatmap <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
     y = d_summary[[1]],
     z = as.matrix(d_summary[,-1]),
     colors = grDevices::colorRamp(c('green', 'white', 'red')),
-    type = "heatmap") %>%
-    # add_annotations(
-    #   x = names(d_summary)[-1],
-    #   y = d_summary[[1]],
-    #   text =  as.matrix(d_summary[,-1]),
-    #   showarrow = FALSE) %>%
+    type = "heatmap") |>
     layout(plot_bgcolor='rgb(200, 200, 200)',
            font = list(family = 'Helvetica Neue')) |>
     layout(xaxis = list(autotick = FALSE, dtick = banding_2, showgrid = FALSE, title = feature_2, tickfont = list(size = min(14,max(6,500/ncol(d_summary))))),
@@ -511,7 +506,7 @@ SHAP_lines <- function(d, weight, feature_1, feature_2, banding_1, banding_2, fa
                type = 'scatter',
                mode = 'lines',
                hovertemplate = paste('(%{x}, %{y:.3f})')
-  ) %>%
+  ) |>
     plotly::layout(
       font = list(family = 'Helvetica Neue'),
       title = list(text = boldify(paste0('SHAP lines plot: ',feature_1, ' x ', feature_2)), font = list(size = 14), y= 0.98),

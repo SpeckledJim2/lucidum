@@ -245,7 +245,7 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
         postcode_centroid <- coords_and_zoom[[1]]
         zoom_level <- coords_and_zoom[[2]]
         if(!is.null(postcode_centroid)){
-          leafletProxy("map", session) %>% setView(lng=postcode_centroid[[1]],lat=postcode_centroid[[2]],zoom=zoom_level)
+          leafletProxy("map", session) |> setView(lng=postcode_centroid[[1]],lat=postcode_centroid[[2]],zoom=zoom_level)
           if(nchar(input$postcode)>2){
             postcode_area <- substr(input$postcode,1,regexpr('[0-9]', input$postcode)-1)
             plot_postcode_area(postcode_area)
@@ -419,7 +419,7 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot
         notification_message, duration = 10, type = 'warning'
       )
       m |>
-        leaflet::addMapPane('sector_polygons', zIndex = 405) %>%
+        leaflet::addMapPane('sector_polygons', zIndex = 405) |>
         leaflet::addPolygons(data = sectors_sf,
                              layerId = sectors_sf$PostcodeSector,
                              group = 'Sector',
@@ -437,8 +437,8 @@ viz_create_map <- function(map, d, response, weight, kpi_spec, map_options, plot
     }
     # add on units if available
     if(!is.null(unit_summary)){
-      m %>%
-        addMapPane('points', zIndex = 420) %>%
+      m |>
+        addMapPane('points', zIndex = 420) |>
         addCircles(data = unit_summary,
                    layerId = unit_summary$PostcodeUnit,
                    lng=unit_summary$long,

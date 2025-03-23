@@ -243,7 +243,7 @@ histogram_chart <- function(d, response, weight, num_bins, log_scale, normalise,
                    nbinsx = num_bins,
                    histnorm = normalise,
                    cumulative = list(enabled=as.logical(as.numeric(inc_cum)))) |>
-        layout(hovermode = 'x') %>%
+        layout(hovermode = 'x') |>
         layout(margin = list(l = 50, r = 50, b = 10, t = 70, pad = 4)) |>
         layout(xaxis = list(title = '', type = x_scale)) |>
         layout(yaxis = list(title = NULL, type = y_scale)) |>

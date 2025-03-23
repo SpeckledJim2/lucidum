@@ -478,8 +478,10 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, cro
         brks_down <- exp(seq(-max_abs_value,0,step))
         brks_up <- exp(seq(step,max_abs_value,step))
       }
-      clrs_down <- round(seq(100, 255, length.out = length(brks_down)), 0) %>% {paste0("rgb(",.,",255,", ., ")")}
-      clrs_up <- round(seq(255, 100, length.out = length(brks_up) + 1), 0) %>% {paste0("rgb(255,", ., ",", ., ")")}
+      green_func <- function(x) {paste0("rgb(", x, ",255,", x, ")")}
+      red_func <- function(x) {paste0("rgb(255,", x,",",x, ")")}
+      clrs_down <- round(seq(100, 255, length.out = length(brks_down)), 0) |> green_func()
+      clrs_up <- round(seq(255, 100, length.out = length(brks_up) + 1), 0) |> red_func()
       brks <- c(brks_down, brks_up)
       clrs <- c(clrs_down, clrs_up)
     }
@@ -501,7 +503,7 @@ GlimmaR_format_table_DT <- function(tabulation, vars, transform, show_terms, cro
         t <- t |> formatStyle(columns = transform_idx, backgroundColor = styleInterval(brks, clrs))
       }
     } else {
-      t <- data.table(V1 = 'no model tabulated') %>% DT::datatable()
+      t <- data.table(V1 = 'no model tabulated') |> DT::datatable()
     }
     return(t)
   }

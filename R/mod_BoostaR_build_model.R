@@ -1119,11 +1119,11 @@ rhandsontable_formatted <- function(dt, height){
     rowHeaders = FALSE,
     columnSorting = TRUE,
     colWidths = c(40,8,8,20,15),
-    height = height) %>%
-    hot_table(stretchH = 'all', highlightRow = TRUE) %>%
-    hot_col(c('gain','include'), valign='htCenter')  %>%
-    hot_col('gain', format = "0.0000") %>%
-    hot_col(c('feature','gain'), readOnly = TRUE) %>%
+    height = height) |>
+    hot_table(stretchH = 'all', highlightRow = TRUE) |>
+    hot_col(c('gain','include'), valign='htCenter')  |>
+    hot_col('gain', format = "0.0000") |>
+    hot_col(c('feature','gain'), readOnly = TRUE) |>
     hot_cols(manualColumnResize = TRUE)
 }
 check_model_features_and_parameters <- function(d, response, weight, input, feature_table, objective){
@@ -1731,12 +1731,12 @@ evaluation_plot <- function(BoostaR_model, view){
       y_max <- max(eval_results$model_test_error)
       y_range <- y_max - y_min
     }
-    plot_ly(eval_results, hovertemplate = paste('(%{x}, %{y})')) %>%
-      add_trace(x = ~iter, y = ~model_train_error, type = 'scatter', mode = 'markers', name = 'train', marker = list(color =  grDevices::rgb(255/255,0/255,0/255))) %>%
-      add_trace(x = ~iter, y = ~model_test_error, type = 'scatter', mode = 'markers', name = 'test', marker = list(color =  grDevices::rgb(0/255,0/255,0/255))) %>%
-      config(displayModeBar = FALSE) %>%
-      layout(legend = list(orientation = 'v', x = 1.05, y = 0.6)) %>%
-      layout(hovermode = 'x') %>%
+    plot_ly(eval_results, hovertemplate = paste('(%{x}, %{y})')) |>
+      add_trace(x = ~iter, y = ~model_train_error, type = 'scatter', mode = 'markers', name = 'train', marker = list(color =  grDevices::rgb(255/255,0/255,0/255))) |>
+      add_trace(x = ~iter, y = ~model_test_error, type = 'scatter', mode = 'markers', name = 'test', marker = list(color =  grDevices::rgb(0/255,0/255,0/255))) |>
+      config(displayModeBar = FALSE) |>
+      layout(legend = list(orientation = 'v', x = 1.05, y = 0.6)) |>
+      layout(hovermode = 'x') |>
       layout(margin = list(r = 25, l = 10, t = 50),
              title = list(text = paste0('<b>',
                                         'evaluation metric: ',

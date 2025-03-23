@@ -262,28 +262,28 @@ BoostaR_render_tree_graph <- function(dt, colours, rules = NULL){
     
     # make the chart
     edges <- DiagrammeR::create_edge_df(
-      from  = match(dt[Feature != "Leaf", c(ID)] %>% rep(2), dt$ID),
+      from  = match(dt[Feature != "Leaf", c(ID)] |> rep(2), dt$ID),
       to    = match(dt[Feature != "Leaf", c(Yes, No)], dt$ID),
-      label = dt[Feature != "Leaf", paste(decision_type, Split)] %>%
+      label = dt[Feature != "Leaf", paste(decision_type, Split)] |>
         c(rep("", nrow(dt[Feature != "Leaf"]))),
-      style = dt[Feature != "Leaf", ifelse(Missing == Yes, "bold", "solid")] %>%
+      style = dt[Feature != "Leaf", ifelse(Missing == Yes, "bold", "solid")] |>
         c(dt[Feature != "Leaf", ifelse(Missing == No, "bold", "solid")]),
       rel   = "leading_to")
     graph <- DiagrammeR::create_graph(
       nodes_df = nodes,
       edges_df = edges,
       attr_theme = NULL
-    ) %>%
+    ) |>
       DiagrammeR::add_global_graph_attrs(
         attr_type = "graph",
         attr  = c("layout", "rankdir"),
         value = c("dot", "LR")
-      ) %>%
+      ) |>
       DiagrammeR::add_global_graph_attrs(
         attr_type = "node",
         attr  = c("color", "style", "fontname"),
         value = c("DimGray", "filled", "Helvetica")
-      ) %>%
+      ) |>
       DiagrammeR::add_global_graph_attrs(
         attr_type = "edge",
         attr  = c("color", "arrowsize", "arrowhead", "fontname"),

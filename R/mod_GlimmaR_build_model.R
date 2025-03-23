@@ -7,7 +7,6 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-#' @importFrom readr read_file 
 mod_GlimmaR_build_model_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -279,7 +278,6 @@ mod_GlimmaR_build_model_ui <- function(id){
 #' buildGlimmaR Server Functions
 #'
 #' @import splines
-#' @importFrom readr read_file
 #'
 #' @noRd 
 mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, GlimmaR_models, GlimmaR_idx, BoostaR_models, BoostaR_idx, crosstab_selector){
@@ -290,7 +288,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
     observeEvent(demo(), once = TRUE, {
       if(demo()){
         fpath <- system.file("glm_formula.csv", package="lucidum")
-        txt <- read_file(file = fpath)
+        txt <- paste(readLines(con = fpath, warn = FALSE), collapse = "\n")
       } else {
         txt <- '# Enter the glm formula'
       }
@@ -399,7 +397,7 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
       shinyFileChoose(input, "formula_load", roots=volumes, session=session)
       fileinfo <- parseFilePaths(volumes, input$formula_load)
       if (nrow(fileinfo) > 0) {
-        glm_formula <- readr::read_file(file = fileinfo$datapath)
+        glm_formula <- paste(readLines(con = fileinfo$datapath, warn = FALSE), collapse = "\n")
         updateAceEditor(session, editorId = 'glm_formula', value = glm_formula)
       }
     })
@@ -888,7 +886,7 @@ GlimmaR_coefficient_DT <- function(coefficients_dt, full_terms){
       long_terms <- nchar(coefficients_for_display$term)>40
       coefficients_for_display[long_terms, term := paste0(substr(term,1,40), '...')]
     }
-    coefficients_for_display %>%
+    coefficients_for_display |>
       DT::datatable(rownames= TRUE,
                     extensions = 'Buttons',
                     selection = 'single',#HERE
@@ -908,10 +906,10 @@ GlimmaR_coefficient_DT <- function(coefficients_dt, full_terms){
                                    columnDefs = list(list(width = '500px', targets =c(1))
                                    )
                                    
-                    )) %>%
-      DT::formatStyle(columns = 0:4, fontSize = '85%', lineHeight='10%') %>%
-      DT::formatPercentage(c("p.value"), 1) %>%
-      DT::formatSignif(c("estimate","std.error"), 4) %>%
+                    )) |>
+      DT::formatStyle(columns = 0:4, fontSize = '85%', lineHeight='10%') |>
+      DT::formatPercentage(c("p.value"), 1) |>
+      DT::formatSignif(c("estimate","std.error"), 4) |>
       DT::formatStyle('p.value',
                       target = 'row',
                       backgroundColor = DT::styleInterval(c(0.01,0.05,0.1),

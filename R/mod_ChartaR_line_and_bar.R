@@ -908,46 +908,46 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
       # add SHAP ribbons
       # mean
       # remove rows from d with NAs for SHAP values
-      p <- p %>%
+      p <- p |>
         add_trace(x = dt[[1]], y = dt[['mean']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   line = list(color = 'rgba(200, 50, 50, 1.0)', dash = 'dot'),
                   showlegend = TRUE, name = 'SHAP_mean')
       # 25th-75th percentiles
-      p <- p %>%
+      p <- p |>
         add_trace(x = dt[[1]], y = dt[['perc_25']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                  showlegend = FALSE, name = 'SHAP_25') %>%
+                  showlegend = FALSE, name = 'SHAP_25') |>
         add_trace(x = dt[[1]], y = dt[['perc_75']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                   showlegend = TRUE, name = 'SHAP_25_75')
       # 5th-95th percentiles
-      p <- p %>%
+      p <- p |>
         add_trace(x = dt[[1]], y = dt[['perc_5']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fillcolor='rgba(200, 50, 50, 0.3)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                  showlegend = FALSE, name = 'SHAP_5') %>%
+                  showlegend = FALSE, name = 'SHAP_5') |>
         add_trace(x = dt[[1]], y = dt[['perc_95']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.2)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                   showlegend = TRUE, name = 'SHAP_5_95')
       # min to max SHAP
       if(SHAP_cols==7){
-        p <- p %>%
+        p <- p |>
           add_trace(x = dt[[1]], y = dt[['min']], type = 'scatter', mode = 'lines', yaxis = "y2",
                     fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
-                    showlegend = FALSE, name = 'SHAP_min') %>%
+                    showlegend = FALSE, name = 'SHAP_min') |>
           add_trace(x = dt[[1]], y = dt[['max']], type = 'scatter', mode = 'lines', yaxis = "y2",
                     fill = 'tonexty', fillcolor='rgba(200, 50, 50, 0.1)', line = list(color = 'rgba(200, 50, 50, 0.0)'),
                     showlegend = TRUE, name = 'SHAP_min_max')
       }
     }
     if(LP_col){
-      p <- p %>%
+      p <- p |>
         add_trace(x = dt[[1]], y = dt[['LP_mean']], type = 'scatter', mode = 'lines', yaxis = "y2",
                   line = list(color = 'rgba(50, 50, 200, 1.0)', dash = 'dot'),
                   showlegend = TRUE, name = 'LP')
     }
     if(show_labels=='All'){
       range <- max(dt[[first_line_col]], na.rm = TRUE) - min(dt[[first_line_col]], na.rm = TRUE)
-      p <- p %>%
+      p <- p |>
         add_text(x = dt[[1]],
                  y = dt[[first_line_col]] + range * 0.03,
                  text = apply_kpi_format(dt[[first_line_col]], response, weight, kpi_spec),
