@@ -184,7 +184,7 @@ get_feature_summary <- function(dt, col) {
     }
   } else {
     summary <- dt[total_filter == 1L, .N, by = col][order(-N)]
-    setnames(summary, c(col, 'count'))
+    setnames(summary, c('Level', 'count'))
     if (nrow(summary) > 10000) {
       other_total <- summary[10001:.N, sum(count)]
       summary <- summary[1:10000]
