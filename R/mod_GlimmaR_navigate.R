@@ -1157,7 +1157,7 @@ predict_tabulations <- function(dt, tabulations, feature_spec){
                           ' cells)')
         )
         vars <- unlist(strsplit(names(tabulations)[[i]], '|', fixed = TRUE))
-        dt_var_cols <- dt[, ..vars]
+        dt_var_cols <- dt[, .SD, .SDcols = vars]
         # band numerical columns
         for(v in vars){
           x_banded <- band_var_with_feature_spec(dt_var_cols[[v]],v,feature_spec)

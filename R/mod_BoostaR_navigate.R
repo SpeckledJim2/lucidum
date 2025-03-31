@@ -557,7 +557,7 @@ lgbm.convert.to.tables <- function(d, BoostaR_model, base_risk = NULL, feature_s
         vars <- unlist(strsplit(table_name, '|', fixed = TRUE))
         dummy_risks <- base_risk[rep(1,each=nrow(tabulations[[i]]))]
         new_cols <- vars # otherwise will get warning on next line
-        dummy_risks[, (new_cols):=tabulations[[i]][,..vars]]
+        dummy_risks[, (new_cols) := tabulations[[i]][, .SD, .SDcols = vars]]
         # make factor columns character so that the rules can be correctly applied by lgb.convert_with_rules
         cols <- names(dummy_risks)[sapply(dummy_risks, inherits, 'factor')]
         dummy_risks[, (cols) := lapply(.SD, as.character), .SDcols = cols]
@@ -688,7 +688,7 @@ predict_tabulations_lgbm <- function(dt, tabulations, feature_spec){
                           ' cells)')
         )
         vars <- unlist(strsplit(names(tabulations)[[i]], '|', fixed = TRUE))
-        dt_var_cols <- dt[, ..vars]
+        dt_var_cols <- dt[, .SD, .SDcols = vars]
         # band numerical columns
         for(v in vars){
           x_banded <- band_var_with_feature_spec(dt_var_cols[[v]],v,feature_spec)
