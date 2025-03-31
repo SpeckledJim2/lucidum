@@ -660,23 +660,40 @@ GlimmaR_tabulation_plot <- function(tabulation, feature_cols, crosstab, transfor
     }
     if (crosstab == "no crosstab") {
       color <- NULL
+      crosstab_colors <- NULL
       n_row <- nrow(tabulation_dt)
+      n_crosstab <- 1
     } else {
       feature_cols <- setdiff(feature_cols, crosstab)
       color <- as.formula(paste0("~", crosstab))
       tabulation_dt[, (crosstab) := factor(get(crosstab), levels = unique(get(crosstab)))]
-      n_row <- nrow(tabulation_dt) / uniqueN(tabulation_dt[[crosstab]])
+      n_crosstab <- uniqueN(tabulation_dt[[crosstab]])
+      n_row <- nrow(tabulation_dt) / n_crosstab
     }
     tabulation_dt[, feature_concat := do.call(paste, c(.SD, list(sep = " x "))), .SDcols = feature_cols]
     tabulation_dt[, feature_concat := factor(feature_concat, levels = unique(feature_concat))]
-    p <- plot_ly(
-      tabulation_dt,
-      x = ~feature_concat,
-      y = y_formula,
-      color = color,
-      type = 'scatter',
-      mode = 'lines+markers'
-    ) |>
+    if(n_crosstab>2 & n_crosstab<9){
+      p <- plot_ly(
+        tabulation_dt,
+        x = ~feature_concat,
+        y = y_formula,
+        color = color,
+        type = 'scatter',
+        mode = 'lines+markers'
+      )
+    } else {
+      p <- plot_ly(
+        tabulation_dt,
+        x = ~feature_concat,
+        y = y_formula,
+        color = color,
+        colors = hcl.colors(n_crosstab, 'Set 2'),
+        type = 'scatter',
+        mode = 'lines+markers'
+      )
+    }
+    
+    p <- p |>
       layout(
         xaxis = list(
           title = paste(feature_cols, collapse = ' x '),
