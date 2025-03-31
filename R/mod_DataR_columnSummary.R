@@ -150,83 +150,51 @@ max2 <- function(x){
 countNAs <- function(x){
   sum(is.na(x))
 }
-get_feature_summary <- function(d, col){
-  if(!is.null(d) & !is.null(col)){
-    if(col %in% names(d)){
-      x <- d[which(total_filter==1)][[col]]
-      type <- 8
-      if(is.null(x)){
-        # do nothing
-      } else if(class(x)[1] %in% c('numeric','logical','integer','POSIXct','Date','IDate')){
-        if(inherits(x, c('Date','POSIXct'))){
-          # because otherwise the formulae below don't work
-          # but I need to do this better
-          x <- as.IDate(x)
-          type <- 1 # else perc doesn't always work
-        }
-        metrics <- c('Min',
-                     '1st percentile',
-                     '5th percentile',
-                     '25th percentile',
-                     'Median',
-                     'Mean',
-                     '75th percentile',
-                     '95th percentile',
-                     '99th percentile',
-                     'Max',
-                     'Standard deviation'
-        )
-        summary <- data.table(
-          metrics=c('Min',
-                    '1st percentile',
-                    '5th percentile',
-                    '25th percentile',
-                    'Median',
-                    'Mean',
-                    '75th percentile',
-                    '95th percentile',
-                    '99th percentile',
-                    'Max',
-                    'Standard deviation'
-          ),
-          value=rep(0,11)
-        )
-        summary[1, value := min(x,na.rm=TRUE)]
-        summary[2, value := stats::quantile(x,prob=0.01,na.rm=TRUE, type = type)]
-        summary[3, value := stats::quantile(x,prob=0.05,na.rm=TRUE, type = type)]
-        summary[4, value := stats::quantile(x,prob=0.25,na.rm=TRUE, type = type)]
-        summary[5, value := stats::quantile(x,prob=0.50,na.rm=TRUE, type = type)]
-        summary[6, value := mean(x, na.rm = TRUE)]
-        summary[7, value := stats::quantile(x,prob=0.75,na.rm=TRUE, type = type)]
-        summary[8, value := stats::quantile(x,prob=0.95,na.rm=TRUE, type = type)]
-        summary[9, value := stats::quantile(x,prob=0.99,na.rm=TRUE, type = type)]
-        summary[10, value := max(x,na.rm=TRUE)]
-        summary[11, value := stats::sd(x,na.rm=TRUE)]
-        # if a number, round to 6 d.p. otherwise too many digits are displayed
-        if(inherits(x, c('integer','numeric','logical'))){
-          summary[, value := signif(value, 6)]
-        }
-      } else {
-        frequencies <- sort(table(x, useNA = 'ifany'), decreasing=TRUE)
-        summary <- as.data.table(frequencies)
-        names(summary) <- c('Level','count')
-        num_levels <- nrow(summary)
-        if(num_levels>10000){
-          other_total <- summary[10001:.N, sum(count)]
-          summary <- summary[1:10000,]
-          summary <- rbind(data.table(value='Levels outside top 10k', count = other_total), summary)
-        }
-      }
-      if(class(x)[1] %in% c('IDate','POSIXct','Date')){
-        sd <- as.character(as.numeric(summary[nrow(summary), value]))
-        formatted <- summary[-.N, as.character(as.Date(value, origin = '1970-01-01'))]
-        summary[, value := NULL]
-        summary[, value := '']
-        summary[, value := c(formatted, sd)]
-      }
-      summary
+get_feature_summary <- function(dt, col) {
+  if (is.null(dt) || is.null(col) || !col %in% names(dt)) return(NULL)
+  x <- dt[total_filter == 1L, get(col)]
+  if (is.null(x)) return(NULL)
+  if (inherits(x, c('numeric', 'logical', 'integer', 'POSIXct', 'Date', 'IDate'))) {
+    type <- if (inherits(x, c('Date', 'POSIXct'))) {
+      x <- as.IDate(x)
+      1
+    } else {
+      8
+    }
+    summary <- data.table(
+      metrics = c('Min', '1st percentile', '5th percentile', '25th percentile',
+                  'Median', 'Mean', '75th percentile', '95th percentile',
+                  '99th percentile', 'Max', 'Standard deviation'),
+      value = c(
+        min(x, na.rm = TRUE),
+        stats::quantile(x, prob = 0.01, na.rm = TRUE, type = type),
+        stats::quantile(x, prob = 0.05, na.rm = TRUE, type = type),
+        stats::quantile(x, prob = 0.25, na.rm = TRUE, type = type),
+        stats::quantile(x, prob = 0.50, na.rm = TRUE, type = type),
+        mean(x, na.rm = TRUE),
+        stats::quantile(x, prob = 0.75, na.rm = TRUE, type = type),
+        stats::quantile(x, prob = 0.95, na.rm = TRUE, type = type),
+        stats::quantile(x, prob = 0.99, na.rm = TRUE, type = type),
+        max(x, na.rm = TRUE),
+        stats::sd(x, na.rm = TRUE)
+      )
+    )
+    if (inherits(x, c('integer', 'numeric', 'logical'))) {
+      summary[, value := signif(value, 6)]
+    }
+  } else {
+    summary <- dt[total_filter == 1L, .N, by = col][order(-N)]
+    setnames(summary, c(col, 'count'))
+    if (nrow(summary) > 10000) {
+      other_total <- summary[10001:.N, sum(count)]
+      summary <- summary[1:10000]
+      summary <- rbindlist(list(data.table(Level = 'Levels outside top 10k', count = other_total), summary))
     }
   }
+  if (inherits(x, c('IDate', 'POSIXct', 'Date'))) {
+    summary[, value := c(as.character(as.Date(summary$value[-.N], origin = '1970-01-01')), as.character(summary$value[.N]))]
+  }
+  return(summary)
 }
 
 #' @importFrom DT datatable formatStyle formatSignif
