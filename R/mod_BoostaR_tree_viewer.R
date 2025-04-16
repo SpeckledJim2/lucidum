@@ -1,12 +1,8 @@
 #' BoostaR_tree_viewer UI Function
 #'
 #' @description A shiny Module.
-#'
 #' @param id,input,output,session Internal parameters for {shiny}.
-#'
 #' @noRd 
-#'
-#' @importFrom shiny NS tagList 
 mod_BoostaR_tree_viewer_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -21,17 +17,17 @@ mod_BoostaR_tree_viewer_ui <- function(id){
           column(
             width = 6,
             div(
-              style='margin-top:18px;',
+              style = 'margin-top:18px;',
               align = 'right',
               radioGroupButtons(
                 inputId = ns('BoostaR_tree_colours'),
                 label = NULL,
-                choiceValues = c('Plain','Divergent','Spectral','Viridis'),
+                choiceValues = c('Plain', 'Divergent', 'Spectral', 'Viridis'),
                 choiceNames = c(
                   'Plain',
-                  tagList(tags$img(src='www/divergent.png', height="16px", width="16px",' Divergent')),
-                  tagList(tags$img(src='www/spectral.png', height="16px", width="16px",' Spectral')),
-                  tagList(tags$img(src='www/viridis.png', height="16px", width="16px",' Viridis'))
+                  tagList(tags$img(src = 'www/divergent.png', height = "16px", width = "16px", ' Divergent')),
+                  tagList(tags$img(src = 'www/spectral.png', height = "16px", width = "16px", ' Spectral')),
+                  tagList(tags$img(src = 'www/viridis.png', height = "16px", width = "16px", ' Viridis'))
                 ),
                 selected = 'Plain'
               )
@@ -39,108 +35,95 @@ mod_BoostaR_tree_viewer_ui <- function(id){
           )
         ),
         grVizOutput(ns("BoostaR_tree_diagram"), width = '100%', height = '75vh')
-        ),
-        column(
-          width = 4,
-          fluidRow(
-            column(
-              width = 6,
-              h3('Select tree')
-              ),
-            column(
-              width = 6,
-              div(
-                style = 'margin-top:15px',
-                textInput(
-                  ns('search_tree'),
-                  label = NULL,
-                  width = '100%',
-                  placeholder = 'feature...'
-                )
-              )
+      ),
+      column(
+        width = 4,
+        fluidRow(
+          column(width = 6, h3('Select tree')),
+          column(
+            width = 6,
+            div(
+              style = 'margin-top:15px',
+              textInput(ns('search_tree'), label = NULL, width = '100%', placeholder = 'feature...')
             )
-          ),
-          sliderInput(ns("BoostaR_tree_selector"),
-                      width = '100%',
-                      label = NULL,
-                      min = 0,
-                      max = 2000,
-                      step = 1,
-                      value = 0,
-                      ticks = FALSE,
-                      animate = TRUE
-                      ),
-          br(),
-          DTOutput(ns('BoostaR_tree_summary'))
           )
+        ),
+        sliderInput(ns("BoostaR_tree_selector"),
+                    width = '100%',
+                    label = NULL,
+                    min = 0,
+                    max = 2000,
+                    step = 1,
+                    value = 0,
+                    ticks = FALSE,
+                    animate = TRUE
+        ),
+        br(),
+        DTOutput(ns('BoostaR_tree_summary'))
       )
     )
+  )
 }
-    
+
 #' BoostaR_tree_viewer Server Functions
 #'
 #' @noRd 
 mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
-  moduleServer( id, function(input, output, session){
+  moduleServer(id, function(input, output, session){
     ns <- session$ns
-    output$BoostaR_tree_diagram <-   renderGrViz({
-      # tree diagram
-      if(length(BoostaR_models())>0){
-        model_index <- BoostaR_idx()
-        if(!is.na(model_index)){
-          if(model_index %in% names(BoostaR_models())){
-            tree_index <- NULL
-            tree_table <- BoostaR_models()[[model_index]]$tree_table
-            rules <- BoostaR_models()[[model_index]]$rules
-            tree <- tree_table[tree_index==input$BoostaR_tree_selector,]
-            if(nrow(tree)>0){
-              my_graph <- BoostaR_render_tree_graph(tree, input$BoostaR_tree_colours, rules)
-              render_graph(my_graph)
-            }
-          }
+    
+    # Tree Diagram Render
+    output$BoostaR_tree_diagram <- renderGrViz({
+      req(BoostaR_models(), BoostaR_idx())
+      model_index <- BoostaR_idx()
+      
+      # Ensure valid model index
+      if(model_index %in% names(BoostaR_models())){
+        tree_table <- BoostaR_models()[[model_index]]$tree_table
+        rules <- BoostaR_models()[[model_index]]$rules
+        tree <- tree_table[tree_index == input$BoostaR_tree_selector, ]
+        
+        if(nrow(tree) > 0){
+          my_graph <- BoostaR_render_tree_graph(tree, input$BoostaR_tree_colours, rules)
+          render_graph(my_graph)
         }
       }
     })
-    # QUESTION - same again, better to put above in observeEvent?
+    
+    # Slider Input Update
     observeEvent(c(BoostaR_models(), BoostaR_idx(), input$BoostaR_tree_selector), {
-      if(length(BoostaR_models())>0){
-        if(!is.null(BoostaR_idx())){
-          updateSliderInput(
-            session,
-            inputId = 'BoostaR_tree_selector',
-            max = max(BoostaR_models()[[BoostaR_idx()]]$tree_table$tree_index, na.rm = TRUE)
-          )
-        }
-      }
-      output$BoostaR_tree_summary <- DT::renderDT({
-        # model summary table
-        if(length(BoostaR_models())>0){
-          if(BoostaR_idx() %in% names(BoostaR_models())){
-            dt <- tree_statistics(BoostaR_models()[[BoostaR_idx()]]$tree_table, input$BoostaR_tree_selector)
-            dt |>
-              DT::datatable(rownames= FALSE,
-                            selection=list(mode="multiple", target="row"),
-                            options = list(pageLength = nrow(dt),
-                                           dom = 'rt',
-                                           scrollX = T,
-                                           searchHighlight=TRUE
-                            )
-              ) |>
-              DT::formatStyle(columns = colnames(dt), lineHeight='0%')
-          }
-        }
-      })
+      req(BoostaR_models(), BoostaR_idx())
+      model_index <- BoostaR_idx()
+      tree_table <- BoostaR_models()[[model_index]]$tree_table
+      max_tree_index <- max(tree_table$tree_index, na.rm = TRUE)
+      
+      updateSliderInput(session, 'BoostaR_tree_selector', max = max_tree_index)
     })
+    
+    # Tree Summary Table
+    output$BoostaR_tree_summary <- DT::renderDT({
+      req(BoostaR_models(), BoostaR_idx())
+      model_index <- BoostaR_idx()
+      dt <- tree_statistics(BoostaR_models()[[model_index]]$tree_table, input$BoostaR_tree_selector)
+      
+      DT::datatable(
+        dt, 
+        rownames = FALSE,
+        selection = list(mode = "multiple", target = "row"),
+        options = list(pageLength = nrow(dt), dom = 'rt', scrollX = TRUE, searchHighlight = TRUE)
+      ) %>%
+        DT::formatStyle(columns = colnames(dt), lineHeight = '0%')
+    })
+    # Search Tree for Feature
     observeEvent(input$search_tree, {
-      if(input$search_tree!=''){
-        # select first tree containing feature
-        tree_table <- BoostaR_models()[[BoostaR_idx()]]$tree_table
-        match_rows <- grepl(input$search_tree,tree_table$split_feature)
-        if(all(!match_rows)){
-          first_tree <- 0
-        } else {
-          first_tree <- tree_table[which.max(match_rows)][['tree_index']]
-        }
+      req(input$search_tree)
+      tree_table <- BoostaR_models()[[BoostaR_idx()]]$tree_table
+      # identify rows where the feature appears
+      match_rows <- which(grepl(input$search_tree, tree_table$split_feature))
+      if (length(match_rows) > 0) {
+        # select the first occurrence based on the tree index
+        first_tree <- tree_table[match_rows[1], tree_index]
+        # update the slider input
         updateSliderInput(session, 'BoostaR_tree_selector', value = first_tree)
       }
     })

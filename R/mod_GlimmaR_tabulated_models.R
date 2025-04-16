@@ -637,6 +637,7 @@ table_metric <- function(tabulation, transform, metric){
   }
   signif(value, 6)
 }
+#' @importFrom grDevices hcl.colors
 GlimmaR_tabulation_plot <- function(tabulation, feature_cols, crosstab, transform, type){
   # create a concatenated feature column (excluding crosstab if specified)
   tabulation_dt <- data.table::copy(tabulation)

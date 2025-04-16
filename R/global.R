@@ -68,6 +68,7 @@ globalVariables(
     'lr',
     'glm_prediction_rate',
     'lgbm_prediction_rate',
-    'feature_concat'
+    'feature_concat',
+    'N'
     )
   )
