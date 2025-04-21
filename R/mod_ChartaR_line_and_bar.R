@@ -231,7 +231,12 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
          weight %in% c('N',d_cols)){
         g <- d[[group_by_col]]
         if(!(is.numeric(g) & banding=='0')){
-          rows_idx <- which(d[['total_filter']]==1L)
+          # identify rows we want to include in the summary
+          if(weight=='N'){
+            rows_idx <- d[, total_filter == 1L]
+          } else {
+            rows_idx <- d[, total_filter == 1L & !is.na(get(weight)) & get(weight) > 0]
+          }
           # band the variable if numeric or date
           if(is.numeric(g) & banding!='0'){
             # band the numerical variable for plotting
@@ -282,7 +287,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
               if(weight %in% c('N','no weights')){
                 d_summary <- d[rows_idx, .(weight = .N), group_by_col]
               } else {
-                d_summary <- d[rows_idx, .(weight = sapply(.SD, sum, na.rm = TRUE)), group_by_col, .SDcols = weight]
+                d_summary <- d[rows_idx, .(weight = sum(get(weight), na.rm = TRUE)), by = group_by_col]
               }
               if(group_low_exposure=='1%'){
                 min_exposure <- 0.01 * sum(d_summary[,2])
@@ -311,12 +316,8 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           if(length(banded_col)>1 & inherits(banded_col, 'character')){
             banded_col <- as.factor(banded_col)
           }
-          # summarise data
-          if(length(rows_idx)==nrow(d)){
-            d_summary <- d[, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
-          } else {
-            d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
-          }
+          # summarise data and sort by first column
+          d_summary <- d[rows_idx, c(count = .N, lapply(.SD, sum, na.rm = TRUE)), banded_col, .SDcols = cols_to_summarise]
           setorderv(d_summary, names(d_summary)[1])
           # extract weighted mean as needed later on to calibrate SHAP values
           if(weight %in% c('N','no weights')){
@@ -333,32 +334,31 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
           }
           if(!is.null(SHAP_col)){
-            if(length(rows_idx)==nrow(d)){
-              SHAP_summary <- d[,c(min = lapply(.SD, min, na.rm = TRUE),
-                                   perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
-                                   perc_25 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.25),
-                                   mean = lapply(.SD, mean, na.rm = TRUE),
-                                   perc_75 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.75),
-                                   perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
-                                   max = lapply(.SD, max, na.rm = TRUE)
-              ),
-              banded_col,
-              .SDcols = SHAP_col]
-            } else {
-              SHAP_summary <- d[rows_idx,
-                                c(min = lapply(.SD, min, na.rm = TRUE),
-                                  perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
-                                  perc_25 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.25),
-                                  mean = lapply(.SD, mean, na.rm = TRUE),
-                                  perc_75 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.75),
-                                  perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
-                                  max = lapply(.SD, max, na.rm = TRUE)
+            SHAP_summary <- d[rows_idx,
+                              c(min = lapply(.SD, min, na.rm = TRUE),
+                                perc_5 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.05),
+                                perc_25 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.25),
+                                mean = lapply(.SD, mean, na.rm = TRUE),
+                                perc_75 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.75),
+                                perc_95 = lapply(.SD, stats::quantile, na.rm = TRUE, probs = 0.95),
+                                max = lapply(.SD, max, na.rm = TRUE)
                                 ),
-                                banded_col,
-                                .SDcols = SHAP_col]
-            }
+                              banded_col,
+                              .SDcols = SHAP_col]
+            # sort by first column
             setorderv(SHAP_summary, names(SHAP_summary)[1])
-            names(SHAP_summary)[2:8] <- c('min','perc_5','perc_25','mean','perc_75','perc_95','max')
+            # rename columns
+            SHAP_cols <- c('min','perc_5','perc_25','mean','perc_75','perc_95','max')
+            setnames(SHAP_summary, old = names(SHAP_summary)[2:8], new = SHAP_cols)
+            # remove NaN's and Inf's
+            SHAP_summary[, (SHAP_cols) := lapply(.SD, function(x) {
+              x[is.nan(x) | is.infinite(x)] <- NA
+              return(x)
+            }), .SDcols = SHAP_cols]
+            # carry forward values to eliminate NAs
+            SHAP_summary[, (SHAP_cols) := lapply(.SD, nafill, type = "locf"), .SDcols = SHAP_cols]
+            # eliminate starting NAs
+            SHAP_summary[, (SHAP_cols) := lapply(.SD, nafill, type = "nocb"), .SDcols = SHAP_cols]
             # remove min and max if selected
             n_SHAP_cols <- 8
             if(show_partial_dependencies=='GBM-'){
@@ -406,11 +406,7 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
             }
           }
           if(!is.null(LP_col)){
-            if(length(rows_idx)==nrow(d)){
-              LP_summary <- d[, lapply(.SD, mean, na.rm = TRUE), banded_col, .SDcols = LP_col]
-            } else {
-              LP_summary <- d[rows_idx, lapply(.SD, mean, na.rm = TRUE), banded_col, .SDcols = LP_col]
-            }
+            LP_summary <- d[rows_idx, lapply(.SD, mean, na.rm = TRUE), banded_col, .SDcols = LP_col]
             setorderv(LP_summary, names(LP_summary)[1])
             names(LP_summary)[2] <- c('LP_mean')
             # scale LP values to mean
@@ -424,7 +420,6 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
                 }
                 LP_summary[, 2] <- LP_summary[, 2] + wtd_mean - wtd_LP_mean
               } else if (glm_link=='log'){
-                
                 LP_summary[, 2] <- exp(LP_summary[, 2]) # exponentiate for log link
                 if(weight %in% c('N','no weights')){
                   wtd_LP_mean <- sum(d_summary[,2]*LP_summary[['LP_mean']], na.rm = TRUE)/sum(d_summary[,2], na.rm = TRUE)
@@ -528,7 +523,6 @@ line_and_bar_summary <- function(d, response, weight, group_by_col, add_cols, ba
           if(length(add_cols)==1 & sigma_bars!=0){
             fitted <- add_cols[1]
             if(inherits(banded_col, 'character')){
-              # low exposure rows
               bands <- d[[banded_col]][rows_idx]
             } else {
               bands <- banded_col
@@ -1025,10 +1019,10 @@ plot_colour <- function(x){
 }
 get_sd_estimate_by_group <- function(d, rows_idx, response, weight, fitted, add_cols, group_by_col, n_samples, sigma_bars){
   n_groups <- 20
-  n_rows <- length(rows_idx)
+  n_rows <- sum(rows_idx)
   # create n random columns with numbers from 1 to n_groups
   set.seed(42)
-  rand_cols <- matrix(sample.int(n_groups,size=n_samples*n_rows,replace=TRUE), nrow=length(rows_idx), ncol=n_samples)
+  rand_cols <- matrix(sample.int(n_groups,size=n_samples*n_rows,replace=TRUE), nrow=n_rows, ncol=n_samples)
   # for each sample, create response-fitted cut by group_by_col and samples
   for(i in 1:n_samples){
     random_col <- rand_cols[,i]
