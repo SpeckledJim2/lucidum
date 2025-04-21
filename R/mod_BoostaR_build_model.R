@@ -206,7 +206,7 @@ mod_BoostaR_build_model_ui <- function(id){
             h3('Parameters')
           ),
           column(
-            width = 5,
+            width = 4,
             align = 'right',
             div(
               style = 'margin-top:16px',
@@ -235,7 +235,29 @@ mod_BoostaR_build_model_ui <- function(id){
             )
           ),
           column(
-            width = 4,
+            width = 2,
+            align = 'right',
+            style = 'margin-top:16px; padding-bottom:0px',
+            textInput(
+              inputId = ns('BoostaR_tweedie_variance_power'),
+              label = NULL,
+              placeholder = 'var.power'),
+            tippy_this(
+              ns('BoostaR_tweedie_variance_power'),
+              delay = 2000,
+              placement = 'bottom',
+              tooltip = tippy_text(
+                '<b>Tweedie variance power</b><br/>
+                    Only used with the Tweedie objective<br/>
+                    Set this closer to 2 to shift towards a Gamma distribution<br/>
+                    Set this closer to 1 to shift towards a Poisson distribution<br/>
+                    Constraints: 1.0 <= tweedie_variance_power < 2.0',
+                12
+              )
+            )
+          ),
+          column(
+            width = 3,
             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
             align = 'right',
 
@@ -426,15 +448,15 @@ mod_BoostaR_build_model_ui <- function(id){
                     width = '100%',
                     label = 'Objective',
                     selected = 'gamma',
-                    choices = list('identity link' = list('mean_squared_error',
+                    choices = list('log link' = list('poisson',
+                                                     'gamma',
+                                                     'tweedie'),
+                                   'logit link' = list('binary'),
+                                   'identity link' = list('mean_squared_error',
                                                           'mean_absolute_error',
                                                           'mean_absolute_percentage_error',
                                                           'huber',
-                                                          'fair'),
-                                   'log link' = list('poisson',
-                                                     'gamma',
-                                                     'tweedie'),
-                                   'logit link' = list('binary')
+                                                          'fair')
                     )
                   )
                 ),
@@ -450,7 +472,27 @@ mod_BoostaR_build_model_ui <- function(id){
                     12
                   )
                 ),
-                div(style = "margin-top:-6px"),
+                selectInput(
+                  inputId = ns('BoostaR_metric'),
+                  label = 'Metric',
+                  choices = list('common' = list(
+                                   'poisson' = 'poisson',
+                                   'gamma' = 'gamma',
+                                   'tweedie' = 'tweedie',
+                                   'binary' = 'binary_logloss'
+                                   ),
+                                 'other' = list(
+                                   'auc' = 'auc',
+                                   'mean_absolute_error (l1)' = 'l1',
+                                   'mean_squared_error (l2)' = 'l2',
+                                   'mean_absolute_percentage_error' = 'mape',
+                                   'rmse' = 'rmse',
+                                   'huber' = 'huber',
+                                   'fair' = 'fair'
+                                   )
+                                 ),
+                  selected = 'gamma'
+                  ),
                 div(
                   id = ns('offset_wrapper'),
                   selectInput(
@@ -471,28 +513,7 @@ mod_BoostaR_build_model_ui <- function(id){
                     The initial score should be in the space of transformed values",
                     12
                     )
-                  ),
-                div(style = "margin-top:-6px"),
-                radioGroupButtons(
-                  inputId = ns('BoostaR_calculate_SHAP_values'),
-                  label = 'Calculate SHAP values',
-                  width = '100%',
-                  justified = TRUE,
-                  choices = c('No','10k','All'),
-                  selected = 'All',
-                ),
-                tippy_this(
-                  ns('BoostaR_calculate_SHAP_values'),
-                  delay = 2000,
-                  placement = 'bottom',
-                  tooltip = tippy_text(
-                    '<b>Calculate SHAP values</b><br/>
-                    SHAP values can take a long time to calculate depending on model complexity<br/>
-                    Choose 10k to calculate SHAP values on a random sample<br/>
-                    Choose No to suppress SHAP value calculation',
-                    12
                   )
-                ),
               ),
             )
           ),
@@ -574,20 +595,23 @@ mod_BoostaR_build_model_ui <- function(id){
               ),
               column(
                 width = 6,
-                textInput(
-                  ns('BoostaR_tweedie_variance_power'),
-                  'Tweedie var power',
-                  value = 1.5),
+                radioGroupButtons(
+                  inputId = ns('BoostaR_calculate_SHAP_values'),
+                  label = 'Calculate SHAP values',
+                  width = '100%',
+                  justified = TRUE,
+                  choices = c('No','10k','All'),
+                  selected = 'All',
+                ),
                 tippy_this(
-                  ns('BoostaR_tweedie_variance_power'),
+                  ns('BoostaR_calculate_SHAP_values'),
                   delay = 2000,
                   placement = 'bottom',
                   tooltip = tippy_text(
-                    '<b>Tweedie variance power</b><br/>
-                    Only used with the Tweedie objective<br/>
-                    Set this closer to 2 to shift towards a Gamma distribution<br/>
-                    Set this closer to 1 to shift towards a Poisson distribution<br/>
-                    Constraints: 1.0 <= tweedie_variance_power < 2.0',
+                    '<b>Calculate SHAP values</b><br/>
+                    SHAP values can take a long time to calculate depending on model complexity<br/>
+                    Choose 10k to calculate SHAP values on a random sample<br/>
+                    Choose No to suppress SHAP value calculation',
                     12
                   )
                 ),
@@ -650,11 +674,11 @@ mod_BoostaR_build_model_ui <- function(id){
             div(style = "margin-top:-15px; padding-top:0px"),
             fluidRow(
               column(
-                width = 6,
+                width = 4,
                 h3('Evaluation log')
               ),
               column(
-                width = 6,
+                width = 8,
                 align = 'right',
                 div(
                   style = 'margin-top:20px; margin-bottom:-10px',
@@ -867,7 +891,12 @@ mod_BoostaR_build_model_server <- function(id, d, dt_update, response, weight, f
             }
             setProgress(value = 0, message = message)
             params <- c(main_params_combos[i], additional_params)
-            params$metric <- metric_from_objective(params$objective)
+            # set the training metric
+            params$metric <- input$BoostaR_metric
+            # derive metric from objective if selected
+            if(params$metric=='use objective'){
+              params$metric <- metric_from_objective(params$objective)
+            }
             BoostaR_model <- build_lgbm(lgb_dat, params, lgb_dat$offset, input$BoostaR_calculate_SHAP_values, input$ebm_mode, BoostaR_feature_table())
             # add on predictions_rate if weight has been used
             if(weight()!='N'){
@@ -1237,7 +1266,7 @@ make_custom_fics <- function(x, features){
   fics <- fics[keep]
 }
 extract_main_lgbm_parameters <- function(input){
-  list(
+  main_params <- list(
     objective = input$BoostaR_objective,
     num_iterations = as.numeric(input$BoostaR_num_rounds),
     early_stopping_round = as.numeric(input$BoostaR_early_stopping),
@@ -1253,6 +1282,10 @@ extract_main_lgbm_parameters <- function(input){
     lambda_l2 = input$BoostaR_lambda_l2,
     min_data_in_leaf = input$BoostaR_min_data_in_leaf
   )
+  if(is.na(main_params$tweedie_variance_power) | main_params$objective != 'tweedie'){
+    main_params$tweedie_variance_power <- NULL
+  }
+  main_params
 }
 extract_additional_lgbm_parameters <- function(x){
   # lgbm parameters
@@ -1762,9 +1795,15 @@ update_GBM_parameters <- function(session, output, BoostaR_model){
     updateRadioGroupButtons(session, inputId = 'ebm_mode', selected = BoostaR_model$ebm_mode)
     updateTextInput(session, inputId = 'BoostaR_num_rounds', value = BoostaR_model$params$num_iterations)
     updateTextInput(session, inputId = 'BoostaR_early_stopping', value = BoostaR_model$params$early_stopping_round)
-    updateTextInput(session, inputId = 'BoostaR_tweedie_variance_power', value = BoostaR_model$params$tweedie_variance_power)
+    if(is.null(BoostaR_model$params$tweedie_variance_power)){
+      val <- ''
+    } else {
+      val <- BoostaR_model$params$tweedie_variance_power
+    }
+    updateTextInput(session, inputId = 'BoostaR_tweedie_variance_power', value = val)
     updateRadioGroupButtons(session, inputId = 'BoostaR_boosting', selected = BoostaR_model$params$boosting)
     updateSelectInput(session, inputId = 'BoostaR_objective', selected = BoostaR_model$params$objective)
+    updateSelectInput(session, inputId = 'BoostaR_metric', selected = BoostaR_model$params$metric)
     updateSelectInput(session, inputId = 'BoostaR_initial_score', selected = BoostaR_model$init_score)
     output$BoostaR_learning_rate_UI <- renderUI({
       sliderInput(
