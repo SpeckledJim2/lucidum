@@ -79,6 +79,26 @@ mod_GlimmaR_build_model_ui <- function(id){
             tippy_this(ns('data_to_use'), delay = 1000, placement = 'right', tooltip = tippy_text('Choose rows supplied to GLM',12))
           ),
           column(
+            width = 4,
+            align = 'right',
+            actionButton(
+              inputId = ns('clear_formula'),
+              label = 'clear',
+              icon = icon("minus-circle")
+            ),
+            tippy_this(ns('clear_formula'), delay = 1000, placement = 'right', tooltip = tippy_text('clear GLM formula above',12)),
+            actionButton(
+              inputId = ns('textsize_minus'),
+              label = "A-",
+              style = 'padding-left: 8px; padding-right:8px'
+            ),
+            actionButton(
+              inputId = ns('textsize_plus'),
+              label = "A+",
+              style = 'padding-left: 6px; padding-right:6px'
+            )
+          ),
+          column(
             width = 2,
             align = 'right',
             dropdownButton(inputId = ns('helper_dropdown'),
@@ -153,38 +173,41 @@ mod_GlimmaR_build_model_ui <- function(id){
                            ),
                            fluidRow(
                              column(
+                               width = 4,
+                               actionButton(
+                                 ns('insert_into_editor'),
+                                 label = '<- insert at cursor location'
+                               )
+                             ),
+                             column(
+                               width = 2,
+                               checkboxInput(
+                                 ns('trailing_plus'),
+                                 label = 'trailing +'
+                               )
+                             )
+                           ),
+                           fluidRow(
+                             column(
                                width = 12,
-                               textAreaInput(
-                                 inputId = ns('formula_suggestion'),
-                                 label = NULL,
-                                 width = '100%',
-                                 height = '200px',
-                                 resize = 'none'
+                               aceEditor(
+                                 ns('formula_suggestion'),
+                                 showPrintMargin = FALSE,
+                                 mode = "r",
+                                 fontSize = 16,
+                                 wordWrap = FALSE,
+                                 height = '240px',
+                                 autoScrollEditorIntoView = TRUE,
+                                 showLineNumbers = FALSE,
+                                 autoComplete = 'live',
+                                 readOnly = TRUE,
+                                 debounce = 10,
+                                 value = ''
                                )
                              )
                            )
             ),
             tippy_this(ns('helper_dropdown'), delay = 1000, placement = 'bottom', tooltip = tippy_text('Create GLM formula',12))
-          ),
-          column(
-            width = 4,
-            align = 'right',
-            actionButton(
-              inputId = ns('clear_formula'),
-              label = 'clear',
-              icon = icon("minus-circle")
-            ),
-            tippy_this(ns('clear_formula'), delay = 1000, placement = 'right', tooltip = tippy_text('clear GLM formula above',12)),
-            actionButton(
-              inputId = ns('textsize_minus'),
-              label = "A-",
-              style = 'padding-left: 8px; padding-right:8px'
-            ),
-            actionButton(
-              inputId = ns('textsize_plus'),
-              label = "A+",
-              style = 'padding-left: 6px; padding-right:6px'
-            )
           ),
           column(
             width = 3,
@@ -225,6 +248,7 @@ mod_GlimmaR_build_model_ui <- function(id){
           autoComplete = 'live',
           selectionId = 'selection',
           debounce = 10,
+          cursorId = 'cursor_pos',
           value = ''
         )
       ),
@@ -426,7 +450,31 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
         crosstab_selector(info_list)
       }
     })
-
+    observeEvent(input$insert_into_editor, {
+      # get the current content of the aceEditor
+      current_content <- input$glm_formula
+      # get cursor position info
+      ace_cursor <- input$glm_formula_cursor_pos
+      # extract row cursor is on and add on 1 (ace is 0-indexed)
+      cursor_row <- ace_cursor$row + 1
+      # split the current content into individual lines
+      content_lines <- strsplit(current_content, "\n")[[1]]
+      last_row <- length(content_lines)
+      if(cursor_row==1){
+        # put new content at start of text
+        new_content <- paste0(input$formula_suggestion,'\n\n', paste0(content_lines, collapse = '\n'))
+      } else if (cursor_row>=last_row-1){
+        # put new content at end of text
+        new_content <- paste0(paste0(content_lines, collapse = '\n'), '\n\n', input$formula_suggestion)
+      } else {
+        # we are mid way in the document
+        prefix <- paste0(content_lines[1:(cursor_row-1)], collapse = '\n')
+        suffix <- paste0(content_lines[cursor_row:length(content_lines)], collapse = '\n')
+        new_content <- paste0(prefix, '\n\n', input$formula_suggestion, '\n', suffix, collapse = '\n')
+      }
+      # update the aceEditor with the new content
+      updateAceEditor(session, "glm_formula", value = new_content)
+    })
     observe({
       if(!is.null(BoostaR_idx())){
         b <- BoostaR_models()[[BoostaR_idx()]]
@@ -447,16 +495,18 @@ mod_GlimmaR_build_model_server <- function(id, d, dt_update, response, weight, G
                         )
     })
     observe({
-      updateTextAreaInput(session,
-                          inputId = 'formula_suggestion',
-                          value = make_GlimmaR_formula_suggestion(
-                            d = d(),
-                            feature = input$helper_feature,
-                            options = input$helper_levels,
-                            level_grouping = input$helper_levels_choice,
-                            inputs = input$helper_level_text
-                            )
-                          )
+      updateAceEditor(
+        session,
+        editorId = 'formula_suggestion',
+        value = make_GlimmaR_formula_suggestion(
+          d = d(),
+          feature = input$helper_feature,
+          options = input$helper_levels,
+          level_grouping = input$helper_levels_choice,
+          inputs = input$helper_level_text,
+          trailing_plus = input$trailing_plus
+          )
+        )
     })
   })
 }
@@ -788,7 +838,7 @@ make_GlimmaR_helper_levels <- function(d, feature){
   }
   return(result)
 }
-make_GlimmaR_formula_suggestion <- function(d, feature, options, level_grouping, inputs){
+make_GlimmaR_formula_suggestion <- function(d, feature, options, level_grouping, inputs, trailing_plus){
   if(!is.null(d) & !is.null(feature)){
     comment_line <- paste0('# ', feature)
     formula_lines <- NULL
@@ -812,6 +862,10 @@ make_GlimmaR_formula_suggestion <- function(d, feature, options, level_grouping,
       }
     }
     result <- paste(comment_line, formula_lines, sep = '\n')
+    if(trailing_plus){
+      result <- paste0(result, ' +')
+    }
+    return(result)
   }
 }
 make_numerical_feature_formula <- function(feature, formula_type, inputs){
