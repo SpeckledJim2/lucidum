@@ -260,6 +260,15 @@ SHAP_flame <- function(d, weight, feature_1, banding_1, q, rebase, SHAP_ribbons,
   cols <- c('min','perc_5','perc_25','mean','perc_75','perc_95','max')
   names(SHAP_summary)[2:8] <- cols
   setorderv(SHAP_summary, names(SHAP_summary)[1])
+  # remove NaN's and Inf's
+  SHAP_summary[, (cols) := lapply(.SD, function(x) {
+    x[is.nan(x) | is.infinite(x)] <- NA
+    return(x)
+  }), .SDcols = cols]
+  # carry forward values to eliminate NAs
+  SHAP_summary[, (cols) := lapply(.SD, nafill, type = "locf"), .SDcols = cols]
+  # eliminate starting NAs
+  SHAP_summary[, (cols) := lapply(.SD, nafill, type = "nocb"), .SDcols = cols]
   # apply response transform
   base_level <- feature_spec$base_level[feature_spec$feature==feature_1]
   if(!shiny::isTruthy(base_level)) base_level <- character(0)
@@ -418,7 +427,7 @@ SHAP_surface <- function(d, weight, feature_1, feature_2, banding_1, banding_2, 
   d_cols[, banded_2 := band_var(feature_2, q, banding_2)]
   #d_cols[, banded_1 := floor(feature_1/banding_1) * banding_1]
   #d_cols[, banded_2 := floor(feature_2/banding_2) * banding_2]
-  d_summary <- d_cols[, list(SHAP = mean(SHAP)), by = c('banded_1', 'banded_2')]
+  d_summary <- d_cols[, list(SHAP = mean(SHAP, na.rm = TRUE)), by = c('banded_1', 'banded_2')]
   d_summary <- dcast(d_summary, stats::as.formula('banded_1 ~ banded_2'), value.var = 'SHAP')
   p <- plot_ly(x = names(d_summary)[-1],
                y = d_summary[[1]],
