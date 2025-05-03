@@ -183,6 +183,8 @@ apply_filter <- function(d, filter, train_test_filter){
         } else {
           f <- tryCatch({d[, eval(parse(text=filter))]}, error = function(e){e})
           if('logical' %in% class(f)){
+            # turn NAs to FALSE
+            f[is.na(f)] <- FALSE
             d[, user_filter := as.integer(f)]
           } else {
             d[, user_filter := 1L]
