@@ -13,10 +13,8 @@ load_dataset <- function(data){
     } else {
       NULL
     }
-  } else if (inherits(data, 'data.frame')){
+  } else {
     setDT(data)
-  } else if (inherits(data, 'data.table')){
-    data
   }
 }
 
