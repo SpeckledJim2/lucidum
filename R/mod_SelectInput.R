@@ -230,7 +230,7 @@ selectInput_choices <- function(
       search_choices <- tryCatch({nl_cols[grepl(search, nl_cols, ignore.case = TRUE)]}, error = function(e){e})
       search_choices <- unname(search_choices)
       if(inherits(search_choices,'simpleError')){
-        choices <- NULL
+        choices <- 'no match'
       } else if (length(search_choices)==0){
         choices <- 'no match'
       } else {
