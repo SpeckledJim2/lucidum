@@ -212,6 +212,7 @@ mod_BoostaR_build_model_ui <- function(id){
               style = 'margin-top:16px',
               radioGroupButtons(
                 inputId = ns('ebm_mode'),
+                size = 'sm',
                 label = NULL,
                 choiceValues = c('Normal','EBM mode'),
                 choiceNames = c(
