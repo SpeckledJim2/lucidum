@@ -47,16 +47,19 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
         if(BoostaR_idx()!='No GBMs'){
           b <- BoostaR_models()[[BoostaR_idx()]]
           # copy over the new predictions
-          d()[b$pred_rows, lgbm_prediction := b$predictions]
+          pred_idx <- b$pred_rows
+          predictions <- b$predictions
+          d()[pred_idx, lgbm_prediction := predictions]
           # if there is a rate prediction, copy those
           if(!is.null(b$predictions_rate)){
-            d()[b$pred_rows, lgbm_prediction_rate := b$predictions_rate]
+            predictions_rate <- b$predictions_rate
+            d()[pred_idx, lgbm_prediction_rate := predictions_rate]
           }
           # if there are tabulated predictions copy those
           if(!is.null(b$tabulated_predictions)){
             x <- b$tabulated_predictions$tabulated_lgbm
             x <- link_function(x, b$link)
-            d()[b$pred_rows, lgbm_tabulated_prediction := x]
+            d()[pred_idx, lgbm_tabulated_prediction := x]
           }
           # if there are SHAP cols copy those
           if(!is.null(b$SHAP_cols)){
@@ -77,9 +80,3 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     })
   })
 }
-    
-## To be copied in the UI
-# mod_BoostaR_ui("BoostaR_1")
-    
-## To be copied in the server
-# mod_BoostaR_server("BoostaR_1")
