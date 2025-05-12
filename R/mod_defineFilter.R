@@ -10,6 +10,19 @@
 mod_defineFilter_ui <- function(id){
   ns <- NS(id)
   tagList(
+    tags$head(
+      tags$style(HTML("
+      .btn-custom-black {
+        color: black !important;
+      }
+      .btn-custom-red {
+        color: red !important;
+      }
+      .btn-custom-blue {
+        color: blue !important;
+      }
+    "))
+    ),
     fluidRow(
       column(
         width = 12,
@@ -17,7 +30,12 @@ mod_defineFilter_ui <- function(id){
           radioGroupButtons(
             inputId = ns('train_test_filter'),
             label = 'Filter (0/0)',
-            choices = c('All','Train','Test'),
+            choiceValues = c('All','Train','Test'),
+            choiceNames = list(
+              tags$span(class = "btn-custom-black", "All"),
+              tags$span(class = "btn-custom-red", "Train"),
+              tags$span(class = "btn-custom-blue", "Test")
+            ),
             selected = 'All',
             justified = TRUE,
             size = 's',

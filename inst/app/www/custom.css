@@ -8,6 +8,14 @@ input {autocorrect: "off"; spellcheck: "false";}
     padding-right: 0px;
 }
 
+input[type='text'] {
+  font-size: 12px;
+}
+
+.shiny-input-container select {
+  font-size: 12px;
+}
+
 /* Put shiny notifications front and center */
 #shiny-notification-panel {
   top: 52px;

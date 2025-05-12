@@ -866,28 +866,51 @@ format_plotly <- function(dt, response, weight, show_labels, show_response, sigm
     }
     # filter text for title
     filter_text <- filters$train_test_filter
-    train_test_filter_text <- filters$user_filter
-    if(filter_text=='All'){filter_text <- ''}
-    if(filter_text=='Train'){filter_text <- '  training data  '}
-    if(filter_text=='Test'){filter_text <- '  test data  '}
+    if(filter_text=='All'){filter_text <- '\n'}
+    if(filter_text=='Train'){filter_text <- '  <span style="color:red;">training data</span>\n'}
+    if(filter_text=='Test'){filter_text <- '  <span style="color:blue;">test data</span>\n'}
+    # user filter text
+    if(is.null(filters$user_filter) || filters$user_filter==''){
+      train_test_filter_text <- 'no filter'
+    } else {
+      train_test_filter_text <- filters$user_filter
+    }
+    train_test_filter_text <- paste0('<span style="font-size:12px;">\u23f7 filter applied: ', train_test_filter_text, '</span>\n')
     # rescale text for title
     rescale_text <- ''
-    if(response_transform %in% c('0','1')){
+    if(response_transform %in% c('Exp','Log','Logit')){
+      rescale_text <- paste0('<span style="font-size:12px;">\u2696\uFE0F response transform: ', response_transform,'</span>\n')
+    } else if (response_transform %in% c('0','1')){
       if(is.null(base_level)){
-        rescale_text <- '  rebased'
+        rescale_text <- '<span style="font-size:12px;">\u2696\uFE0F rebased, no base level in x-axis values</span>\n'
       } else {
-        rescale_text <- paste0('  rebased, base level: ', base_level)
+        rescale_text <- paste0('<span style="font-size:12px;">\u2696\uFE0F rebased: base level ', base_level, '</span>\n')
+      }
+    }
+    # response transform text for title
+    if(response_transform %in% c('Exp','Log','Logit')){
+      rescale_text <- paste0('<span style="font-size:12px;">\u2696\uFE0F response transform: ', response_transform,'</span>\n')
+    } else if (response_transform %in% c('0','1')){
+      if(is.null(base_level)){
+        rescale_text <- '<span style="font-size:12px;">\u2696\uFE0F rebased, no base level in x-axis values</span>\n'
+      } else {
+        rescale_text <- paste0('<span style="font-size:12px;">\u2696\uFE0F rebased: base level ', base_level, '</span>\n')
       }
     }
     # make the chart
     p <- p |> layout(xaxis = xform,
                      yaxis = yform,
                      yaxis2 = yform2,
-                     margin = list(r = 100, l = 50, t = 50),
+                     margin = list(r = 100, l = 50, t = 80),
                      title = list(
-                       x = 0.03,
-                       y = 0.97,
-                       text = paste0(boldify(chart_title), filter_text, ' ', train_test_filter_text, ' ', rescale_text), font = list(size = 16)
+                       x = 0.06,
+                       y = 0.94,
+                       text = paste0(
+                         boldify(chart_title),
+                         filter_text,
+                         train_test_filter_text,
+                         rescale_text
+                         )
                        )
     ) |>
       layout(legend = list(traceorder = 'normal',
