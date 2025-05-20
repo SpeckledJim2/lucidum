@@ -13,10 +13,10 @@ mod_GlimmaR_navigate_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 3,
-        h3('GlimmaR model summary')
+        width = 2,
+        h3('GLM navigator')
       ),
-      column(width = 9,
+      column(width = 10,
              align = 'right',
              style = 'margin-top: 0px',
              div(
@@ -33,7 +33,7 @@ mod_GlimmaR_navigate_ui <- function(id){
                textInput(
                  inputId = ns('model_name'),
                  label = NULL,
-                 width = '250px',
+                 width = '200px',
                  placeholder = "enter model name"
                )
              ),
@@ -55,12 +55,6 @@ mod_GlimmaR_navigate_ui <- function(id){
                  inputId = ns('model_down'),
                  label = NULL,
                  icon = icon("arrow-down"),
-                 class = 'btn-sm'
-               ),
-               actionButton(
-                 inputId = ns('make_active'),
-                 label = 'Make active',
-                 icon = icon("chevron-right"),
                  class = 'btn-sm'
                ),
                actionButton(
@@ -86,7 +80,7 @@ mod_GlimmaR_navigate_ui <- function(id){
                  style = "display: inline-block;",
                  shinySaveButton(
                    id = ns('save_GlimmaR_models'),
-                   label = 'Save all GlimmaR models',
+                   label = 'Save all GLMs',
                    title = 'Save all GlimmaR models as .rds',
                    filename = "",
                    filetype = list(txt="rds"),

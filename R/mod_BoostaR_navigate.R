@@ -14,10 +14,10 @@ mod_BoostaR_navigate_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 3,
-        h3('BoostaR model summary')
+        width = 2,
+        h3('GBM navigator')
       ),
-      column(width = 9,
+      column(width = 10,
              align = 'right',
              style = 'margin-top: 0px',
              div(
@@ -34,7 +34,7 @@ mod_BoostaR_navigate_ui <- function(id){
                textInput(
                  inputId = ns('BoostaR_model_name'),
                  label = NULL,
-                 width = '250px',
+                 width = '200px',
                  placeholder = "enter model name"
                )
              ),
@@ -81,7 +81,7 @@ mod_BoostaR_navigate_ui <- function(id){
                  style = "display: inline-block;",
                  shinySaveButton(
                    id = ns('BoostaR_save_BoostaR_models'),
-                   label = 'Save all BoostaR models',
+                   label = 'Save all GBMs',
                    title = 'Save all BoostaR models as .rds',
                    filename = "",
                    filetype = list(txt="rds"),
