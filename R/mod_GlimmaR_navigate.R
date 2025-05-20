@@ -13,47 +13,88 @@ mod_GlimmaR_navigate_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 4,
+        width = 3,
         h3('GlimmaR model summary')
       ),
-      column(width = 8,
+      column(width = 9,
              align = 'right',
-             style = 'margin-top:16px; padding-right:16px; padding-bottom:0px',
-             actionButton(
-               inputId = ns('delete_model'),
-               label = 'Delete',
-               icon = icon("minus-circle"),
-               class = 'btn-danger'
+             style = 'margin-top: 0px',
+             div(
+               style = "display: inline-block; vertical-align: middle; margin-right: 5px; padding-right: 40px",
+               actionButton(
+                 inputId = ns('delete_model'),
+                 label = 'Delete',
+                 icon = icon("minus-circle"),
+                 class = 'btn-danger btn-sm'
+               )
              ),
-             actionButton(
-               inputId = ns('make_active'),
-               label = 'Make active',
-               icon = icon("chevron-right")
+             div(
+               style = "display: inline-block; vertical-align: middle; margin-right: 5px; padding-top: 15px",
+               textInput(
+                 inputId = ns('model_name'),
+                 label = NULL,
+                 width = '250px',
+                 placeholder = "enter model name"
+               )
              ),
-             actionButton(
-               inputId = ns('tabulate'),
-               label = 'Tabulate',
-               icon = icon("table")
-             ),
-             shinySaveButton(
-               id = ns('save_model'),
-               label = 'Save GLM',
-               title = 'Save GLM model as .rds',
-               filename = "",
-               filetype = list(txt="rds"),
-               icon = icon('upload'),
-               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-               viewtype = "detail"
-             ),
-             shinySaveButton(
-               id = ns('save_GlimmaR_models'),
-               label = 'Save all GlimmaR models',
-               title = 'Save all GlimmaR models as .rds',
-               filename = "",
-               filetype = list(txt="rds"),
-               icon = icon('upload'),
-               style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left',
-               viewtype = "detail"
+             div(
+               style = "display: inline-block;",
+               actionButton(
+                 inputId = ns('rename_model'),
+                 label = 'Rename',
+                 icon = icon("pencil"),
+                 class = 'btn-sm'
+               ),
+               actionButton(
+                 inputId = ns('model_up'),
+                 label = NULL,
+                 icon = icon("arrow-up"),
+                 class = 'btn-sm'
+               ),
+               actionButton(
+                 inputId = ns('model_down'),
+                 label = NULL,
+                 icon = icon("arrow-down"),
+                 class = 'btn-sm'
+               ),
+               actionButton(
+                 inputId = ns('make_active'),
+                 label = 'Make active',
+                 icon = icon("chevron-right"),
+                 class = 'btn-sm'
+               ),
+               actionButton(
+                 inputId = ns('tabulate'),
+                 label = 'Tabulate',
+                 icon = icon("table"),
+                 class = 'btn-sm'
+               ),
+               tags$span(
+                 style = "display: inline-block;",
+                 shinySaveButton(
+                   id = ns('save_model'),
+                   label = 'Save GLM',
+                   title = 'Save GLM model as .rds',
+                   filename = "",
+                   filetype = list(txt="rds"),
+                   icon = icon('upload'),
+                   style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left; font-size: 13px; padding: 4px 6px;',
+                   viewtype = "detail"
+                 )
+               ),
+               tags$span(
+                 style = "display: inline-block;",
+                 shinySaveButton(
+                   id = ns('save_GlimmaR_models'),
+                   label = 'Save all GlimmaR models',
+                   title = 'Save all GlimmaR models as .rds',
+                   filename = "",
+                   filetype = list(txt="rds"),
+                   icon = icon('upload'),
+                   style = 'color: #fff; background-color: #4bb03c; border-color: #3e6e37; text-align: left; font-size: 13px; padding: 4px 6px;',
+                   viewtype = "detail",
+                 )
+               )
              )
       )
     ),
@@ -234,6 +275,114 @@ mod_GlimmaR_navigate_server <- function(id, d, response, weight, feature_spec, G
               tabulated_models(temp)
           }
         }
+      }
+    })
+    observeEvent(input$rename_model, {
+      # rename flag
+      rename_success <- FALSE
+      # get currently selected model
+      rows_selected <- input$model_summary_rows_selected
+      # check if rename possible
+      if(is.null(rows_selected)){
+        message <- 'no model selected'
+      } else if(length(rows_selected)>1){
+        message <- 'more than one model selected'
+      } else {
+        if(make.names(input$model_name)!=input$model_name){
+          message <- paste0(input$model_name, ' is not a valid R name')
+        } else if(input$model_name %in% names(GlimmaR_models())){
+          message <- 'model name already exists'
+        } else {
+          # rename model
+          current_model_name <- names(GlimmaR_models())[rows_selected]
+          G <- GlimmaR_models()
+          G[[current_model_name]]$name <- input$model_name
+          names(G)[names(G)==current_model_name] <- input$model_name
+          # update GlimmaR_models
+          GlimmaR_models(G)
+          message <- paste0(current_model_name, ' renamed to ', input$model_name)
+          rename_success <- TRUE
+        }
+      }
+      if(rename_success){
+        showNotification(
+          ui = message,
+          type = 'message'
+        )
+      } else {
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'Rename error',
+                          text = message,
+                          btn_labels = c('OK')
+        )
+      }
+    })
+    observeEvent(input$model_up, {
+      # rename flag
+      move_success <- FALSE
+      message <- ''
+      if(is.null(GlimmaR_models())){
+        message <- 'no GLMs built'
+      } else if(length(GlimmaR_models())==0){
+        message <- 'no GLMs built'
+      } else {
+        rows_selected <- input$model_summary_rows_selected
+        if(is.null(rows_selected)){
+          message <- 'no GBM selected'
+        } else if (length(rows_selected)>1) {
+          message <- 'more than one model selected'
+        } else {
+          selected_model_name <- names(GlimmaR_models())[rows_selected]
+          G <- GlimmaR_models()
+          G <- reorder_list(G, selected_model_name, -1)
+          GlimmaR_models(G)
+          selectRows(dataTableProxy('model_summary'), max(1, rows_selected - 1), ignore.selectable = FALSE)
+          move_success <- TRUE
+        }
+      }
+      if(!move_success){
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'Rename error',
+                          text = message,
+                          btn_labels = c('OK')
+        )
+      }
+    })
+    observeEvent(input$model_down, {
+      # rename flag
+      move_success <- FALSE
+      message <- ''
+      if(is.null(GlimmaR_models())){
+        message <- 'no GBMs built'
+      } else if(length(GlimmaR_models())==0){
+        message <- 'no GBMs built'
+      } else {
+        rows_selected <- input$model_summary_rows_selected
+        if(is.null(rows_selected)){
+          message <- 'no GLM selected'
+        } else if (length(rows_selected)>1) {
+          message <- 'more than one model selected'
+        } else {
+          selected_model_name <- names(GlimmaR_models())[rows_selected]
+          G <- GlimmaR_models()
+          G <- reorder_list(G, selected_model_name, 1)
+          GlimmaR_models(G)
+          selectRows(dataTableProxy('model_summary'), min(length(G), rows_selected + 1), ignore.selectable = FALSE)
+          move_success <- TRUE
+        }
+      }
+      if(!move_success){
+        confirmSweetAlert(session = session,
+                          type = 'error',
+                          inputId = "temp",
+                          title = 'Rename error',
+                          text = message,
+                          btn_labels = c('OK')
+        )
       }
     })
     observe({
@@ -1228,4 +1377,56 @@ calc_terms_importances <- function(glm){
     var_importances <- NA
   }
   return(list(terms=terms_importances, vars = var_importances))
+}
+reorder_list <- function(my_list, name_to_move, move_inc) {
+  # validate inputs
+  if (!is.list(my_list)) {
+    stop("Input must be a list")
+  }
+  if (length(my_list) == 0) {
+    warning("Empty list provided, returning as is")
+    return(my_list)
+  }
+  # check if the names exist
+  if (is.null(names(my_list))) {
+    stop("List must have named elements")
+  }
+  # check if the element to move exists in the list
+  if (!(name_to_move %in% names(my_list))) {
+    stop(paste("Element", name_to_move, "not found in the list"))
+  }
+  # check if move_inc is valid
+  if (!move_inc %in% c(-1, 1)) {
+    stop("move_inc must be either -1 (move up) or 1 (move down)")
+  }
+  # find the current position of the element to move
+  current_pos <- which(names(my_list) == name_to_move)
+  # calculate the new position
+  new_pos <- current_pos + move_inc
+  # handle edge cases
+  if (new_pos < 1 || new_pos > length(my_list)) {
+    # Element is already at the beginning or end, return list unchanged
+    message(paste("Cannot move", name_to_move, "further", 
+                  ifelse(move_inc == -1, "up", "down"), 
+                  "as it's already at the", 
+                  ifelse(move_inc == -1, "beginning", "end")))
+    return(my_list)
+  }
+  
+  # Get all names in current order
+  all_names <- names(my_list)
+  # create new order by swapping positions
+  if (move_inc == 1) {
+    # moving down - swap with the next element
+    # just swap the two elements directly
+    new_order <- all_names
+    new_order[c(current_pos, current_pos+1)] <- all_names[c(current_pos+1, current_pos)]
+  } else {
+    # moving up - swap with the previous element
+    # just swap the two elements directly
+    new_order <- all_names
+    new_order[c(current_pos-1, current_pos)] <- all_names[c(current_pos, current_pos-1)]
+  }
+  # return reordered list
+  my_list[new_order]
 }
