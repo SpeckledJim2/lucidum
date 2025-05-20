@@ -8,7 +8,17 @@ mod_BoostaR_tree_viewer_ui <- function(id){
   tagList(
     fluidRow(
       column(
-        width = 8,
+        width = 5,
+        fluidRow(
+          column(
+            width = 12,
+            h3('Select tree')
+            )
+        ),
+        DTOutput(ns('BoostaR_tree_summary'))
+      ),
+      column(
+        width = 7,
         fluidRow(
           column(
             width = 6,
@@ -35,31 +45,6 @@ mod_BoostaR_tree_viewer_ui <- function(id){
           )
         ),
         grVizOutput(ns("BoostaR_tree_diagram"), width = '100%', height = '75vh')
-      ),
-      column(
-        width = 4,
-        fluidRow(
-          column(width = 6, h3('Select tree')),
-          column(
-            width = 6,
-            div(
-              style = 'margin-top:15px',
-              textInput(ns('search_tree'), label = NULL, width = '100%', placeholder = 'feature...')
-            )
-          )
-        ),
-        sliderInput(ns("BoostaR_tree_selector"),
-                    width = '100%',
-                    label = NULL,
-                    min = 0,
-                    max = 2000,
-                    step = 1,
-                    value = 0,
-                    ticks = FALSE,
-                    animate = TRUE
-        ),
-        br(),
-        DTOutput(ns('BoostaR_tree_summary'))
       )
     )
   )
@@ -72,16 +57,19 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Tree Diagram Render
+    # reactiveVal to hold the selected tree
+    selected_tree <- reactiveVal(0)
+    
+    # tree diagram render
     output$BoostaR_tree_diagram <- renderGrViz({
-      req(BoostaR_models(), BoostaR_idx())
+      req(BoostaR_models(), BoostaR_idx(), selected_tree())
       model_index <- BoostaR_idx()
       
       # Ensure valid model index
       if(model_index %in% names(BoostaR_models())){
         tree_table <- BoostaR_models()[[model_index]]$tree_table
         rules <- BoostaR_models()[[model_index]]$rules
-        tree <- tree_table[tree_index == input$BoostaR_tree_selector, ]
+        tree <- tree_table[tree_index == selected_tree(), ]
         
         if(nrow(tree) > 0){
           my_graph <- BoostaR_render_tree_graph(tree, input$BoostaR_tree_colours, rules)
@@ -90,43 +78,39 @@ mod_BoostaR_tree_viewer_server <- function(id, BoostaR_models, BoostaR_idx){
       }
     })
     
-    # Slider Input Update
-    observeEvent(c(BoostaR_models(), BoostaR_idx(), input$BoostaR_tree_selector), {
-      req(BoostaR_models(), BoostaR_idx())
-      model_index <- BoostaR_idx()
-      tree_table <- BoostaR_models()[[model_index]]$tree_table
-      max_tree_index <- max(tree_table$tree_index, na.rm = TRUE)
-      
-      updateSliderInput(session, 'BoostaR_tree_selector', max = max_tree_index)
-    })
-    
-    # Tree Summary Table
+    # new tree summary table
     output$BoostaR_tree_summary <- DT::renderDT({
       req(BoostaR_models(), BoostaR_idx())
       model_index <- BoostaR_idx()
-      dt <- tree_statistics(BoostaR_models()[[model_index]]$tree_table, input$BoostaR_tree_selector)
-      
+      tree_summary <- summarise_trees(BoostaR_models()[[model_index]]$tree_table)
+      long_terms <- nchar(tree_summary$features)>60
+      tree_summary[long_terms, features := paste0(substr(features, 1, 60), '...')]
       DT::datatable(
-        dt, 
+        tree_summary, 
         rownames = FALSE,
-        selection = list(mode = "multiple", target = "row"),
-        options = list(pageLength = nrow(dt), dom = 'rt', scrollX = TRUE, searchHighlight = TRUE)
+        selection = list(mode = "single", target = "row"),
+        options = list(
+          pageLength = nrow(tree_summary),
+          dom = 'frt',
+          scrollX = TRUE,
+          scrollY = 'calc(90vh - 200px)',
+          searchHighlight = TRUE,
+          columnDefs = list(
+            list(width = '15px', targets = 0, className = 'dt-left'),  # Width of first column
+            list(width = '15px', targets = 1, className = 'dt-left'),  # Width of second column
+            list(width = '30px', targets = 3, className = 'dt-left')   # Width of second column
+          )
+          )
       ) %>%
-        DT::formatStyle(columns = colnames(dt), lineHeight = '0%')
+        DT::formatStyle(columns = colnames(tree_summary), lineHeight = '0%', fontSize = '12px')
     })
-    # Search Tree for Feature
-    observeEvent(input$search_tree, {
-      req(input$search_tree)
-      tree_table <- BoostaR_models()[[BoostaR_idx()]]$tree_table
-      # identify rows where the feature appears
-      match_rows <- which(grepl(input$search_tree, tree_table$split_feature))
-      if (length(match_rows) > 0) {
-        # select the first occurrence based on the tree index
-        first_tree <- tree_table[match_rows[1], tree_index]
-        # update the slider input
-        updateSliderInput(session, 'BoostaR_tree_selector', value = first_tree)
-      }
+    
+    # get the selected tree
+    observeEvent(input$BoostaR_tree_summary_rows_selected, {
+      # minus one as trees start at zero
+      selected_tree(input$BoostaR_tree_summary_rows_selected[1]-1)
     })
+    
   })
 }
 
@@ -294,4 +278,37 @@ tree_statistics <- function(dt, t_idx){
     x <- data.table(parameter=names(x), value = t(signif(x[1], 6)))
     setnames(x, c('parameter','value'))
   }
+}
+
+# function to summarise each tree in a GBM
+summarise_trees <- function(dt) {
+  
+  # Calculate summary statistics by tree_index
+  result <- dt[, .(
+    # dimensionality: count unique non-NA split_features
+    dim = sum(!is.na(unique(split_feature)) & 
+                           unique(split_feature) != "NA" & 
+                           unique(split_feature) != ""),
+    
+    # concatenated features with " x " separator (sorted alphabetically)
+    features = {
+      unique_features <- unique(split_feature[!is.na(split_feature) & 
+                                                split_feature != "NA" & 
+                                                split_feature != ""])
+      if(length(unique_features) > 0) {
+        paste(unique_features, collapse = " x ")
+      } else {
+        ""
+      }
+    },
+    
+    # Sum of split_gain for the tree
+    gain = round(sum(split_gain, na.rm = TRUE), 0)
+    
+  ), by = tree_index]
+  
+  # make sure the columns are in the correct order
+  setnames(result, old = 'tree_index', new = 'tree')
+  
+  return(result)
 }
