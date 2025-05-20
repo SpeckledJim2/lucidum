@@ -16,6 +16,7 @@ globalVariables(
     'feature',
     'monotonicity',
     '..features',
+    'features',
     'objective',
     'gain',
     'tree_index',
