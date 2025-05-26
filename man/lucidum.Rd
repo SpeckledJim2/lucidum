@@ -12,16 +12,17 @@ lucidum(
   filter_spec = NULL,
   feature_spec = NULL,
   specification_path = NULL,
-  show_DataR = T,
-  show_ChartaR = T,
-  show_MappaR = T,
-  show_BoostaR = T,
-  show_GlimmaR = T,
-  show_DevelopaR = T,
+  show_DataR = TRUE,
+  show_ChartaR = TRUE,
+  show_MappaR = TRUE,
+  show_BoostaR = TRUE,
+  show_GlimmaR = TRUE,
+  show_DevelopaR = FALSE,
   starting_tab = "ChartaR",
   starting_response = NULL,
-  sidebar_width = 250,
-  num_threads = -1
+  sidebar_width = 280,
+  num_threads = -1,
+  title = NULL
 )
 }
 \arguments{
@@ -58,6 +59,8 @@ lucidum(
 \item{sidebar_width}{integer, width of the sidebar.}
 
 \item{num_threads}{integer, number of threads for data.table and lightgbm (default -1 means max threads)}
+
+\item{title}{character, text to show in the app header.}
 }
 \description{
 Launch lucidum

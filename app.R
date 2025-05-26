@@ -12,13 +12,14 @@ lucidum::lucidum(
   data = insurance,
   BoostaR_models = NULL,
   GlimmaR_models = NULL,
-  show_DevelopaR = TRUE,
+  show_DevelopaR = FALSE,
   show_MappaR = TRUE,
   starting_response = 'price',
-  starting_tab = 'DataR',
+  starting_tab = 'ChartaR',
   kpi_spec = kpi_spec,
   feature_spec = feature_spec,
   filter_spec = filter_spec,
-  sidebar_width = 250,
-  num_threads = 1
+  sidebar_width = 280,
+  num_threads = 1,
+  title = 'This is the demo dataset included with lucidum, R object RAM usage in brackets'
   )

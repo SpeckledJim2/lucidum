@@ -26,6 +26,7 @@ lucidum(
   show_BoostaR = TRUE,
   show_GlimmaR = TRUE,
   num_threads = -1,
-  sidebar_width = 250,
-  specification_path = 'inst'
+  sidebar_width = 280,
+  specification_path = 'inst',
+  title = 'This is the demo dataset included with lucidum, R object RAM usage in brackets'
   )

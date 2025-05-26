@@ -9,9 +9,9 @@
 #' @importFrom shiny NS tagList
 #' @importFrom tippy tippy_this
 mod_dashboardHeader_ui <- function(id){
-  bs <- '30px'
-  pd <- 'padding:3px 5px 3px 5px'
-  pd_marg <- 'padding:3px 5px 3px 5px; margin-right: 12px'
+  bs <- '20px'
+  pd <- 'padding:2px 5px 3px 5px; margin-top: 5px'
+  pd_marg <- 'padding:2px 5px 3px 5px; margin-right: 12px; margin-top: 5px'
   ns <- NS(id)
     dashboardHeader(
       title = span(
@@ -57,17 +57,7 @@ mod_dashboardHeader_ui <- function(id){
       # GlimmaR
       dashboardButton(ns, 'GoTo_GlimmaR_build', 'beta', 'GLM formula and coefficient table', 'show_GlimmaR', bs, pd),
       dashboardButton(ns, 'GoTo_GlimmaR_navigate', 'GlimmaR_navigate', 'GLM navigator', 'show_GlimmaR', bs, pd),
-      dashboardButton(ns, 'GoTo_GlimmaR_tabulate', 'tabulate', 'Tabulated GLMs', 'show_GlimmaR', bs, pd_marg),
-      # dataset
-      insertDashboardHeader(
-        div(
-          style="margin-left: 0px; margin-right: 12px; margin-top:10px; margin-bottom:-20px;",
-          div(
-            selectInput(inputId = "dataset", width = 360, label = NULL, choices = NULL), style = 'font-weight: 600')
-        ),
-        # if no data supplied then always show dataset chooser
-        ifelse(is.null(get_golem_options('data')), TRUE, FALSE)
-      )
+      dashboardButton(ns, 'GoTo_GlimmaR_tabulate', 'tabulate', 'Tabulated GLMs', 'show_GlimmaR', bs, pd_marg)
     )
 }
     
@@ -77,12 +67,17 @@ mod_dashboardHeader_ui <- function(id){
 mod_dashboardHeader_server <- function(id, parent, dt_update){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    # RAM
+    # title shown in header
     observeEvent(dt_update(),{
       output$ram_used <- renderUI({
+        title <- golem::get_golem_options('title')
         ram_used <- gc()
-        formatted_ram <- paste('RAM used: ', sum(ram_used[,2]),'Mb')
-        p(HTML(formatted_ram), style = 'color: white')
+        if(!is.null(title) & is.character(title)){
+          title_text <- paste0(title, ' (', round(sum(ram_used[,2]), 0),'Mb)')
+        } else {
+          title_text <- paste('RAM used: ', round(sum(ram_used[,2]), 0),'Mb')
+        }
+        p(title_text, style = 'color: white')
         })
     })
     
