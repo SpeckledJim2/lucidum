@@ -133,15 +133,19 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
       updateSelectInput(inputId = 'filter_list', selected = character(0))
+      dt_update(dt_update()+1)
       user_filter(input$free_filter)
     })
     observeEvent(input$clear_filter, {
-      free_filter(FALSE)
       updateTextInput(inputId = 'free_filter', value = '')
       message <- apply_filter(d(), '', input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
       updateSelectInput(inputId = 'filter_list', selected = character(0))
+      if(isTRUE(input$free_filter != input$filter_list) | free_filter()){
+        dt_update(dt_update()+1)
+      }
+      free_filter(FALSE)
       user_filter('')
     })
     observeEvent(c(input$filter_list, input$filter_operation), ignoreInit = TRUE, {
