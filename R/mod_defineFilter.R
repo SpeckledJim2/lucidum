@@ -121,7 +121,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
         output$message <- renderText({message})
         updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
         user_filter(flt)
-        free_filter(FALSE)
+        #free_filter(FALSE)
       }
       stop_update(FALSE)
     })
@@ -131,10 +131,11 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       message <- apply_filter(d(), input$free_filter, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      updateSelectInput(inputId = 'filter_list', selected = character(0))
       user_filter(input$free_filter)
     })
     observeEvent(input$clear_filter, {
-      free_filter(TRUE)
+      free_filter(FALSE)
       updateTextInput(inputId = 'free_filter', value = '')
       dt_update(dt_update()+1)
       message <- apply_filter(d(), '', input$train_test_filter)
@@ -143,9 +144,37 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       updateSelectInput(inputId = 'filter_list', selected = character(0))
       user_filter('')
     })
-    observeEvent(c(input$filter_list, input$filter_operation, input$train_test_filter), ignoreInit = TRUE, {
+    observeEvent(c(input$filter_list, input$filter_operation), ignoreInit = TRUE, {
+      if(!is.null(input$filter_list)){
+        free_filter(FALSE)
+      }
+      if(!is.null(input$filter_list) | (is.null(input$filter_list) & !free_filter())){
+        dt_update(dt_update()+1)
+        filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
+        message <- apply_filter(d(), filter_formula, input$train_test_filter)
+        output$message <- renderText({message})
+        updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+        if(!is.null(filter_formula)){
+          if(filter_formula=='no_filter'){
+            value <- ''
+          } else {
+            value <- filter_formula
+          }
+          updateTextInput(inputId = 'free_filter', value = value)
+        } else {
+          updateTextInput(inputId = 'free_filter', value = '')
+        }
+        user_filter(filter_formula)
+        stop_update(TRUE)
+      }
+    })
+    observeEvent(input$train_test_filter, ignoreInit = TRUE, {
       dt_update(dt_update()+1)
-      filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
+      if(free_filter()){
+        filter_formula <- input$free_filter
+      } else {
+        filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
+      }
       message <- apply_filter(d(), filter_formula, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
@@ -256,48 +285,6 @@ combine_filters <- function(filters, operation){
     filter_expression <- paste0('!(',filter_expression,')')
   }
   filter_expression
-}
-no_filter <- function(x){
-  if(x[[1]]!='no filter'){
-    x <- c('no filter', x)
-  }
-  x
-}
-filter_idx_old <- function(d, train_test){
-  if(nrow(d)>0){
-    if(is.null(train_test)){
-      if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1L, which = TRUE]
-      } else {
-        idx <- 1L:nrow(d)
-      }
-    } else if (!('train_test' %in% names(d))){
-      if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1L, which = TRUE]
-      } else {
-        idx <- 1L:nrow(d)
-      }
-    } else if (train_test == 'All'){
-      if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1L, which = TRUE]
-      } else {
-        idx <- 1L:nrow(d)
-      }
-    } else if (train_test == 'Train'){
-      if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1L & train_test==0L, which = TRUE]
-      } else {
-        idx <- d[train_test==0L, which = TRUE]
-      }
-    } else if (train_test == 'Test'){
-      if('user_filter' %in% names(d)){
-        idx <- d[user_filter==1L & train_test==1L, which = TRUE]
-      } else {
-        idx <- d[train_test==1L, which = TRUE]
-      }
-    }
-    idx
-  }
 }
 filter_idx <- function(d, train_test) {
   if (nrow(d) == 0) return(integer())
