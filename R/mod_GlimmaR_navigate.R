@@ -24,7 +24,7 @@ mod_GlimmaR_navigate_ui <- function(id){
                actionButton(
                  inputId = ns('delete_model'),
                  label = 'Delete',
-                 icon = icon("minus-circle"),
+                 icon = icon("xmark"),
                  class = 'btn-danger btn-sm'
                )
              ),

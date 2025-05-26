@@ -84,7 +84,7 @@ mod_GlimmaR_build_model_ui <- function(id){
             actionButton(
               inputId = ns('clear_formula'),
               label = 'clear',
-              icon = icon("minus-circle")
+              icon = icon("xmark")
             ),
             tippy_this(ns('clear_formula'), delay = 1000, placement = 'right', tooltip = tippy_text('clear GLM formula above',12)),
             actionButton(

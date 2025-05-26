@@ -25,7 +25,7 @@ mod_BoostaR_navigate_ui <- function(id){
                actionButton(
                  inputId = ns('BoostaR_delete_model'),
                  label = 'Delete',
-                 icon = icon("minus-circle"),
+                 icon = icon("xmark"),
                  class = 'btn-danger btn-sm'
                )
              ),

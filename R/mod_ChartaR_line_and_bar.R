@@ -13,8 +13,8 @@ mod_ChartaR_line_and_bar_ui <- function(id, d, dt_update, response, weight, kpi_
     fluidRow(
       column(
         width = 3,
-        selectInput_ui(id = ns('x_axis_feature'), label = 'x-axis feature', height_divisor = 50, height_adj = 2, multiple = FALSE, initial = 'Original'),
-        selectInput_ui(id = ns('add_columns'), label = 'Additional y-axis columns', height_divisor = 55, height_adj = 3, multiple = TRUE, initial = 'lucidum')
+        selectInput_ui(id = ns('x_axis_feature'), label = 'x-axis feature', height_divisor = 40, height_adj = 1, multiple = FALSE, initial = 'Original'),
+        selectInput_ui(id = ns('add_columns'), label = 'Additional y-axis columns', height_divisor = 65, height_adj = 3, multiple = TRUE, initial = 'lucidum')
       ),
       column(
         width = 9,
