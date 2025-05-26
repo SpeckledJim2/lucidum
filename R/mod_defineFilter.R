@@ -129,7 +129,6 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
     })
     observeEvent(input$apply_filter, {
       free_filter(TRUE)
-      dt_update(dt_update()+1)
       message <- apply_filter(d(), input$free_filter, input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
@@ -139,7 +138,6 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
     observeEvent(input$clear_filter, {
       free_filter(FALSE)
       updateTextInput(inputId = 'free_filter', value = '')
-      dt_update(dt_update()+1)
       message <- apply_filter(d(), '', input$train_test_filter)
       output$message <- renderText({message})
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
