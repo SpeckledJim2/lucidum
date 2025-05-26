@@ -44,26 +44,25 @@ mod_defineFilter_ui <- function(id){
         )
       )
     ),
-    fluidRow(
-      column(
-        width = 10,
-        style = 'margin-top: 0px; margin-right:0px; padding-right: 0px',
-        div(
-          textInput(inputId = ns('free_filter'), placeholder = 'enter filter...', label = NULL, width = '100%'),
-        )
+    div(
+      style = "display: flex; width: 100%; padding-right: 15px",
+        textInput(
+          inputId = ns('free_filter'),
+          label = NULL,
+          placeholder = 'enter filter...',
+          width = '100%'
+        ),
+      actionButton(
+        inputId = ns('apply_filter'),
+        label = NULL,
+        icon = icon("filter"),
+        style = "height: 34px; width: 34px; padding: 0; margin: 0; border-radius: 0px; margin-left: -15px"
       ),
-      column(
-        width = 2,
-        style = 'margin-left:-30px; margin-top:0px; padding-top: 0px; padding-left:0px;',
-        div(
-          actionButton(
-            style = 'height:34px; border-radius:0px; margin-top: 0px; margin-bottom: 0px; padding-left:0px; padding-right:0px',
-            width = '100%',
-            inputId = ns('apply_filter'),
-            label = NULL,
-            icon = icon("filter")
-          )
-        )
+      actionButton(
+        inputId = ns('clear_filter'),
+        label = NULL,
+        icon = icon("xmark"),
+        style = "height: 34px; width: 34px; padding: 0; margin: 0; border-radius: 0px;"
       )
     ),
     fluidRow(
@@ -71,7 +70,7 @@ mod_defineFilter_ui <- function(id){
         width = 12,
         div(
           #style = 'margin-top:0px',
-          selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 6, selectize = FALSE, multiple = TRUE, choices = NULL)
+          selectInput(inputId = ns('filter_list'),label = NULL, width = '100%', size = 12, selectize = FALSE, multiple = TRUE, choices = NULL)
         )
       )
     ),
@@ -134,6 +133,16 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
       user_filter(input$free_filter)
     })
+    observeEvent(input$clear_filter, {
+      free_filter(TRUE)
+      updateTextInput(inputId = 'free_filter', value = '')
+      dt_update(dt_update()+1)
+      message <- apply_filter(d(), '', input$train_test_filter)
+      output$message <- renderText({message})
+      updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      updateSelectInput(inputId = 'filter_list', selected = character(0))
+      user_filter('')
+    })
     observeEvent(c(input$filter_list, input$filter_operation, input$train_test_filter), ignoreInit = TRUE, {
       dt_update(dt_update()+1)
       filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
@@ -154,7 +163,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       stop_update(TRUE)
     })
     observeEvent(filter_spec(), {
-      updateSelectInput(inputId = 'filter_list', choices = no_filter(filter_spec()[[1]]))
+      updateSelectInput(inputId = 'filter_list', choices = split_list(filter_spec()[[1]]))
     })
     return(
       reactive(
@@ -179,7 +188,6 @@ filter_text <- function(d){
   }
 
 }
-
 apply_filter <- function(d, filter, train_test_filter){
   user_filter <- NULL
   total_filter <- NULL
@@ -223,7 +231,7 @@ apply_filter <- function(d, filter, train_test_filter){
       if(train_test_filter=='All'){
         d[, total_filter := user_filter]
       } else if (train_test_filter=='Train'){
-        d[, total_filter := user_filter*(1-train_test)]
+        d[, total_filter := user_filter*(1L-train_test)]
       } else if (train_test_filter=='Test'){
         d[, total_filter := user_filter*train_test]
       }
@@ -231,7 +239,6 @@ apply_filter <- function(d, filter, train_test_filter){
     }
   }
 }
-
 combine_filters <- function(filters, operation){
   if(operation %in% c('AND','NAND')){
     op <- ' & '
@@ -250,33 +257,31 @@ combine_filters <- function(filters, operation){
   }
   filter_expression
 }
-
 no_filter <- function(x){
   if(x[[1]]!='no filter'){
     x <- c('no filter', x)
   }
   x
 }
-
-filter_idx <- function(d, train_test){
+filter_idx_old <- function(d, train_test){
   if(nrow(d)>0){
     if(is.null(train_test)){
       if('user_filter' %in% names(d)){
         idx <- d[user_filter==1L, which = TRUE]
       } else {
-        idx <- 1:nrow(d)
+        idx <- 1L:nrow(d)
       }
     } else if (!('train_test' %in% names(d))){
       if('user_filter' %in% names(d)){
         idx <- d[user_filter==1L, which = TRUE]
       } else {
-        idx <- 1:nrow(d)
+        idx <- 1L:nrow(d)
       }
     } else if (train_test == 'All'){
       if('user_filter' %in% names(d)){
         idx <- d[user_filter==1L, which = TRUE]
       } else {
-        idx <- 1:nrow(d)
+        idx <- 1L:nrow(d)
       }
     } else if (train_test == 'Train'){
       if('user_filter' %in% names(d)){
@@ -293,4 +298,61 @@ filter_idx <- function(d, train_test){
     }
     idx
   }
+}
+filter_idx <- function(d, train_test) {
+  if (nrow(d) == 0) return(integer())
+  has_user_filter <- "user_filter" %in% names(d)
+  has_train_test  <- "train_test" %in% names(d)
+  if (is.null(train_test) || !has_train_test) {
+    if (has_user_filter) {
+      return(d[user_filter == 1L, which = TRUE])
+    } else {
+      return(seq_len(nrow(d)))
+    }
+  }
+  # combine filters if needed
+  if (has_user_filter) {
+    return(d[user_filter == 1L & train_test == train_test, which = TRUE])
+  } else {
+    return(d[train_test == train_test, which = TRUE])
+  }
+}
+split_list <- function(input_choices) {
+  if (!any(startsWith(input_choices, "---"))) {
+    return(input_choices)  # flat character vector
+  }
+  
+  res <- list()
+  current_group <- NULL
+  buffer <- character(0)
+  
+  for (item in input_choices) {
+    if (startsWith(item, "---")) {
+      # skip empty or malformed group headers
+      group_label <- trimws(sub("^---\\s*", "", item))
+      if (group_label == "") {
+        next
+      }
+      if (!is.null(current_group)) {
+        res[[current_group]] <- buffer
+      } else if (length(buffer) > 0) {
+        res[["no grouping"]] <- buffer
+      }
+      current_group <- sub("^---\\s*", "", item)
+      buffer <- character(0)
+    } else {
+      buffer <- c(buffer, item)
+    }
+  }
+  
+  if (!is.null(current_group)) {
+    res[[current_group]] <- buffer
+  } else if (length(buffer) > 0) {
+    res[["no grouping"]] <- buffer
+  }
+  
+  # ensure each group is a character vector (even if length 1)
+  res <- lapply(res, list_if_length_one)
+  
+  return(res)
 }
