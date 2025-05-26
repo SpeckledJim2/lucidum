@@ -230,11 +230,17 @@ mod_DevelopaR_server <- function(id, d, dt_update, response, weight, kpi_spec, f
     updated_filter_spec <- mod_editSpecification_server('filter', filter_spec, type = 'filter', dimensions)
     updated_feature_spec <- mod_editSpecification_server('feature', feature_spec, type = 'feature', dimensions)
     observeEvent(updated_kpi_spec(), {
+      ks <- updated_kpi_spec()
+      ks[is.na(ks)] <- ''
+      updated_kpi_spec(ks)
       if(!identical(kpi_spec(), updated_kpi_spec())){
         kpi_spec(updated_kpi_spec())
       }
     })
     observeEvent(updated_filter_spec(), {
+      flt <- updated_filter_spec()
+      flt[is.na(flt)] <- ''
+      updated_filter_spec(flt)
       if(!identical(filter_spec(), updated_filter_spec())){
         filter_spec(updated_filter_spec())
       }

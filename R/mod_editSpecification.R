@@ -117,7 +117,7 @@ mod_editSpecification_server <- function(id, input_spec, type, dimensions) {
       fileinfo <- parseSavePath(volumes, input$save_specification)
       if(nrow(fileinfo)>0){
         dt <- setDT(rhandsontable::hot_to_r(isolate({input$specification})))
-        fwrite(dt, fileinfo$datapath)
+        fwrite(dt, fileinfo$datapath, quote = FALSE)
         output_spec(dt)
       }
     })
