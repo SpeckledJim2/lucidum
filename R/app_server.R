@@ -4,7 +4,7 @@
 #' @importFrom golem get_golem_options
 #' @importFrom DT datatable renderDT
 app_server <- function(input, output, session) {
-
+  
   # set threads for data.table and lightgbm
   set_threads()
   
@@ -28,9 +28,6 @@ app_server <- function(input, output, session) {
     dimensions(input$dimensions)
   })
   
-  # lucidum startup
-  init_lucidum(session, golem::get_golem_options('data'), golem::get_golem_options('dataset_name'))
-  
   # d is the dataset being analysed by lucidum
   # the golem option 'data' specifies the dataset
   # dt_update is used to trigger reactivity when d is changed
@@ -48,7 +45,7 @@ app_server <- function(input, output, session) {
   feature_spec <- reactiveVal()
   filter_spec <- reactiveVal()
   
-  #
+  # demo if insurance supplied as dataset
   demo <- reactiveVal(get_golem_options('dataset_name')=='insurance')
   starting_response <- reactiveVal()
   observeEvent(demo(), once = TRUE, {
@@ -147,13 +144,7 @@ app_server <- function(input, output, session) {
   
   # header server
   mod_dashboardHeader_server('header_nav_buttons', session, dt_update)
-  observeEvent(input$dataset, ignoreInit = TRUE, {
-    if(input$dataset %not_in% c('loaded from .csv file', 'choose dataset','user supplied dataset')){
-      d(setDT(get(input$dataset)))
-      dataset_name(input$dataset)
-      dt_update(dt_update()+1)
-    }
-  })
+
   observeEvent(nav_options(), {
     kpi(nav_options()$kpi)
     BoostaR_idx(nav_options()$gbm)

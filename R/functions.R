@@ -18,29 +18,6 @@ load_dataset <- function(data){
   }
 }
 
-init_lucidum <- function(session, data, dataset_name){
-  
-  # get the names of the tables in the global environment
-  table_lists <- return_global_env_tables()
-
-  # get the dataset name
-  if(is.null(data)){
-    sel <- 'choose dataset'
-    table_lists[[2]] <- c(table_lists[[2]], 'choose dataset')
-  } else if(inherits(data, 'character')){
-    # the user specified a .csv file
-    # so the object has no file name
-    sel <- 'loaded from .csv file'
-    table_lists[[2]] <- c(table_lists[[2]], 'loaded from .csv file')
-  } else if(inherits(data, 'data.frame')){
-    sel <- dataset_name
-    table_lists[[2]] <- c(table_lists[[2]], 'user supplied dataset')
-  }
-  
-  # update the selectInput
-  updateSelectInput(session, inputId = 'dataset', choices = table_lists, selected = sel)
-}
-
 contains_postcode_cols <- function(d){
   # TRUE if d contains one of PostcodeUnit, PostcodeSector or PostcodeArea
   # 'PostcodeUnit' %in% names(d) | 'PostcodeSector' %in% names(d) | 'PostcodeArea' %in% names(d)
