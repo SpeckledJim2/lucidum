@@ -23,6 +23,7 @@ mod_defineFilter_ui <- function(id){
       }
     "))
     ),
+    tags$style(HTML(paste0("#", ns('train_test_filter'), " .btn {border-radius: 0 !important;}"))),
     fluidRow(
       column(
         width = 12,
@@ -74,6 +75,7 @@ mod_defineFilter_ui <- function(id){
         )
       )
     ),
+    tags$style(HTML(paste0("#", ns('filter_operation'), " .btn {border-radius: 0 !important;}"))),
     fluidRow(
       column(
         width = 12,

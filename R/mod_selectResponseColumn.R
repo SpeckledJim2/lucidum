@@ -85,7 +85,7 @@ mod_selectResponseColumn_server <- function(
       }
     })
     observeEvent(kpi(), {
-      kpi_components <- kpi_numerator_denominator(kpi_spec()[as.numeric(kpi())][[1]], kpi_spec())
+      kpi_components <- kpi_numerator_denominator(kpi(), kpi_spec())
       selected <- kpi_components$numerator
       updateSelectInput(inputId = 'col', selected = selected)
     })
@@ -94,12 +94,12 @@ mod_selectResponseColumn_server <- function(
          weight() %in% c('N', names(d()))){
         if('total_filter' %in% names(d())){
           if(weight()=='N'){
-            num <- d()[which(total_filter==1), sum(.SD), .SDcols=input$col]
+            num <- d()[which(total_filter==1L), sum(.SD), .SDcols=input$col]
             den <- d()[, sum(total_filter)]
             val <- num/den
           } else {
-            num <- d()[which(total_filter==1), sum(.SD), .SDcols=input$col]
-            den <- d()[which(total_filter==1), sum(.SD), .SDcols=weight()]
+            num <- d()[which(total_filter==1L), sum(.SD), .SDcols=input$col]
+            den <- d()[which(total_filter==1L), sum(.SD), .SDcols=weight()]
             val <- num/den
           }
         } else {

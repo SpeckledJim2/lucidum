@@ -11,6 +11,7 @@
 mod_navigator_ui <- function(id){
   ns <- NS(id)
   tagList(
+    tags$style(HTML(paste0("#", ns('type'), " .btn {border-radius: 0 !important;}"))),
     div(
       style = 'margin-top:0px; margin-bottom:0px; padding-top:0px ; padding-bottom:0px;  border-radius: 3px 3px 0px 0px;',
       radioGroupButtons(
@@ -70,7 +71,7 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
       if(nrow(kpi_spec())>0){
         updateSelectInput(
           inputId = 'kpi_chooser',
-          choices = setNames(1:nrow(kpi_spec()), kpi_spec()[[1]])
+          choices = split_list(kpi_spec()[[1]])
         )
       } else {
         updateSelectInput(

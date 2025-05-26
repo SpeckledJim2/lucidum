@@ -72,7 +72,7 @@ mod_selectWeightColumn_server <- function(
       }
     })
     observeEvent(kpi(), {
-      kpi_components <- kpi_numerator_denominator(kpi_spec()[as.numeric(kpi())][[1]], kpi_spec())
+      kpi_components <- kpi_numerator_denominator(kpi(), kpi_spec())
       selected <- kpi_components$denominator
       updateSelectInput(inputId = 'col', selected = selected)
     })
