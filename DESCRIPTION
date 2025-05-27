@@ -1,6 +1,6 @@
 Package: lucidum
 Title: A Shiny App to Build and Understand GBMs and GLMs
-Version: 0.0.0.9015
+Version: 0.0.0.9016
 Authors@R: 
     person("Gary", "Hemming", , "garyhemming@me.com", role = c("cre", "aut"))
 Description: A Shiny App to interactively explore datasets, map UK
