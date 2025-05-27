@@ -42,14 +42,45 @@ mod_MappaR_ui <- function(id){
                   ),
                   br(),
                   fluidRow(
-                    column(width = 12,
+                    column(width = 5,
                            searchInput(
                              inputId = ns('postcode'),
                              label = NULL,
-                             placeholder = "enter postcode area",
-                             btnReset = icon("xmark"),
-                             btnSearch = icon("magnifying-glass")
+                             placeholder = "postcode...",
+                             btnSearch = icon("magnifying-glass"),
+                             btnReset = icon("xmark")
                            )
+                    ),
+                    column(
+                      width = 4,
+                      radioGroupButtons(
+                        inputId = ns('palettes'),
+                        label = NULL,
+                        justified = TRUE,
+                        size = 'sm',
+                        choiceValues = c('Divergent','Spectral','Viridis'),
+                        choiceNames = c(
+                          tagList(tags$img(src='www/divergent.png', height="18px", width="18px",'')),
+                          tagList(tags$img(src='www/spectral.png', height="18px", width="18px",'')),
+                          tagList(tags$img(src='www/viridis.png', height="18px", width="18px",''))
+                        ),
+                        selected = 'Divergent'
+                      )
+                    ),
+                    column(
+                      width = 3,
+                      radioGroupButtons(
+                        inputId = ns('dark_mode'),
+                        label = NULL,
+                        justified = TRUE,
+                        size = 'sm',
+                        choiceValues = c('Light', 'Dark'),
+                        choiceNames = list(
+                          tags$div(style = "background-color: white; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 4px;"),
+                          tags$div(style = "background-color: black; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 4px;")
+                        ),
+                        selected = 'Dark'
+                      )
                     )
                   ),
                   tags$head(tags$style(HTML(".custom-slider-label label {font-size: 12px}"))),
@@ -117,25 +148,11 @@ mod_MappaR_ui <- function(id){
                   ),
                   fluidRow(
                     column(
-                      width = 5,
-                      align = 'left',
-                      radioGroupButtons(
-                        inputId = ns('palettes'),
-                        label = NULL,
-                        justified = TRUE,
-                        size = 'xs',
-                        choiceValues = c('Divergent','Spectral','Viridis'),
-                        choiceNames = c(
-                          tagList(tags$img(src='www/divergent.png', height="18px", width="18px",'')),
-                          tagList(tags$img(src='www/spectral.png', height="18px", width="18px",'')),
-                          tagList(tags$img(src='www/viridis.png', height="18px", width="18px",''))
-                          ),
-                        selected = 'Divergent'
-                        )
-                      ),
+                      width = 3,
+
+                    ),
                     column(
-                      width = 7,
-                      align = 'right',
+                      width = 3,
                       radioGroupButtons(
                         inputId = ns('resolution'),
                         label = NULL,
@@ -143,36 +160,24 @@ mod_MappaR_ui <- function(id){
                         size = 'xs',
                         choices = c('Area','Sector','Unit'),
                         selected = 'Area'
-                        )
                       )
                     ),
-                      fluidRow(
-                        column(
-                          width = 5,
-                          align = 'left',
-                          radioGroupButtons(
-                            inputId = ns('dark_mode'),
-                            label = NULL,
-                            justified = TRUE,
-                            size = 'xs',
-                            choices = c('Light','Dark'),
-                            selected = 'Dark'
-                            )
-                          ),
-                        column(
-                          width = 7,
-                          align = 'center',
-                          radioGroupButtons(
-                            inputId = ns('max_units'),
-                            label = NULL,
-                            justified = TRUE,
-                            size = 'xs',
-                            choiceValues = c(50000,250000),
-                            choiceNames = c('50k','250k'),
-                            selected = 50000
-                            )
-                          )
-                        )
+                    column(
+                      width = 3
+                    ),
+                    column(
+                      width = 3,
+                      radioGroupButtons(
+                        inputId = ns('max_units'),
+                        label = NULL,
+                        justified = TRUE,
+                        size = 'xs',
+                        choiceValues = c(50000,250000),
+                        choiceNames = c('50k','250k'),
+                        selected = 50000
+                      )
+                    )
+                  )
                   )
     )
 }
