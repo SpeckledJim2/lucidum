@@ -28,9 +28,9 @@ mod_MappaR_ui <- function(id){
     tags$script(paste0("Shiny.addCustomMessageHandler('background-color', function(color) {var map = document.getElementById('" , ns('map') , "') ;map.style.backgroundColor = color;});")),
     absolutePanel(id = ns('controls'),
                   class = 'panel panel-default',
-                  top = '25%',
+                  top = '8%',
                   right = '2%',
-                  width = 250,
+                  width = 420,
                   fixed=TRUE,
                   draggable = TRUE,
                   height = "auto",
@@ -52,49 +52,66 @@ mod_MappaR_ui <- function(id){
                            )
                     )
                   ),
+                  tags$head(tags$style(HTML(".custom-slider-label label {font-size: 12px}"))),
                   fluidRow(
-                    column(width = 6,
-                           sliderInput(
-                             inputId = ns('line_thickness'),
-                             label = 'Line thickness',
-                             min = 0,
-                             max = 5,
-                             value = 1,
-                             step = 0.5,
-                             ticks = FALSE,
-                             width = '100%'
-                           ),
-                           sliderInput(
-                             inputId = ns('opacity'),
-                             label = 'Opacity',
-                             min = 0,
-                             max = 1,
-                             value = 1.00,
-                             step = 0.2,
-                             ticks = FALSE,
-                             width = '100%'
-                           ),
+                    column(width = 3,
+                           div(
+                             class = 'custom-slider-label',
+                             sliderInput(
+                               inputId = ns('line_thickness'),
+                               label = 'Line thickness',
+                               min = 0,
+                               max = 5,
+                               value = 1,
+                               step = 0.5,
+                               ticks = FALSE,
+                               width = '100%'
+                             )
+                           )
                     ),
-                    column(width = 6,
-                           sliderInput(
-                             inputId = ns('hotspots'),
-                             label = 'Hot/not-spots',
-                             min = -20,
-                             max = 20,
-                             value = 0,
-                             step = 5,
-                             ticks = FALSE,
-                             width = '100%'
-                           ),
-                           sliderInput(
-                             inputId = ns('label_size'),
-                             label = 'Label size',
-                             min = 0,
-                             max = 20,
-                             value = 0,
-                             step = 1,
-                             ticks = FALSE,
-                             width = '100%'
+                    column(width = 3,
+                           div(
+                             class = 'custom-slider-label',
+                             sliderInput(
+                               inputId = ns('opacity'),
+                               label = 'Opacity',
+                               min = 0,
+                               max = 1,
+                               value = 1.00,
+                               step = 0.2,
+                               ticks = FALSE,
+                               width = '100%'
+                             )
+                           )
+                    ),
+                    column(width = 3,
+                           div(
+                             class = 'custom-slider-label',
+                             sliderInput(
+                               inputId = ns('hotspots'),
+                               label = 'Hot/not-spots',
+                               min = -20,
+                               max = 20,
+                               value = 0,
+                               step = 5,
+                               ticks = FALSE,
+                               width = '100%'
+                             )
+                           )
+                    ),
+                    column(width = 3,
+                           div(
+                             class = 'custom-slider-label',
+                             sliderInput(
+                               inputId = ns('label_size'),
+                               label = 'Label size',
+                               min = 0,
+                               max = 20,
+                               value = 0,
+                               step = 1,
+                               ticks = FALSE,
+                               width = '100%'
+                             )
                            )
                     )
                   ),
