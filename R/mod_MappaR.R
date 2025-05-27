@@ -16,31 +16,34 @@ mod_MappaR_ui <- function(id){
   button_style_update <- 'padding:3px; font-size:80%; margin-left:0px; margin-right:0px;color: #fff; background-color: #4bb03c; border-color: #3e6e37'
   ns <- NS(id)
   tagList(
-    # height argument ensures map resizes well with browser
     leaflet::leafletOutput(ns('map'), height = 'calc(99vh - 69px)'),
     
-    # QUESTION - better way to do the following?
-    # not sure how I could move to an external file because of the ns
     tags$head(tags$style(HTML(paste0('#', ns('map'), '{background-color: rgb(36,45,49)}')))),
     tags$head(tags$style(HTML(paste0('#', ns('controls'), '{background-color: rgba(255,255,255,0.9)}')))),
     tags$head(tags$style(HTML(paste0('#', ns('controls'), '{border-width: 2px; border-color: rgb(255,255,255)}')))),
     tags$head(tags$style(HTML(paste0('#', ns('filters'), '{margin-left: 5px; margin-top:5px; font-size: 12px; text-align:left}')))),
     tags$script(paste0("Shiny.addCustomMessageHandler('background-color', function(color) {var map = document.getElementById('" , ns('map') , "') ;map.style.backgroundColor = color;});")),
+    
     absolutePanel(id = ns('controls'),
                   class = 'panel panel-default',
                   top = '8%',
                   right = '2%',
-                  width = 420,
-                  fixed=TRUE,
+                  width = 450,
+                  fixed = TRUE,
                   draggable = TRUE,
                   height = "auto",
+                  
+                  # filters + buttons
                   fluidRow(
-                    column(width = 12,
-                           align = 'center',
-                           uiOutput(ns('filters'))
+                    column(
+                      width = 12,
+                      align = 'left',
+                      uiOutput(ns('filters'))
                     )
                   ),
                   br(),
+                  
+                  # search + palette + dark_mode
                   fluidRow(
                     column(width = 5,
                            searchInput(
@@ -51,135 +54,131 @@ mod_MappaR_ui <- function(id){
                              btnReset = icon("xmark")
                            )
                     ),
-                    column(
-                      width = 4,
-                      radioGroupButtons(
-                        inputId = ns('palettes'),
-                        label = NULL,
-                        justified = TRUE,
-                        size = 'sm',
-                        choiceValues = c('Divergent','Spectral','Viridis'),
-                        choiceNames = c(
-                          tagList(tags$img(src='www/divergent.png', height="18px", width="18px",'')),
-                          tagList(tags$img(src='www/spectral.png', height="18px", width="18px",'')),
-                          tagList(tags$img(src='www/viridis.png', height="18px", width="18px",''))
-                        ),
-                        selected = 'Divergent'
-                      )
+                    column(width = 4,
+                           radioGroupButtons(
+                             inputId = ns('palettes'),
+                             label = NULL,
+                             justified = TRUE,
+                             size = 'sm',
+                             choiceValues = c('Divergent','Spectral','Viridis'),
+                             choiceNames = c(
+                               tagList(tags$img(src='www/divergent.png', height="18px", width="18px",'')),
+                               tagList(tags$img(src='www/spectral.png', height="18px", width="18px",'')),
+                               tagList(tags$img(src='www/viridis.png', height="18px", width="18px",''))
+                             ),
+                             selected = 'Divergent'
+                           )
                     ),
-                    column(
-                      width = 3,
-                      radioGroupButtons(
-                        inputId = ns('dark_mode'),
-                        label = NULL,
-                        justified = TRUE,
-                        size = 'sm',
-                        choiceValues = c('Light', 'Dark'),
-                        choiceNames = list(
-                          tags$div(style = "background-color: white; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 4px;"),
-                          tags$div(style = "background-color: black; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 4px;")
-                        ),
-                        selected = 'Dark'
-                      )
+                    column(width = 3,
+                           radioGroupButtons(
+                             inputId = ns('dark_mode'),
+                             label = NULL,
+                             justified = TRUE,
+                             size = 'sm',
+                             choiceValues = c('Light', 'Dark'),
+                             choiceNames = list(
+                               tags$div(style = "background-color: white; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 4px;"),
+                               tags$div(style = "background-color: black; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 4px;")
+                             ),
+                             selected = 'Dark'
+                           )
                     )
                   ),
+                  
                   tags$head(tags$style(HTML(".custom-slider-label label {font-size: 12px}"))),
+                  
+                  # sliders
                   fluidRow(
                     column(width = 3,
-                           div(
-                             class = 'custom-slider-label',
-                             sliderInput(
-                               inputId = ns('line_thickness'),
-                               label = 'Line thickness',
-                               min = 0,
-                               max = 5,
-                               value = 1,
-                               step = 0.5,
-                               ticks = FALSE,
-                               width = '100%'
-                             )
+                           div(class = 'custom-slider-label',
+                               sliderInput(
+                                 inputId = ns('line_thickness'),
+                                 label = 'Line thickness',
+                                 min = 0,
+                                 max = 5,
+                                 value = 1,
+                                 step = 0.5,
+                                 ticks = FALSE,
+                                 width = '100%'
+                               )
                            )
                     ),
                     column(width = 3,
-                           div(
-                             class = 'custom-slider-label',
-                             sliderInput(
-                               inputId = ns('opacity'),
-                               label = 'Opacity',
-                               min = 0,
-                               max = 1,
-                               value = 1.00,
-                               step = 0.2,
-                               ticks = FALSE,
-                               width = '100%'
-                             )
+                           div(class = 'custom-slider-label',
+                               sliderInput(
+                                 inputId = ns('opacity'),
+                                 label = 'Opacity',
+                                 min = 0,
+                                 max = 1,
+                                 value = 1.00,
+                                 step = 0.2,
+                                 ticks = FALSE,
+                                 width = '100%'
+                               )
                            )
                     ),
                     column(width = 3,
-                           div(
-                             class = 'custom-slider-label',
-                             sliderInput(
-                               inputId = ns('hotspots'),
-                               label = 'Hot/not-spots',
-                               min = -20,
-                               max = 20,
-                               value = 0,
-                               step = 5,
-                               ticks = FALSE,
-                               width = '100%'
-                             )
+                           div(class = 'custom-slider-label',
+                               sliderInput(
+                                 inputId = ns('hotspots'),
+                                 label = 'Hot/not-spots',
+                                 min = -20,
+                                 max = 20,
+                                 value = 0,
+                                 step = 5,
+                                 ticks = FALSE,
+                                 width = '100%'
+                               )
                            )
                     ),
                     column(width = 3,
-                           div(
-                             class = 'custom-slider-label',
-                             sliderInput(
-                               inputId = ns('label_size'),
-                               label = 'Label size',
-                               min = 0,
-                               max = 20,
-                               value = 0,
-                               step = 1,
-                               ticks = FALSE,
-                               width = '100%'
-                             )
+                           div(class = 'custom-slider-label',
+                               sliderInput(
+                                 inputId = ns('label_size'),
+                                 label = 'Label size',
+                                 min = 0,
+                                 max = 20,
+                                 value = 0,
+                                 step = 1,
+                                 ticks = FALSE,
+                                 width = '100%'
+                               )
                            )
                     )
                   ),
                   fluidRow(
+                    column(width = 6,
+                           div(class = 'custom-slider-label',
+                               radioGroupButtons(
+                                 inputId = ns('resolution'),
+                                 label = 'Resolution',
+                                 justified = TRUE,
+                                 size = 'xs',
+                                 choiceValues = c('Area','Sector','Unit'),
+                                 choiceNames = c('Area only','+ Sector','+ Unit'),
+                                 selected = 'Area',
+                                 width = '100%'
+                                 )
+                               )
+                           ),
                     column(
-                      width = 3,
-
-                    ),
-                    column(
-                      width = 3,
-                      radioGroupButtons(
-                        inputId = ns('resolution'),
-                        label = NULL,
-                        justified = TRUE,
-                        size = 'xs',
-                        choices = c('Area','Sector','Unit'),
-                        selected = 'Area'
-                      )
-                    ),
-                    column(
-                      width = 3
-                    ),
-                    column(
-                      width = 3,
-                      radioGroupButtons(
-                        inputId = ns('max_units'),
-                        label = NULL,
-                        justified = TRUE,
-                        size = 'xs',
-                        choiceValues = c(50000,250000),
-                        choiceNames = c('50k','250k'),
-                        selected = 50000
+                      width = 6,
+                      div(class = 'custom-slider-label',
+                        radioGroupButtons(
+                          inputId = ns('max_units'),
+                          label = 'Max units to plot',
+                          justified = TRUE,
+                          size = 'xs',
+                          choiceValues = c(50000,250000,500000),
+                          choiceNames = c('50k','250k','500k'),
+                          selected = 50000,
+                          width = '100%'
+                        )
                       )
                     )
-                  )
                   )
     )
+  )
 }
     
 #' MappaR Server Function
