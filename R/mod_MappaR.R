@@ -24,9 +24,7 @@ mod_MappaR_ui <- function(id){
     tags$head(tags$style(HTML(paste0('#', ns('map'), '{background-color: rgb(36,45,49)}')))),
     tags$head(tags$style(HTML(paste0('#', ns('controls'), '{background-color: rgba(255,255,255,0.9)}')))),
     tags$head(tags$style(HTML(paste0('#', ns('controls'), '{border-width: 2px; border-color: rgb(255,255,255)}')))),
-    tags$head(tags$style(HTML(paste0('#', ns('panel_title'), ' {font-size: 48px; font-weight: 300; text-align:center}')))),
-    tags$head(tags$style(HTML(paste0('#', ns('panel_location'), '{font-size: 20px; text-align:center}')))),
-    tags$head(tags$style(HTML(paste0('#', ns('filters'), '{margin-top:5px; font-size: 14px; text-align:center; font-weight: 600}')))),
+    tags$head(tags$style(HTML(paste0('#', ns('filters'), '{margin-left: 5px; margin-top:5px; font-size: 12px; text-align:left}')))),
     tags$script(paste0("Shiny.addCustomMessageHandler('background-color', function(color) {var map = document.getElementById('" , ns('map') , "') ;map.style.backgroundColor = color;});")),
     absolutePanel(id = ns('controls'),
                   class = 'panel panel-default',
@@ -39,10 +37,7 @@ mod_MappaR_ui <- function(id){
                   fluidRow(
                     column(width = 12,
                            align = 'center',
-                           textOutput(ns('panel_title')),
-                           htmlOutput(ns('panel_location')),
-                           textOutput(ns('panel_value')),
-                           textOutput(ns('filters'))
+                           uiOutput(ns('filters'))
                     )
                   ),
                   br(),
@@ -257,17 +252,39 @@ mod_MappaR_server <- function(id, d, dt_update, response, weight, kpi_spec, sele
         }
       }
     })
-    observeEvent(filters(), {
-      # filter text
-      train_test_filter <- filters()$train_test_filter
+
+    # render filter text
+    output$filters <- renderText({
+      
+      # title
+      chart_title <- if (weight() == 'N') {
+        response()
+      } else {
+        paste(response(), '/', weight())
+      }
+      
+      # filter text for title
+      filter_text <- filters()$train_test_filter
+      filter_text <- switch(
+        filter_text,
+        "Train" = '<span style="color:red;">training data</span><br>',
+        "Test" = '<span style="color:blue;">test data</span><br>',
+        '<span style="color:black;"></span><br>'  # default for "All" or anything else
+      )
+      
+      # user filter text
       user_filter <- filters()$user_filter
-      if(train_test_filter=='All'){train_test_filter <- ''}
-      if(train_test_filter=='Train'){train_test_filter <- 'Training data'}
-      if(train_test_filter=='Test'){train_test_filter <- 'Test data'}
-      output$filters <- renderText({
-        paste0(train_test_filter, ' ', user_filter)
-      })
+      train_test_filter_text <- if (is.null(user_filter) || user_filter == '') {
+        'no filter'
+      } else {
+        user_filter
+      }
+      train_test_filter_text <- paste0('<span style="font-size:12px;">\u23f7 ', train_test_filter_text, '</span><br>')
+      
+      # combine and return
+      paste0(boldify(chart_title), filter_text, train_test_filter_text)
     })
+    
   })
 }
 
