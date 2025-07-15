@@ -121,7 +121,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
         }
         message <- apply_filter(d(), flt, input$train_test_filter)
         output$message <- renderText({message})
-        updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+        updateRadioGroupButtons(inputId = 'train_test_filter', label = filter_text(d()))
         user_filter(flt)
         #free_filter(FALSE)
       }
@@ -131,7 +131,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       free_filter(TRUE)
       message <- apply_filter(d(), input$free_filter, input$train_test_filter)
       output$message <- renderText({message})
-      updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      updateRadioGroupButtons(inputId = 'train_test_filter', label = filter_text(d()))
       updateSelectInput(inputId = 'filter_list', selected = character(0))
       dt_update(dt_update()+1)
       user_filter(input$free_filter)
@@ -140,7 +140,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       updateTextInput(inputId = 'free_filter', value = '')
       message <- apply_filter(d(), '', input$train_test_filter)
       output$message <- renderText({message})
-      updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      updateRadioGroupButtons(inputId = 'train_test_filter', label = filter_text(d()))
       updateSelectInput(inputId = 'filter_list', selected = character(0))
       if(isTRUE(input$free_filter != input$filter_list) | free_filter()){
         dt_update(dt_update()+1)
@@ -157,7 +157,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
         filter_formula <- combine_filters(filters = input$filter_list, input$filter_operation)
         message <- apply_filter(d(), filter_formula, input$train_test_filter)
         output$message <- renderText({message})
-        updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+        updateRadioGroupButtons(inputId = 'train_test_filter', label = filter_text(d()))
         if(!is.null(filter_formula)){
           if(filter_formula=='no_filter'){
             value <- ''
@@ -181,7 +181,7 @@ mod_defineFilter_server <- function(id, d, dt_update, filter_spec){
       }
       message <- apply_filter(d(), filter_formula, input$train_test_filter)
       output$message <- renderText({message})
-      updateRadioButtons(inputId = 'train_test_filter', label = filter_text(d()))
+      updateRadioGroupButtons(inputId = 'train_test_filter', label = filter_text(d()))
       if(!is.null(filter_formula)){
         if(filter_formula=='no_filter'){
           value <- ''

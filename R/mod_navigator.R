@@ -138,7 +138,7 @@ mod_navigator_server <- function(id, kpi_spec, GlimmaR_models, BoostaR_models, G
     })
     observeEvent(c(input$type, input$kpi_chooser, input$gbm_chooser, input$glm_chooser), {
       lbl_icn <- nav_label(input$type, kpi_spec(), BoostaR_models(), GlimmaR_models())
-      updateRadioButtons(inputId = 'type', label = lbl_icn$label)
+      updateRadioGroupButtons(inputId = 'type', label = lbl_icn$label)
     })
     return(reactive({list(kpi=input$kpi_chooser, glm=input$glm_chooser, gbm=input$gbm_chooser)}))
   })
