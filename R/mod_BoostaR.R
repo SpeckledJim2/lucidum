@@ -19,6 +19,10 @@ mod_BoostaR_ui <- function(id){
                          ),
                 tabPanel(value = 'Tree viewer', title = span(tagList(tags$img(src='www/tree.png', height="30px", width="30px"), 'Tree viewer')),
                          mod_BoostaR_tree_viewer_ui(ns('treeViewer'))
+                         ),
+                tabPanel(value = 'Stacked SHAP', title = span(tagList(tags$img(src='www/stacked_SHAP.png', height="30px", width="30px"), 'Stacked SHAP')),
+                         br(),
+                         mod_BoostaR_stacked_SHAP_ui(ns('stackedSHAP'))
                 )
     ),
   )
@@ -34,6 +38,7 @@ mod_BoostaR_server <- function(id, d, dt_update, response, weight, feature_spec,
     mod_BoostaR_build_model_server('buildBoostaR', d, dt_update, response, weight, feature_spec, BoostaR_models, BoostaR_idx, dimensions, crosstab_selector)
     mod_BoostaR_navigate_server('navigateBoostaR', d, BoostaR_models, BoostaR_idx, feature_spec, crosstab_selector, tabulated_models)
     mod_BoostaR_tree_viewer_server('treeViewer', BoostaR_models, BoostaR_idx)
+    mod_BoostaR_stacked_SHAP_server('stackedSHAP', d, dt_update, BoostaR_models, BoostaR_idx)
     observeEvent(c(BoostaR_models(), BoostaR_idx()), {
       if(!is.null(BoostaR_idx())){
         # delete existing cols

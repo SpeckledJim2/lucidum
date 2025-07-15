@@ -70,6 +70,11 @@ globalVariables(
     'glm_prediction_rate',
     'lgbm_prediction_rate',
     'feature_concat',
-    'N'
+    'N',
+    'feature_group',
+    'net_feature_contribution',
+    'shap_feature',
+    'shap_value',
+    'mean_abs_SHAP'
     )
   )

@@ -1,6 +1,20 @@
 filter
+--- Customer Age
 age<25
+age>=25
+
+--- Licence Type
+licence=='Full'
 licence=='Provisional'
+
+--- Vehicle Make
 make=='BMW'
+
+--- How Long Owned Vehicle
 ownership==0
+ownership>0
+
+--- Where Vehicle Kept
+vehicle_kept=='Drive'
 vehicle_kept=='Garage'
+vehicle_kept=='Road'
